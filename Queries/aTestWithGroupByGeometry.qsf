@@ -1,0 +1,4 @@
+Fields {geometry::UnionAggregate([SP_GEOMETRY]) AS SP_GEOMETRY, $$CommonName, $$RecYear as Year}
+Where {CommonName = 'Whitethroat' OR CommonName = 'Holly Blue'}
+Group By {CommonName, RecYear}
+Order By {Year, CommonName}

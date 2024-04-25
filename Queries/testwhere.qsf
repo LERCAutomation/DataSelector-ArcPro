@@ -1,0 +1,4 @@
+Fields {SP_GEOMETRY as Shape, $$CommonName as Name, $$RecYear as Year,$$Abundance, Location}
+Where {}
+Group By {}
+Order By {Year, Name}

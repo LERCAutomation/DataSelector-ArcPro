@@ -1,0 +1,3 @@
+Fields {SP_GEOMETRY, $$CommonName, $$RecYear as Year}
+Where {CommonName = 'Whitethroat' OR CommonName = 'Holly Blue'}
+Order By {Year, CommonName}
