@@ -28,8 +28,6 @@ using System.Text.RegularExpressions;
 namespace DataTools
 {
 
-    #region Wildcard
-
     /// Original code from:
     /// http://www.codeproject.com/Articles/11556/Converting-Wildcards-to-Regexes<summary>
     /// Represents a wildcard running on the
@@ -37,6 +35,9 @@ namespace DataTools
     /// </summary>
     public class Wildcard : Regex
     {
+
+        #region Constructor
+
         /// <summary>
         /// Initializes a wildcard with the given search pattern.
         /// </summary>
@@ -69,18 +70,21 @@ namespace DataTools
              Replace("\\?", ".*").
              Replace("\\|", "|") + "$";
         }
+
+        #endregion
     }
-
-    #endregion
-
-    #region StringFunctions
 
     public class StringFunctions
     {
+
+        #region Constructor
+
         public StringFunctions()
         {
             // constructor takes no arguments.
         }
+
+        #endregion
 
         #region Characters
 
@@ -160,7 +164,7 @@ namespace DataTools
         #region References
 
         /// <summary>
-        /// Gets the sub-reference out of a short reference string. 
+        /// Gets the sub-reference out of a short reference string.
         /// </summary>
         /// <param name="anInputString"></param>
         /// <param name="aReplaceString"></param>
@@ -241,7 +245,7 @@ namespace DataTools
         /// <returns></returns>
         public static string AlignStatsColumns(string AllColumns, string StatsColumns, string GroupColumns)
         {
-            if (GroupColumns == "" || AllColumns == "") //GroupColumns == "" || 
+            if (GroupColumns == "" || AllColumns == "") //GroupColumns == "" ||
                 return StatsColumns;
             List<string> liAllColumns = AllColumns.Split(',').ToList();
             foreach (string strFieldName in liAllColumns)
@@ -317,7 +321,5 @@ namespace DataTools
         #endregion
 
     }
-
-    #endregion
 
 }

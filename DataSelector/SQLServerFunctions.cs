@@ -29,23 +29,23 @@ namespace DataTools
     /// <summary>
     /// Illustrates how to get a Dataset's Definition from a geodatabase.
     /// </summary>
-    /// 
+    ///
     /// <remarks>
     /// <para>
-    /// While it is true classes that are derived from the <see cref="ArcGIS.Core.CoreObjectsBase"/> super class 
-    /// consumes native resources (e.g., <see cref="ArcGIS.Core.Data.Geodatabase"/> or <see cref="ArcGIS.Core.Data.FeatureClass"/>), 
-    /// you can rest assured that the garbage collector will properly dispose of the unmanaged resources during 
-    /// finalization.  However, there are certain workflows that require a <b>deterministic</b> finalization of the 
-    /// <see cref="ArcGIS.Core.Data.Geodatabase"/>.  Consider the case of a file geodatabase that needs to be deleted 
+    /// While it is true classes that are derived from the <see cref="ArcGIS.Core.CoreObjectsBase"/> super class
+    /// consumes native resources (e.g., <see cref="ArcGIS.Core.Data.Geodatabase"/> or <see cref="ArcGIS.Core.Data.FeatureClass"/>),
+    /// you can rest assured that the garbage collector will properly dispose of the unmanaged resources during
+    /// finalization.  However, there are certain workflows that require a <b>deterministic</b> finalization of the
+    /// <see cref="ArcGIS.Core.Data.Geodatabase"/>.  Consider the case of a file geodatabase that needs to be deleted
     /// on the fly at a particular moment.  Because of the <b>indeterministic</b> nature of garbage collection, we can't
-    /// count on the garbage collector to dispose of the Geodatabase object, thereby removing the <b>lock(s)</b> at the  
-    /// moment we want. To ensure a deterministic finalization of important native resources such as a 
-    /// <see cref="ArcGIS.Core.Data.Geodatabase"/> or <see cref="ArcGIS.Core.Data.FeatureClass"/>, you should declare 
-    /// and instantiate said objects in a <b>using</b> statement.  Alternatively, you can achieve the same result by 
+    /// count on the garbage collector to dispose of the Geodatabase object, thereby removing the <b>lock(s)</b> at the
+    /// moment we want. To ensure a deterministic finalization of important native resources such as a
+    /// <see cref="ArcGIS.Core.Data.Geodatabase"/> or <see cref="ArcGIS.Core.Data.FeatureClass"/>, you should declare
+    /// and instantiate said objects in a <b>using</b> statement.  Alternatively, you can achieve the same result by
     /// putting the object inside a try block and then calling Dispose() in a finally block.
     /// </para>
     /// <para>
-    /// In general, you should always call Dispose() on the following types of objects: 
+    /// In general, you should always call Dispose() on the following types of objects:
     /// </para>
     /// <para>
     /// - Those that are derived from <see cref="ArcGIS.Core.Data.Datastore"/> (e.g., <see cref="ArcGIS.Core.Data.Geodatabase"/>).
@@ -68,13 +68,18 @@ namespace DataTools
     /// </remarks>
     public class SQLServerFunctions
     {
+
+        #region Fields
+
         private readonly Task _initializeTask;
 
-        readonly string _sdeFileName;
-        List<String> _tableNames;
-        List<String> _fieldNames;
+        private readonly string _sdeFileName;
+        private List<String> _tableNames;
+        private List<String> _fieldNames;
 
-        Geodatabase _geodatabase = null;
+        private Geodatabase _geodatabase = null;
+
+        #endregion
 
         #region Constructor
 
@@ -180,7 +185,7 @@ namespace DataTools
                 {
                     // Get the table definition.
                     using TableDefinition tableDefinition = _geodatabase.GetDefinition<TableDefinition>(tableName);
-                    
+
                     // Get the fields in the table and add them to the list.
                     IReadOnlyList<Field> tableFields = tableDefinition.GetFields();
 
@@ -491,7 +496,7 @@ namespace DataTools
         }
         #endregion
 
-        #region FeatureClass
+        #region FeatureClasses
 
         /// <summary>
         /// Check if a feature class exists in the database.
@@ -570,7 +575,7 @@ namespace DataTools
 
         #endregion
 
-        #region Table
+        #region Tables
 
         /// <summary>
         /// Check if a table exists in the database.

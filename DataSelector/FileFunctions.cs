@@ -26,6 +26,14 @@ namespace DataTools
 {
     class FileFunctions
     {
+        #region Constructor
+
+        public FileFunctions()
+        {
+        }
+
+        #endregion
+
         #region Directories
 
         /// <summary>

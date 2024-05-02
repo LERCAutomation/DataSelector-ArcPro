@@ -40,8 +40,13 @@ namespace DataTools
 {
     class MapFunctions
     {
+
+        #region Fields
+
         Map _map;
         MapView _mapView;
+
+        #endregion
 
         #region Constructor
 
@@ -139,6 +144,28 @@ namespace DataTools
             }
         }
 
+        #endregion
+
+        #region Layers
+
+        internal Layer FindLayer(String layerName)
+        {
+            //Finds layers by name and returns a read only list of Layers
+            IReadOnlyList<Layer> layers = _map.FindLayers(layerName, true);
+
+            while (layers.Count > 0)
+            {
+                Layer layer = layers.First();
+
+                if (layer.Map.Name == _map.Name)
+                    return layer;
+            }
+
+            return null;
+        }
+
+        #endregion
+
         #region Symbology
 
         public async Task<bool> ApplySymbologyFromLayerFileAsync(string layerName, string layerFile)
@@ -182,22 +209,6 @@ namespace DataTools
 
         #endregion
 
-        internal Layer FindLayer(String layerName)
-        {
-            //Finds layers by name and returns a read only list of Layers
-            IReadOnlyList<Layer> layers = _map.FindLayers(layerName, true);
-
-            while (layers.Count > 0)
-            {
-                Layer layer = layers.First();
-
-                if (layer.Map.Name == _map.Name)
-                    return layer;
-            }
-
-            return null;
-        }
-
         //    public IMxDocument GetIMXDocument()
         //    {
         //        ESRI.ArcGIS.ArcMapUI.IMxDocument mxDocument = ((ESRI.ArcGIS.ArcMapUI.IMxDocument)(thisApplication.Document));
@@ -222,8 +233,6 @@ namespace DataTools
         //        IMxDocument theDoc = GetIMXDocument();
         //        theDoc.CurrentContentsView.Refresh(null);
         //    }
-
-        #endregion
     }
 
     class ArcGISFunctions
@@ -1041,12 +1050,12 @@ namespace DataTools
         //            pLayer = pLayers.Next();
         //        }
         //        return null;
-        //    }      
+        //    }
 
         //    public bool MoveToGroupLayer(string theGroupLayerName, ILayer aLayer,  bool messages = false)
         //    {
         //        bool blExists = false;
-        //        IGroupLayer myGroupLayer = new GroupLayer(); 
+        //        IGroupLayer myGroupLayer = new GroupLayer();
         //        // Does the group layer exist?
         //        if (GroupLayerExists(theGroupLayerName))
         //        {
@@ -1459,7 +1468,7 @@ namespace DataTools
         //        if (isSpatial)
         //        {
 
-        //            IFeatureClass myFC = GetFeatureClass(filePath, fileName, true); 
+        //            IFeatureClass myFC = GetFeatureClass(filePath, fileName, true);
         //            myCurs = (ICursor)myFC.Search(null, false);
         //            fldsFields = myFC.Fields;
         //        }
