@@ -1,60 +1,35 @@
-﻿using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.UtilityNetwork;
-using ArcGIS.Desktop.Framework;
+﻿using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using DataTools;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Text.RegularExpressions;
-
-using static System.Net.Mime.MediaTypeNames;
-using System.IO;
-using System.Linq;
-using System.Xml.Linq;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Data.SqlClient;
-using System.Windows.Controls;
-using System.Collections.ObjectModel;
-using System.Data.SqlTypes;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.IO;
+using System.Linq;
 using System.Text;
-using ArcGIS.Desktop.Core.Geoprocessing;
-using ArcGIS.Core.Data.UtilityNetwork.Trace;
-using ActiproSoftware.Windows.Data;
-using ArcGIS.Desktop.Core;
-using ArcGIS.Desktop.Mapping;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Windows.Input;
+using System.Text.RegularExpressions;
+using System.Windows.Media;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 
 namespace DataSelector.UI
 {
-    class WindowMainViewModel : ViewModelBase, INotifyPropertyChanged
+    internal class PaneHeader2ViewModel : PanelViewModelBase, INotifyPropertyChanged
     {
 
         #region Fields
 
-        //private List<string> _availableXMLFiles;
-        //private String _selectedXMLProfile;
+        private DockpaneMainViewModel _dockPane;
 
         private string _sdeFileName;
 
-        private String _columnsText;
-        private String _whereText;
-        private String _groupByText;
-        private String _orderByText;
-        private ObservableCollection<String> _tablesList;
-        private String _selectedTable;
-        private List<String> _outputFormats;
-        private String _selectedOutputFormat;
-        private bool _clearLogFile;
-        private bool _setSymbology;
+        private bool _tableListLoading;
+
         private string _layerLocation;
-        private String _windowStatus;
         private string _logFile;
 
         string _includeWildcard;
@@ -64,39 +39,30 @@ namespace DataSelector.UI
 
         private String _queryName;
 
-        private ICommand _saveCommand;
-        private ICommand _loadCommand;
-        private ICommand _okCommand;
-        private ICommand _cancelCommand;
-        private ICommand _loadColumnsCommand;
-
         long _tableCount = 0;
         long _polyCount = 0;
         long _pointCount = 0;
 
-        Task<List<String>> _columnsTask;
-
         private String _displayName = "DataSelector";
 
-        private System.Windows.Forms.Cursor _windowCursor = System.Windows.Forms.Cursors.Arrow;
-
         private SelectorToolConfig _toolConfig;
-
         private SQLServerFunctions _sqlFunctions;
         private ArcGISFunctions _gisFunctions;
         private MapFunctions _mapFunctions;
-
-
-        Task _initialise;
 
         #endregion
 
         #region ViewModelBase Members
 
-        public string DisplayName
+        //public override string DisplayName
+        //{
+        //    get { return "Select XML Profile"; }
+        //}
+
+        public override string DisplayName
         {
             get { return _displayName; }
-            set { _displayName = value; }
+            //set { _displayName = value; }
         }
 
         public string WindowTitle
@@ -110,25 +76,19 @@ namespace DataSelector.UI
             }
         }
 
-        public System.Windows.Forms.Cursor WindowCursor
-        {
-            get
-            {
-                return _windowCursor;
-            }
-        }
-
         #endregion
 
         #region Creator
 
         /// <summary>
-        /// Initialise the window properties.
+        /// Initialise the query pane.
         /// </summary>
         /// <param name="xmlFilesList"></param>
         /// <param name="defaultXMLFile"></param>
-        public WindowMainViewModel(SelectorToolConfig configFile)
+        public PaneHeader2ViewModel(DockpaneMainViewModel dockPane, SelectorToolConfig configFile)
         {
+            _dockPane = dockPane;
+
             if (configFile == null) return;
 
             _toolConfig = configFile;
@@ -144,8 +104,8 @@ namespace DataSelector.UI
             if (!FileFunctions.FileExists(_sdeFileName))
             {
                 MessageBox.Show("ArcSDE connection file " + _sdeFileName + " not found. Cannot load Data Selector.", "DataSelector", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                //blOpenForm = false;
-                // Close the form.
+                _sdeConnected = false;
+                return;
             }
 
             // Open an connection to SQL Server
@@ -158,9 +118,11 @@ namespace DataSelector.UI
             catch (Exception ex)
             {
                 MessageBox.Show("Cannot open ArcSDE connection " + _sdeFileName + ". Error is " + ex.Message, "DataSelector", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                //blOpenForm = false;
-                // Close the form.
+                _sdeConnected = false;
+                return;
             }
+
+            _sdeConnected = true;
 
             _sqlFunctions = new(_sdeFileName);
             _gisFunctions = new();
@@ -188,15 +150,9 @@ namespace DataSelector.UI
 
         #endregion
 
-        #region RequestClose
-
-        public delegate void RequestCloseEventHandler();
-
-        public event RequestCloseEventHandler RequestClose;
-
-        #endregion
-
         #region Ok Command
+
+        private ICommand _okCommand;
 
         /// <summary>
         /// Create Ok button command
@@ -292,22 +248,18 @@ namespace DataSelector.UI
         /// <value></value>
         /// <returns></returns>
         /// <remarks></remarks>
-        private static bool CanOk { get { return true; } }
+        public static bool CanOk { get { return true; } }
 
         private async Task<bool> ExecuteSelectionAsync(string userID)
         {
             // Save the parameters.
             string tableName = SelectedTable;
-            string columnNames = ColumnsText.Replace("\r\n", " ");
-            string whereClause = WhereText.Replace("\r\n", " ");
-            string groupClause = GroupByText.Replace("\r\n", " ");
-            string orderClause = OrderByText.Replace("\r\n", " ");
+            string columnNames = ColumnsText == null ? "" : ColumnsText.Replace("\r\n", " ");
+            string whereClause = WhereText == null ? "" : WhereText.Replace("\r\n", " ");
+            string groupClause = GroupByText == null ? "" : GroupByText.Replace("\r\n", " ");
+            string orderClause = OrderByText == null ? "" : OrderByText.Replace("\r\n", " ");
             string outputFormat = SelectedOutputFormat;
             string outputFile;
-
-            // Set the window status.
-            _windowStatus = "Executing selection ...";
-            OnPropertyChanged(nameof(WindowStatus));
 
             FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
             FileFunctions.WriteLine(_logFile, "Process started");
@@ -353,7 +305,7 @@ namespace DataSelector.UI
             if (outputFile == null)
             {
                 // User has pressed Cancel. Bring original menu to the front.
-                MessageBox.Show("Please select an output file");
+                //MessageBox.Show("Please select an output file");
 
                 //myArcMapFuncs.ToggleDrawing();
                 //myArcMapFuncs.ToggleTOC();
@@ -513,49 +465,116 @@ namespace DataSelector.UI
 
         #endregion
 
-        #region Cancel Command
+        #region Controls Enabled
 
         /// <summary>
-        /// Create Cancel button command
+        /// Is the tables list is enabled
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        public ICommand CancelCommand
+        public bool TablesListEnabled
         {
             get
             {
-                if (_cancelCommand == null)
-                {
-                    Action<object> cancelAction = new(CancelCommandClick);
-                    _cancelCommand = new RelayCommand(cancelAction, param => CanCancel);
-                }
-                return _cancelCommand;
+                return (!_tableListLoading && _tablesList != null);
             }
         }
 
         /// <summary>
-        /// Handles event when Cancel button is clicked
+        /// Is the load columns hidden button is enabled
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
-        private void CancelCommandClick(object param)
+        public bool LoadColumnsEnabled
         {
-            // Close the main window.
-            this.RequestClose();
+            get
+            {
+                return (_tablesList != null)
+                    && (_selectedTable != null);
+            }
         }
 
         /// <summary>
-        /// Can the Cancel button be pressed?
+        /// If the ok command buttons is enabled
+        /// </summary>
+        public bool OkButtonEnabled
+        {
+            get
+            {
+                return (_tablesList != null)
+                    && (_selectedTable != null)
+                    && (!String.IsNullOrEmpty(ColumnsText));
+            }
+        }
+
+        /// <summary>
+        /// If the other command buttons are enabled
+        /// </summary>
+        public bool OtherButtonsEnabled
+        {
+            get
+            {
+                return (_tablesList != null);
+            }
+        }
+
+        #endregion
+
+        #region Cancel Command
+
+        private ICommand _clearCommand;
+
+        /// <summary>
+        /// Create Clear button command
         /// </summary>
         /// <value></value>
         /// <returns></returns>
         /// <remarks></remarks>
-        private static bool CanCancel { get { return true; } }
+        public ICommand ClearCommand
+        {
+            get
+            {
+                if (_clearCommand == null)
+                {
+                    Action<object> clearAction = new(ClearCommandClick);
+                    _clearCommand = new RelayCommand(clearAction, param => CanClear);
+                }
+                return _clearCommand;
+            }
+        }
+
+        /// <summary>
+        /// Handles event when Clear button is clicked
+        /// </summary>
+        /// <param name="param"></param>
+        /// <remarks></remarks>
+        private void ClearCommandClick(object param)
+        {
+            // Clear all of the fields.
+            ColumnsText = null;
+            SelectedTable = null;
+            WhereText = null;
+            GroupByText = null;
+            OrderByText = null;
+
+            // Update the fields and buttons in the form.
+            OnPropertyChanged(nameof(ColumnsText));
+            OnPropertyChanged(nameof(SelectedTable));
+            OnPropertyChanged(nameof(WhereText));
+            OnPropertyChanged(nameof(GroupByText));
+            OnPropertyChanged(nameof(OrderByText));
+            OnPropertyChanged(nameof(OkButtonEnabled));
+        }
+
+        /// <summary>
+        /// Can the Clear button be pressed?
+        /// </summary>
+        /// <value></value>
+        /// <returns></returns>
+        /// <remarks></remarks>
+        private static bool CanClear { get { return true; } }
 
         #endregion
 
         #region Save Command
+
+        private ICommand _saveCommand;
 
         /// <summary>
         /// Create Save button command
@@ -635,17 +654,13 @@ namespace DataSelector.UI
                 }
                 else // User pressed Cancel.
                 {
-                    MessageBox.Show("Please select an output file.", "Save query", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //MessageBox.Show("Please select an output file.", "Save query", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
             }
 
             await Task.Run(() =>
             {
-                // Set the window status.
-                _windowStatus = "Saving query ...";
-                OnPropertyChanged(nameof(WindowStatus));
-
                 // Save the query name ready for future saves.
                 _queryName = FileFunctions.GetFileName(saveFileName);
 
@@ -669,10 +684,6 @@ namespace DataSelector.UI
                 qryFile.Dispose();
             });
 
-            // Reset the window status.
-            _windowStatus = null;
-            OnPropertyChanged(nameof(WindowStatus));
-
             return true;
         }
 
@@ -687,6 +698,8 @@ namespace DataSelector.UI
         #endregion
 
         #region Load Command
+
+        private ICommand _loadCommand;
 
         /// <summary>
         /// Create Load button command
@@ -706,6 +719,7 @@ namespace DataSelector.UI
                 return _loadCommand;
             }
         }
+
 
         /// <summary>
         /// Handles event when Load button is clicked
@@ -741,10 +755,6 @@ namespace DataSelector.UI
             {
                 await Task.Run(() =>
                 {
-                    // Set the window status.
-                    _windowStatus = "Loading query ...";
-                    OnPropertyChanged(nameof(WindowStatus));
-
                     // Clear the form.
                     _columnsText = "";
                     _whereText = "";
@@ -791,25 +801,18 @@ namespace DataSelector.UI
                     qryFile.Close();
                     qryFile.Dispose();
 
-                    // Update the fields in the form.
+                    // Update the fields and buttons in the form.
                     OnPropertyChanged(nameof(ColumnsText));
                     OnPropertyChanged(nameof(WhereText));
                     OnPropertyChanged(nameof(GroupByText));
                     OnPropertyChanged(nameof(OrderByText));
+                    OnPropertyChanged(nameof(OkButtonEnabled));
                 });
-
-                // Reset the window status.
-                _windowStatus = null;
-                OnPropertyChanged(nameof(WindowStatus));
 
                 return true;
             }
             else
             {
-                // Reset the window status.
-                _windowStatus = null;
-                OnPropertyChanged(nameof(WindowStatus));
-
                 return false;
             }
         }
@@ -824,7 +827,60 @@ namespace DataSelector.UI
 
         #endregion
 
+        #region TablesList
+
+        private ICommand _refreshCommand;
+
+        public ICommand RefreshTablesListCommand
+        {
+            get
+            {
+                if (_refreshCommand == null)
+                {
+                    Action<object> refreshAction = new(RefreshTablesListCommandClick);
+                    _refreshCommand = new RelayCommand(refreshAction, param => CanRefreshTablesList);
+                }
+                return _refreshCommand;
+            }
+        }
+
+        /// <summary>
+        /// Handles event when refresh tables list button is clicked
+        /// </summary>
+        /// <param name="param"></param>
+        /// <remarks></remarks>
+        private async void RefreshTablesListCommandClick(object param)
+        {
+            // Clear the tables list.
+            _tablesList = null;
+
+            // Update the fields and buttons in the form.
+            OnPropertyChanged(nameof(TablesList));
+            OnPropertyChanged(nameof(TablesListEnabled));
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
+            OnPropertyChanged(nameof(OkButtonEnabled));
+            OnPropertyChanged(nameof(OtherButtonsEnabled));
+
+            await GetTableNames();
+
+            //// Inform the user the load was successful.
+            //if (loaded)
+            //    MessageBox.Show("Query loaded.", "Load query", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        /// <summary>
+        /// Can the refresh tables list button be pressed?
+        /// </summary>
+        /// <value></value>
+        /// <returns></returns>
+        /// <remarks></remarks>
+        private static bool CanRefreshTablesList { get { return true; } }
+
+        #endregion
+
         #region LoadColumns Command
+
+        private ICommand _loadColumnsCommand;
 
         /// <summary>
         /// Create LoadColumns button command
@@ -867,6 +923,18 @@ namespace DataSelector.UI
 
         #region Properties
 
+        private bool _sdeConnected;
+
+        public bool SDEConnected
+        {
+            get
+            {
+                return _sdeConnected;
+            }
+        }
+
+        private String _columnsText;
+
         /// <summary>
         ///
         /// </summary>
@@ -879,8 +947,13 @@ namespace DataSelector.UI
             set
             {
                 _columnsText = value;
+
+                // Update the fields and buttons in the form.
+                OnPropertyChanged(nameof(OkButtonEnabled));
             }
         }
+
+        private String _whereText;
 
         /// <summary>
         ///
@@ -891,11 +964,10 @@ namespace DataSelector.UI
             {
                 return _whereText;
             }
-            set
-            {
-                _whereText = value;
-            }
+            set => SetProperty(ref _whereText, value);
         }
+
+        private String _groupByText;
 
         /// <summary>
         ///
@@ -906,11 +978,10 @@ namespace DataSelector.UI
             {
                 return _groupByText;
             }
-            set
-            {
-                _groupByText = value;
-            }
+            set => SetProperty(ref _groupByText, value);
         }
+
+        private String _orderByText;
 
         /// <summary>
         ///
@@ -921,11 +992,10 @@ namespace DataSelector.UI
             {
                 return _orderByText;
             }
-            set
-            {
-                _orderByText = value;
-            }
+            set => SetProperty(ref _orderByText, value);
         }
+
+        private ObservableCollection<String> _tablesList;
 
         public ObservableCollection<String> TablesList
         {
@@ -934,6 +1004,8 @@ namespace DataSelector.UI
                 return _tablesList;
             }
         }
+
+        private String _selectedTable;
 
         public String SelectedTable
         {
@@ -944,21 +1016,30 @@ namespace DataSelector.UI
             set
             {
                 _selectedTable = value;
+
+                // Update the fields and buttons in the form.
+                OnPropertyChanged(nameof(OkButtonEnabled));
             }
+
+            //set => SetProperty(ref _selectedTable, value);
         }
 
-        public String WindowStatus
+        public ImageSource CmdRefreshImg
         {
             get
             {
-                return _windowStatus;
+                var imageSource = System.Windows.Application.Current.Resources["GenericRefresh16"] as ImageSource;
+                return imageSource;
             }
         }
 
+        #endregion
+
+        #region Methods
+
         /// <summary>
-        /// Called on double-click of the TablesList. The columns belonging
-        /// to the table name that was double clicked are filled in to the
-        /// Columns textbox.
+        /// Called on double-click of the Columns textbox. The columns belonging
+        /// to the selected table name are filled in to the Columns textbox.
         /// </summary>
         /// <param name="selectedTable"></param>
         /// <returns></returns>
@@ -974,10 +1055,6 @@ namespace DataSelector.UI
                         return; //User clicked by accident; leave routine.
                 }
 
-                // Set the window status.
-                _windowStatus = "Getting table names ...";
-                OnPropertyChanged(nameof(WindowStatus));
-
                 // Get the field names and wait for the task to finish.
                 List<String> columnsList = await _sqlFunctions.GetFieldNamesListAsync(SelectedTable);
 
@@ -992,14 +1069,13 @@ namespace DataSelector.UI
                 // Replace the text box value with the field names.
                 _columnsText = columnNamesText;
 
-                // Update the field in the form.
+                // Update the fields and buttons in the form.
                 OnPropertyChanged(nameof(ColumnsText));
-
-                // Reset the window status
-                _windowStatus = null;
-                OnPropertyChanged(nameof(WindowStatus));
+                OnPropertyChanged(nameof(OkButtonEnabled));
             }
         }
+
+        private List<String> _outputFormats;
 
         public List<String> OutputFormats
         {
@@ -1008,6 +1084,8 @@ namespace DataSelector.UI
                 return _outputFormats;
             }
         }
+
+        private String _selectedOutputFormat;
 
         public String SelectedOutputFormat
         {
@@ -1021,6 +1099,8 @@ namespace DataSelector.UI
             }
         }
 
+        private bool _clearLogFile;
+
         public bool ClearLogFile
         {
             get
@@ -1032,6 +1112,8 @@ namespace DataSelector.UI
                 _clearLogFile = value;
             }
         }
+
+        private bool _setSymbology;
 
         public bool SetSymbology
         {
@@ -1052,35 +1134,58 @@ namespace DataSelector.UI
         /// <summary>
         /// Get a list of the table names from the SQL Server.
         /// </summary>
-        public async void GetTableNames()
+        public async Task GetTableNames()
         {
-            _windowStatus = "Getting table names ...";
-            OnPropertyChanged(nameof(WindowStatus));
+            // Indicate table is loading.
+            _tableListLoading = true;
 
-            //
-            Task getTableNamesTask = _sqlFunctions.GeodatabaseGetTableNamesAsync();
+            // Clear the tables list.
+            _tablesList = new();
+            _tablesList.Add("Loading tables ...");
+            SelectedTable = "Loading tables ...";
+            OnPropertyChanged(nameof(TablesList));
+            OnPropertyChanged(nameof(SelectedTable));
+
+            // Get the full list of feature classess and tables from SQL Server.
+            Task getTableNamesTask = _sqlFunctions.GetTableNamesAsync();
             await getTableNamesTask;
 
+            // Save the list of tables returned from SQL Server.
             List<String> tabList = _sqlFunctions.TableNames;
 
+            // Get the include and exclude wildcard settings.
             string includeWC = String.Format("{0}.{1}", _defaultSchema, _includeWildcard);
             string excludeWC = String.Format("{0}.{1}", _defaultSchema, _excludeWildcard);
 
-            // Get the SQL table names and add them to a list.
+            // Filter the SQL table names and add them to a list.
             ObservableCollection<String> tablesList = new();
             List<string> tableList = FilterTableNames(tabList, includeWC, excludeWC, false);
             foreach (string strItem in tableList)
             {
-                //_tablesList.Add(strItem);
                 tablesList.Add(strItem);
             }
 
-            //_tablesList = new ObservableCollection<string>(_tablesList.OrderBy(t => t));
+            // Set the tables list in sort order.
             _tablesList = new(tablesList.OrderBy(t => t));
-            OnPropertyChanged(nameof(TablesList));
 
-            _windowStatus = null;
-            OnPropertyChanged(nameof(WindowStatus));
+            // Indicate table has finished loading.
+            _tableListLoading = false;
+
+            // Update the fields and buttons in the form.
+            OnPropertyChanged(nameof(TablesList));
+            OnPropertyChanged(nameof(TablesListEnabled));
+
+            // Select the first item in the list if there is only one.
+            if (_tablesList.Count() == 1)
+                SelectedTable = _tablesList[0];
+            else
+                SelectedTable = null;
+
+            OnPropertyChanged(nameof(SelectedTable));
+
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
+            OnPropertyChanged(nameof(OkButtonEnabled));
+            OnPropertyChanged(nameof(OtherButtonsEnabled));
         }
 
         /// <summary>

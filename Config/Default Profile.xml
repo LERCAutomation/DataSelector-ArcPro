@@ -26,12 +26,12 @@ as a spreadsheet.
 
   <!-- The existing file location where log files will be saved with output messages -->
   <LogFilePath>
-	<value>D:\GitHub\DataSelector-ArcPro\Logfiles</value>
+	<value>D:\GitHub\DataSelector-ArcPro-DockPane\Logfiles</value>
   </LogFilePath>
 
   <!-- The location of the SDE file that specifies which SQL Server database to connect to -->
   <FileDSN>
-	<value>D:\GitHub\DataSelector-ArcPro\Config\NBNExtract.sde</value>
+	<value>D:\GitHub\DataSelector-ArcPro-DockPane\Config\NBNExtract.sde</value>
   </FileDSN>
 
   <!-- Connection string for ADO connection (to allow stored procedures to be run with parameters) -->
@@ -53,7 +53,7 @@ as a spreadsheet.
 
   <!-- The existing file location where queries will be saved and loaded by default -->
   <DefaultQueryPath>
-	<value>D:\GitHub\DataSelector-ArcPro\Queries\</value>
+	<value>D:\GitHub\DataSelector-ArcPro-DockPane\Queries\</value>
   </DefaultQueryPath>
 
   <!-- The default format of the output files to be created -->

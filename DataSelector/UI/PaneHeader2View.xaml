@@ -1,0 +1,304 @@
+﻿<UserControl x:Class="DataSelector.UI.PaneHeader2View"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:DataSelector.UI" d:DataContext="{d:DesignInstance Type=local:PaneHeader2ViewModel}"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <DockPanel Width="Auto"
+            Margin="6,0,6,6"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Top"
+            Cursor="{Binding WindowCursor}">
+
+        <AdornerDecorator>
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition MinWidth="300" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Name="GridColumns" Grid.Row="0" Margin="0,4,0,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="150" />
+                        </Grid.RowDefinitions>
+
+                        <Label Name="LabelColumns"
+                            Content="Select:"
+                            Grid.Row="0"
+                            Margin="0,0,0,2"
+                            Padding="0"
+                            VerticalAlignment="Center" />
+                        <TextBox Name="TextColumns"
+                                Grid.Row="1"
+                                Margin="0,0,0,0"
+                                IsEnabled="True"
+                                IsReadOnly="False"
+                                Text="{Binding ColumnsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TextAlignment="Left"
+                                AcceptsReturn="True"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Visible"
+                                MouseDoubleClick="TextColumns_MouseDoubleClick" />
+                    </Grid>
+
+                    <Grid Name="GridTables" Grid.Row="1" Margin="0,0,0,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="28" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="28" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Name="LabelTables"
+                            Content="From:"
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Margin="0,0,0,0"
+                            Padding="0"
+                            VerticalAlignment="Center" />
+                        <ComboBox Name="ComboBoxTables"
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Margin="0,0,0,0"
+                                IsEditable="False"
+                                IsReadOnly="True"
+                                IsEnabled="{Binding Path=TablesListEnabled}"
+                                ItemsSource="{Binding Path=TablesList,
+                                                    Mode=OneWay,
+                                                    UpdateSourceTrigger=PropertyChanged}"
+                                SelectedValue="{Binding Path=SelectedTable}" />
+                        <Button Name="ButtonLoadColumns"
+                            Grid.Row="1"
+                            Margin="0,0,0,0"
+                            IsEnabled="{Binding Path=LoadColumnsEnabled}"
+                            Command="{Binding Path=LoadColumnsCommand}"
+                            IsCancel="False"
+                            Visibility="Hidden">
+                        </Button>
+                        <Button Name="ButtonTablesListRefresh"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Margin="4,0,0,0"
+                                Height="22"
+                                VerticalAlignment="Center"
+                                IsEnabled="{Binding Path=TablesListEnabled}"
+                                Command="{Binding RefreshTablesListCommand}"
+                                Style="{DynamicResource Esri_SmallButton}">
+                                        <Image Source="{Binding CmdRefreshImg}" Width="16" Height="16"/>
+                        </Button>
+                    </Grid>
+
+                    <Grid Name="GridWhere" Grid.Row="2" Margin="0,0,0,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="80" />
+                        </Grid.RowDefinitions>
+
+                        <Label Name="LabelWhere"
+                            Content="Where:"
+                            Grid.Row="0"
+                            Margin="0,0,0,2"
+                            Padding="0"
+                            VerticalAlignment="Center" />
+                        <TextBox Name="TextWhere"
+                                Grid.Row="1"
+                                Margin="0,0,0,0"
+                                IsEnabled="True"
+                                IsReadOnly="False"
+                                Text="{Binding WhereText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TextAlignment="Left"
+                                AcceptsReturn="True"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Visible" />
+                    </Grid>
+
+                    <Grid Name="GridGroupBy" Grid.Row="3" Margin="0,0,0,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="50" />
+                        </Grid.RowDefinitions>
+
+                        <Label Name="LabelGroupBy"
+                            Content="Group By:"
+                            Grid.Row="0"
+                            Margin="0,0,0,2"
+                            Padding="0"
+                            VerticalAlignment="Center" />
+                        <TextBox Name="TextGroupBy"
+                                Grid.Row="1"
+                                Margin="0,0,0,0"
+                                IsEnabled="True"
+                                IsReadOnly="False"
+                                Text="{Binding GroupByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TextAlignment="Left"
+                                AcceptsReturn="True"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Visible" />
+                    </Grid>
+
+                    <Grid Name="GridOrderBy" Grid.Row="4" Margin="0,0,0,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="50" />
+                        </Grid.RowDefinitions>
+
+                        <Label Name="LabelOrderBy"
+                            Content="Order By:"
+                            Grid.Row="0"
+                            Margin="0,0,0,2"
+                            Padding="0"
+                            VerticalAlignment="Center" />
+                        <TextBox Name="TextOrderBy"
+                                Grid.Row="1"
+                                Margin="0,0,0,0"
+                                IsEnabled="True"
+                                IsReadOnly="False"
+                                Text="{Binding OrderByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TextAlignment="Left"
+                                AcceptsReturn="True"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Visible" />
+                    </Grid>
+
+                    <Grid Name="GridOutputFormat" Grid.Row="5" Margin="0,0,0,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="28" />
+                        </Grid.RowDefinitions>
+
+                        <Label Name="LabelOutputFormat"
+                            Content="Output File Format:"
+                            Grid.Row="0"
+                            Margin="0,0,0,0"
+                            Padding="0"
+                            VerticalAlignment="Center" />
+                        <ComboBox Name="ComboBoxOutputFormat"
+                                Grid.Row="1"
+                                Margin="0,0,0,0"
+                                VerticalAlignment="Center"
+                                IsEditable="False"
+                                IsReadOnly="True"
+                                ItemsSource="{Binding Path=OutputFormats,
+                                                    Mode=OneWay,
+                                                    UpdateSourceTrigger=PropertyChanged}"
+                                SelectedValue="{Binding Path=SelectedOutputFormat}" />
+                    </Grid>
+
+                    <Grid Name="GridOptions" Grid.Row="6" Margin="0,4,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="28" />
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox Name="CheckBoxSetSymbology"
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="0,0,2,2"
+                                Padding="0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding SetSymbology, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Label Name="LabelSetSymbology"
+                            Content="Set Default Symbology?"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="2,0,0,2"
+                            Padding="0"
+                            VerticalAlignment="Center" />
+                        <CheckBox Name="CheckBoxClearLogFile"
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Margin="0,2,2,0"
+                                Padding="0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding ClearLogFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Label Name="LabelClearLogFile"
+                            Content="Clear log file?"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="2,2,0,0"
+                            Padding="0"
+                            VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid Name="GridButtons" Grid.Row="7" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="72" />
+                            <ColumnDefinition Width="72" />
+                            <ColumnDefinition Width="72" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="72" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Name="ButtonClear"
+                                Grid.Column="0"
+                                Margin="0,0,2,0"
+                                Command="{Binding Path=ClearCommand}"
+                                IsCancel="False"
+                                IsDefault="False"
+                                IsEnabled="{Binding Path=OtherButtonsEnabled}"
+                                Style="{DynamicResource Esri_SimpleButton}"
+                                TabIndex="2">
+                                _Clear
+                        </Button>
+                        <Button Name="ButtonSave"
+                                Grid.Column="1"
+                                Margin="0,0,2,0"
+                                Command="{Binding Path=SaveCommand}"
+                                IsCancel="False"
+                                IsDefault="False"
+                                IsEnabled="{Binding Path=OtherButtonsEnabled}"
+                                Style="{DynamicResource Esri_SimpleButton}"
+                                TabIndex="2">
+                                _Save
+                        </Button>
+                        <Button Name="ButtonLoad"
+                                Grid.Column="2"
+                                Margin="2,0,0,0"
+                                Command="{Binding Path=LoadCommand}"
+                                IsCancel="False"
+                                IsDefault="False"
+                                IsEnabled="{Binding Path=OtherButtonsEnabled}"
+                                Style="{DynamicResource Esri_SimpleButton}"
+                                TabIndex="1">
+                                _Load
+                        </Button>
+                        <Button Name="ButtonOk"
+                                Grid.Column="4"
+                                Margin="2,0,0,0"
+                                Command="{Binding Path=OkCommand}"
+                                IsCancel="False"
+                                IsDefault="True"
+                                IsEnabled="{Binding Path=OkButtonEnabled}"
+                                Style="{DynamicResource Esri_SimpleButton}"
+                                TabIndex="1">
+                                _OK
+                        </Button>
+                    </Grid>
+                </Grid>
+            </ScrollViewer>
+        </AdornerDecorator>
+    </DockPanel>
+</UserControl>

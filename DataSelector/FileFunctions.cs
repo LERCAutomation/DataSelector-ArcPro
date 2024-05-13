@@ -60,7 +60,7 @@ namespace DataTools
         public static string GetDirectoryName(string fullPath)
         {
             // Check input first.
-            if (fullPath == null) return null;
+            if (String.IsNullOrEmpty(fullPath)) return null;
 
             // Get the directory name.
             FileInfo fileInfo = new(fullPath);

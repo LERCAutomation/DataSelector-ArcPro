@@ -20,7 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Forms;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
+
 //using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 
@@ -105,7 +109,11 @@ namespace DataTools
         public List<String> FieldNames
         {
             get { return _fieldNames; }
-            set { _fieldNames = value; }
+        }
+
+        public bool GeodatabaseFound
+        {
+            get { return (_geodatabase != null); }
         }
 
         #endregion
@@ -116,12 +124,14 @@ namespace DataTools
         /// Get all of the feature class and table names from the geodatabase.
         /// </summary>
         /// <returns></returns>
-        public async Task GeodatabaseGetTableNamesAsync()
+        public async Task GetTableNamesAsync()
         {
-            // Open a connection to the geodatabase if not already open.
-            _geodatabase ??= await OpenGeodatabaseUsingSDEFilePath(_sdeFileName);
-
             _tableNames = new();
+
+            // Open a connection to the geodatabase if not already open.
+            _geodatabase ??= await OpenGeodatabase(_sdeFileName);
+
+            if (_geodatabase == null) return;
 
             await QueuedTask.Run(() =>
             {
@@ -136,7 +146,7 @@ namespace DataTools
                         _tableNames.Add(definition.GetName());
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     // GetDefinitions throws an exception.
                     throw;
@@ -156,7 +166,7 @@ namespace DataTools
                         _tableNames.Add(definition.GetName());
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     // GetDefinitions throws an exception.
                     throw;
@@ -176,9 +186,10 @@ namespace DataTools
             List<string> fieldNames = new();
 
             // Open a connection to the geodatabase if not already open.
-            _geodatabase ??= await OpenGeodatabaseUsingSDEFilePath(_sdeFileName);
+            _geodatabase ??= await OpenGeodatabase(_sdeFileName);
 
-            // Open the SQLServer geodatabase via the .sde connection file.
+            if (_geodatabase == null) return fieldNames;
+
             await QueuedTask.Run(() =>
             {
                 try
@@ -210,14 +221,16 @@ namespace DataTools
         /// <returns></returns>
         public async Task<IReadOnlyList<Field>> GetFieldsAsync(string fullPath)
         {
-            string fileName = FileFunctions.GetFileName(fullPath);
-
             IReadOnlyList<Field> fields = null;
 
-            // Open a connection to the geodatabase if not already open.
-            _geodatabase ??= await OpenGeodatabaseUsingSDEFilePath(_sdeFileName);
+            // Get the file name from the specified path.
+            string fileName = FileFunctions.GetFileName(fullPath);
 
-            // Open the SQLServer geodatabase via the .sde connection file.
+            // Open a connection to the geodatabase if not already open.
+            _geodatabase ??= await OpenGeodatabase(_sdeFileName);
+
+            if (_geodatabase == null) return fields;
+
             await QueuedTask.Run(() =>
             {
                 try
@@ -242,7 +255,7 @@ namespace DataTools
         /// </summary>
         /// <param name="tableName"></param>
         /// <returns></returns>
-        public static async Task<IReadOnlyList<Field>> GetFieldNamesAsync2(string filePath, string fileName)
+        public static async Task<IReadOnlyList<Field>> GetFieldNamesAsync(string filePath, string fileName)
         {
             IReadOnlyList<Field> fields = null;
 
@@ -275,9 +288,9 @@ namespace DataTools
         /// </summary>
         /// <param name="fullPath"></param>
         /// <returns></returns>
-        public static async Task<IReadOnlyList<Field>> GetFieldNamesAsync2(string fullPath)
+        public static async Task<IReadOnlyList<Field>> GetFieldNamesAsync(string fullPath)
         {
-            return await GetFieldNamesAsync2(FileFunctions.GetDirectoryName(fullPath), FileFunctions.GetFileName(fullPath));
+            return await GetFieldNamesAsync(FileFunctions.GetDirectoryName(fullPath), FileFunctions.GetFileName(fullPath));
         }
 
         /// <summary>
@@ -285,9 +298,12 @@ namespace DataTools
         /// </summary>
         /// <param name="sdeFileName"></param>
         /// <returns></returns>
-        public static async Task<Geodatabase> OpenGeodatabaseUsingSDEFilePath(string sdeFileName)
+        public static async Task<Geodatabase> OpenGeodatabase(string sdeFileName)
         {
             Geodatabase geodatabase = null;
+
+            if (!FileFunctions.FileExists(sdeFileName))
+                return geodatabase;
 
             await QueuedTask.Run(() =>
             {
@@ -296,9 +312,14 @@ namespace DataTools
                     // Try and open the geodatabase using the connection file.
                     geodatabase = new Geodatabase(new DatabaseConnectionFile(new Uri(sdeFileName)));
                 }
-                catch (Exception)
+                catch (GeodatabaseNotFoundOrOpenedException ex)
                 {
                     // Geodatabase throws and exception.
+                    //MessageBox.Show("Cannot open ArcSDE connection " + _sdeFileName + ". Error is " + ex.Message, "DataSelector", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //return geodatabase;
+                }
+                catch (Exception ex)
+                {
                     throw;
                 }
             });
@@ -311,14 +332,16 @@ namespace DataTools
         #region ExecuteSQL
 
         /// <summary>
-        /// Execute a raw SQL on the underlying database management system.
+        /// Execute a raw SQL statement on the underlying database management system.
         /// Any SQL is permitted (DDL or DML), but no results can be returned.
         /// </summary>
         /// <param name="sqlStatement"></param>
         public async Task ExecuteSQLOnGeodatabase(string sqlStatement)
         {
             // Open a connection to the geodatabase if not already open.
-            _geodatabase ??= await OpenGeodatabaseUsingSDEFilePath(_sdeFileName);
+            _geodatabase ??= await OpenGeodatabase(_sdeFileName);
+
+            if (_geodatabase == null) return;
 
             await QueuedTask.Run(() =>
             {
@@ -327,7 +350,7 @@ namespace DataTools
                     // Try and execute the SQL statement.
                     DatabaseClient.ExecuteStatement(_geodatabase, sqlStatement);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     // ExecuteStatement throws and exception.
                     throw;
@@ -413,7 +436,9 @@ namespace DataTools
             StreamWriter txtFile = new(outFile, true);
 
             // Open a connection to the geodatabase if not already open.
-            _geodatabase ??= await OpenGeodatabaseUsingSDEFilePath(_sdeFileName);
+            _geodatabase ??= await OpenGeodatabase(_sdeFileName);
+
+            if (_geodatabase == null) return false;
 
             string tabName;
             string fcName;
@@ -483,7 +508,7 @@ namespace DataTools
                     }
                 });
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
                 // logger.Error(exception.Message);
             }
@@ -508,7 +533,9 @@ namespace DataTools
             bool exists = false;
 
             // Open a connection to the geodatabase if not already open.
-            _geodatabase ??= await OpenGeodatabaseUsingSDEFilePath(_sdeFileName);
+            _geodatabase ??= await OpenGeodatabase(_sdeFileName);
+
+            if (_geodatabase == null) return exists;
 
             // Check to see if the feature class is a feature class.
             await QueuedTask.Run(() =>
@@ -543,7 +570,9 @@ namespace DataTools
             long rows = 0;
 
             // Open a connection to the geodatabase if not already open.
-            _geodatabase ??= await OpenGeodatabaseUsingSDEFilePath(_sdeFileName);
+            _geodatabase ??= await OpenGeodatabase(_sdeFileName);
+
+            if (_geodatabase == null) return rows;
 
             // Check to see if the table is a feature class.
             await QueuedTask.Run(() =>
@@ -587,7 +616,9 @@ namespace DataTools
             bool exists = false;
 
             // Open a connection to the geodatabase if not already open.
-            _geodatabase ??= await OpenGeodatabaseUsingSDEFilePath(_sdeFileName);
+            _geodatabase ??= await OpenGeodatabase(_sdeFileName);
+
+            if (_geodatabase == null) return exists;
 
             await QueuedTask.Run(() =>
             {
@@ -621,7 +652,9 @@ namespace DataTools
             long rows = 0;
 
             // Open a connection to the geodatabase if not already open.
-            _geodatabase ??= await OpenGeodatabaseUsingSDEFilePath(_sdeFileName);
+            _geodatabase ??= await OpenGeodatabase(_sdeFileName);
+
+            if (_geodatabase == null) return rows;
 
             // Check to see if the table is a table.
             await QueuedTask.Run(() =>

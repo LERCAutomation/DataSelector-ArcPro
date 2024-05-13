@@ -22,8 +22,6 @@ using System;
 using System.Windows.Forms;
 using System.Xml;
 
-using DataSelector.Properties;
-
 // This configuration file reader defines how the tool behaves at start up:
 // Does it show a dropdown list to choose a configuration file, or does it launch
 // a default profile straight away?
@@ -35,40 +33,55 @@ namespace DataTools
 
         #region Fields
 
-        private bool blChooseConfig;
-        private string strDefaultXML = "DefaultProfile.xml";
+        private static string _toolName;
 
-        private string _xmlFile;
-        private bool _xmlFound;
-        private bool _xmlLoaded;
+        private bool blChooseConfig;
 
         // Initialise components to read XML
-        XmlElement xmlDataSelector;
+        XmlElement xmlToolNode;
 
         #endregion
 
         #region Constructor
 
-        public LaunchConfig(string xmlFile, string toolName)
+        public LaunchConfig(string xmlFolder, string toolName, bool promptFilePath)
         {
+            _toolName = toolName;
             _xmlFound = false;
             _xmlLoaded = true;
+            _selectCancelled = false;
+
+            string xmlFile = xmlFolder + String.Format(@"\{0}.xml", toolName);
 
             // Open and read the app XML file.
             try
             {
-                // If the app XML file path is blank or doesn't exist.
-                if (String.IsNullOrEmpty(xmlFile) || (!FileFunctions.FileExists(xmlFile)))
+                // If the user is to be prompted for a file path.
+                if (promptFilePath)
                 {
-                    // Prompt the user for the correct file path. File name is always the same.
-                    string strFolder = GetConfigFilePath();
-                    if (!String.IsNullOrEmpty(strFolder))
-                        xmlFile = strFolder + String.Format(@"\{0}.xml", toolName);
+                    // Prompt the user for the correct file path.
+                    string xmlFilePath = GetConfigFilePath();
+
+                    if (String.IsNullOrEmpty(xmlFilePath))
+                    {
+                        _selectCancelled = true;
+                        return;
+                    }
+
+                    xmlFolder = xmlFilePath;
+                    xmlFile = xmlFolder + String.Format(@"\{0}.xml", toolName);
+                }
+                // If the app XML file path is blank or doesn't exist.
+                else if (String.IsNullOrEmpty(xmlFile) || !FileFunctions.FileExists(xmlFile))
+                {
+                    _xmlLoaded = false;
+                    return;
                 }
 
                 // Check the app XML file path exists.
                 if (!String.IsNullOrEmpty(xmlFile) && (FileFunctions.FileExists(xmlFile)))
                 {
+                    _xmlFolder = xmlFolder;
                     _xmlFile = xmlFile;
                     _xmlFound = true;
                 }
@@ -97,13 +110,13 @@ namespace DataTools
                 // Get the InitialConfig node (the first node).
                 string strRawText;
                 XmlNode currNode = xmlConfig.DocumentElement.FirstChild;
-                xmlDataSelector = (XmlElement)currNode;
+                xmlToolNode = (XmlElement)currNode;
 
                 // Get the user choice variable.
                 try
                 {
                     blChooseConfig = false;
-                    strRawText = xmlDataSelector["ChooseXML"].InnerText;
+                    strRawText = xmlToolNode["ChooseXML"].InnerText;
                     if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
                     {
                         blChooseConfig = true;
@@ -119,9 +132,9 @@ namespace DataTools
                 // Get the default XML file name.
                 try
                 {
-                    strRawText = xmlDataSelector["DefaultProfile"].InnerText;
+                    strRawText = xmlToolNode["DefaultProfile"].InnerText;
                     if (strRawText != "")
-                        strDefaultXML = strRawText; // If there is an entry; otherwise use the default.
+                        _defaultXML = strRawText; // If there is an entry; otherwise use the default.
                 }
                 catch
                 {
@@ -136,6 +149,8 @@ namespace DataTools
 
         #region Members
 
+        private bool _xmlFound;
+
         /// <summary>
         /// Has the XML file been found.
         /// </summary>
@@ -146,6 +161,8 @@ namespace DataTools
                 return _xmlFound;
             }
         }
+
+        private bool _xmlLoaded;
 
         /// <summary>
         ///  Has the XML file been loaded.
@@ -158,8 +175,23 @@ namespace DataTools
             }
         }
 
+        private string _xmlFolder;
+
         /// <summary>
-        /// Has the XML file been found.
+        /// The XML folder path.
+        /// </summary>
+        public string XMLFolder
+        {
+            get
+            {
+                return _xmlFolder;
+            }
+        }
+
+        private string _xmlFile;
+
+        /// <summary>
+        /// The XML file path.
         /// </summary>
         public string XMLFile
         {
@@ -180,6 +212,8 @@ namespace DataTools
             }
         }
 
+        private string _defaultXML = "DefaultProfile.xml";
+
         /// <summary>
         /// The name of the default XML profile.
         /// </summary>
@@ -187,7 +221,17 @@ namespace DataTools
         {
             get
             {
-                return strDefaultXML;
+                return _defaultXML;
+            }
+        }
+
+        private bool _selectCancelled = false;
+
+        public bool SelectCancelled
+        {
+            get
+            {
+                return _selectCancelled;
             }
         }
 
@@ -201,11 +245,25 @@ namespace DataTools
         /// <returns></returns>
         private static string GetConfigFilePath()
         {
+            //OpenFolderDialog folderDialog = new OpenFolderDialog
+            //{
+            //    Title = "Select folder containing 'DataSelector.xml' file ...",
+            //    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
+            //};
+
+            //if (folderDialog.ShowDialog() == true)
+            //{
+            //    var folderName = folderDialog.FolderName;
+            //    return folderName;
+            //}
+            //else
+            //    return null;
+
             // Create folder dialog.
             FolderBrowserDialog xmlFolder = new FolderBrowserDialog();
 
             // Set the folder dialog title.
-            xmlFolder.Description = "Select folder containing 'DataSelector.xml' file ...";
+            xmlFolder.Description = String.Format("Select folder containing '{0}.xml' file ...", _toolName) ;
             xmlFolder.ShowNewFolderButton = false;
 
             // Show folder dialog.
