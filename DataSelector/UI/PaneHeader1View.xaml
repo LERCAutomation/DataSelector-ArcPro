@@ -39,6 +39,7 @@
                          Height="22"
                          Text="{Binding Path=XMLFolder}"
                          IsReadOnly="True"
+                         TabIndex="0"
                          HorizontalAlignment="Stretch"
                          VerticalAlignment="Center" />
                 <Button Name="ButtonXMLFilePath"
@@ -49,7 +50,9 @@
                         Height="22"
                         Width="26"
                         FontWeight="ExtraBold"
+                        TabIndex="1"
                         VerticalAlignment="Center"
+                        Style="{DynamicResource Esri_SimpleButton}"
                         Content=" ... ">
                     <Button.ToolTip>
                         <ToolTip>
@@ -107,7 +110,7 @@
                                                 UpdateSourceTrigger=PropertyChanged}"
                             SelectedValue="{Binding Path=SelectedXMLProfile,
                                                     ValidatesOnDataErrors=True}"
-                            TabIndex="0" />
+                            TabIndex="2" />
                 <Button Name="ButtonOpenXML"
                         Grid.Column="2"
                         Command="{Binding Path=OpenXMLCommand}"
@@ -117,8 +120,8 @@
                         IsCancel="False"
                         IsDefault="True"
                         IsEnabled="{Binding Path=CanOpenXML}"
-                        Style="{DynamicResource Esri_SmallButton}"
-                        TabIndex="2"
+                        Style="{DynamicResource Esri_SimpleButton}"
+                        TabIndex="3"
                         VerticalAlignment="Center"
                         Content="Open">
                 </Button>

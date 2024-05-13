@@ -8,10 +8,9 @@
              d:DesignHeight="450" d:DesignWidth="800">
 
     <DockPanel Width="Auto"
-            Margin="6,0,6,6"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Top"
-            Cursor="{Binding WindowCursor}">
+                Margin="6,0,6,6"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Top">
 
         <AdornerDecorator>
             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -260,7 +259,7 @@
                                 IsDefault="False"
                                 IsEnabled="{Binding Path=OtherButtonsEnabled}"
                                 Style="{DynamicResource Esri_SimpleButton}"
-                                TabIndex="2">
+                                TabIndex="1">
                                 _Clear
                         </Button>
                         <Button Name="ButtonSave"
@@ -282,7 +281,7 @@
                                 IsDefault="False"
                                 IsEnabled="{Binding Path=OtherButtonsEnabled}"
                                 Style="{DynamicResource Esri_SimpleButton}"
-                                TabIndex="1">
+                                TabIndex="3">
                                 _Load
                         </Button>
                         <Button Name="ButtonOk"
@@ -293,7 +292,7 @@
                                 IsDefault="True"
                                 IsEnabled="{Binding Path=OkButtonEnabled}"
                                 Style="{DynamicResource Esri_SimpleButton}"
-                                TabIndex="1">
+                                TabIndex="4">
                                 _OK
                         </Button>
                     </Grid>

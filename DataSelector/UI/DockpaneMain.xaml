@@ -35,12 +35,12 @@
     </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0" KeyboardNavigation.TabNavigation="Local" Height="26" LastChildFill="False" Margin="5,0,0,0">
-
+<!--
             <controls:BurgerButton DockPanel.Dock="Right"
 				        ToolTip="Options"
 				        PopupMenu="{Binding BurgerButtonPopupMenu}"
                         HorizontalAlignment="Right"/>
-
+-->
             <ListBox x:Name="primaryNavigator" DockPanel.Dock="Left"
                Style="{DynamicResource Esri_ListBoxPanelIndicator}"
                ItemsSource="{Binding PrimaryMenuList}"

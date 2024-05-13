@@ -228,6 +228,8 @@ namespace DataSelector.UI
 
         protected override void OnClick()
         {
+            string uri = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
             // Show the dock pane.
             DockpaneMainViewModel.Show();
         }

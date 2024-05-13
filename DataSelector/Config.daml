@@ -21,14 +21,14 @@
       <groups>
         <!-- comment this out if you have no controls on the Addin tab to avoid
               an empty group-->
-        <group id="DataSelector_Group" caption="Data Tools" appearsOnAddInTab="false">
+        <group id="DataSelector_Group" caption="Data Tools" appearsOnAddInTab="true">
           <!-- host controls within groups -->
           <button refID="DataSelector_btnDataSelectorDockPane" size="large" />
         </group>
       </groups>
       <controls>
         <!-- add your controls here -->
-        <button id="DataSelector_btnDataSelectorDockPane" caption="Data Selector" className="DataSelector.UI.DockpaneMain_ShowButton" loadOnClick="true" smallImage="Images\btnDataSelector.png" largeImage="Images\DataSelector.png">
+        <button id="DataSelector_btnDataSelectorDockPane" caption="Data Selector" className="DataSelector.UI.DockpaneMain_ShowButton" loadOnClick="true" smallImage="DarkImages\AddInDesktop16.png" largeImage="DarkImages\AddInDesktop32.png">
           <tooltip heading="Data Selector tool">Define, load, save and run SQL queries.<disabledText /></tooltip>
         </button>
       </controls>
