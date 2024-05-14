@@ -11,29 +11,48 @@
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
   </AddInInfo>
   <modules>
-    <insertModule id="DataSelector_Module" className="DataSelector" autoLoad="false" caption="Data Selector module">
+    <insertModule id="DataSelector_Module"
+				  className="DataSelector"
+				  autoLoad="true"
+				  caption="Data Selector module">
       <!-- uncomment to have the control hosted on a separate tab-->
       <tabs>
-        <tab id="DataSelector_Tab" caption="Tools" keytip="T">
+        <tab id="DataSelector_Tab"
+			 caption="Tools"
+			 keytip="T">
           <group refID="DataSelector_Group" />
         </tab>
       </tabs>
       <groups>
         <!-- comment this out if you have no controls on the Addin tab to avoid
               an empty group-->
-        <group id="DataSelector_Group" caption="Data Tools" appearsOnAddInTab="true">
+        <group id="DataSelector_Group"
+			   caption="Data Tools"
+			   appearsOnAddInTab="false">
           <!-- host controls within groups -->
-          <button refID="DataSelector_btnDataSelectorDockPane" size="large" />
+          <button refID="DataSelector_btnDataSelectorDockPane"
+				  size="large" />
         </group>
       </groups>
       <controls>
         <!-- add your controls here -->
-        <button id="DataSelector_btnDataSelectorDockPane" caption="Data Selector" className="DataSelector.UI.DockpaneMain_ShowButton" loadOnClick="true" smallImage="DarkImages\AddInDesktop16.png" largeImage="DarkImages\AddInDesktop32.png">
+        <button id="DataSelector_btnDataSelectorDockPane"
+				caption="Data Selector"
+				className="DataSelector.UI.DockpaneMain_ShowButton"
+				loadOnClick="true"
+				smallImage="pack://application:,,,/DataSelector;component/Images/DataSelector16.png"
+				largeImage="pack://application:,,,/DataSelector;component/Images/DataSelector32.png">
           <tooltip heading="Data Selector tool">Define, load, save and run SQL queries.<disabledText /></tooltip>
         </button>
       </controls>
       <dockPanes>
-        <dockPane id="DataSelector_UI_DockpaneMain" hasHelp="true" autoHide="false" caption="Data Selector" className="DataSelector.UI.DockpaneMainViewModel" dock="group" dockWith="esri_core_projectDockPane">
+        <dockPane id="DataSelector_UI_DockpaneMain"
+				  hasHelp="true"
+				  autoHide="false"
+				  caption="Data Selector"
+				  className="DataSelector.UI.DockpaneMainViewModel"
+				  dock="group"
+				  dockWith="esri_core_projectDockPane">
           <content className="DataSelector.UI.DockpaneMainView" />
         </dockPane>
       </dockPanes>

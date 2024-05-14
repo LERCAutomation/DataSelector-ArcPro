@@ -269,8 +269,6 @@ namespace DataSelector.UI
             //myArcMapFuncs.ToggleDrawing();
             //myArcMapFuncs.ToggleTOC();
 
-            //SqlConnection dbConn = mySQLServerFuncs.CreateSQLConnection(myConfig.GetConnectionString());
-
             // Check if there is a geometry field in the returned data
             // and select the stored procedure accordingly
             bool isSpatial = await IsQuerySpatial(tableName, columnNames);
@@ -1024,12 +1022,15 @@ namespace DataSelector.UI
             //set => SetProperty(ref _selectedTable, value);
         }
 
+        private ImageSource _imageRefresh;
+
         public ImageSource CmdRefreshImg
         {
             get
             {
-                var imageSource = System.Windows.Application.Current.Resources["GenericRefresh16"] as ImageSource;
-                return imageSource;
+                if (_imageRefresh == null)
+                    _imageRefresh = System.Windows.Application.Current.Resources["GenericRefresh16"] as ImageSource;
+                return _imageRefresh;
             }
         }
 
@@ -1422,7 +1423,8 @@ namespace DataSelector.UI
         {
             bool success = false;
 
-            string storedProcedureName = "AFSelectSppSubset";
+            // Get the name of the stored procedure to execute selection in SQL Server.
+            string storedProcedureName = _toolConfig.GetSelectStoredProcedure;
 
             // Hard-code the parameters (for testing).
             //schema = "dbo";
@@ -1533,7 +1535,8 @@ namespace DataSelector.UI
             // Set up the SQL command.
             StringBuilder sqlCmd = new();
 
-            string storedProcedureName = "AFClearSppSubset";
+            // Get the name of the stored procedure to clear selection in SQL Server.
+            string storedProcedureName = _toolConfig.GetClearStoredProcedure;
 
             // Build the SQL command to execute the stored procedure.
             sqlCmd = sqlCmd.Append(String.Format("EXECUTE {0}", storedProcedureName));

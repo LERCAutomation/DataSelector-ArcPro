@@ -293,9 +293,11 @@ namespace DataSelector.UI
         /// <remarks></remarks>
         private void OpenXMLCommandClick(object param)
         {
+            // Skip if no profile selected (shouldn't be possible).
             if (SelectedXMLProfile == null)
                 return;
 
+            // Set the full path for the profile file.
             string configFile = _xmlFolder + @"\" + SelectedXMLProfile;
 
             // Check the file (still) exists.
@@ -360,6 +362,18 @@ namespace DataSelector.UI
                 return _xmlFolder;
             }
             set => SetProperty(ref _xmlFolder, value);
+        }
+
+        private ImageSource _imageFolderOpen;
+
+        public ImageSource CmdFolderOpenImg
+        {
+            get
+            {
+                if (_imageFolderOpen == null)
+                    _imageFolderOpen = System.Windows.Application.Current.Resources["FolderOpenState16"] as ImageSource;
+                return _imageFolderOpen;
+            }
         }
 
         #endregion

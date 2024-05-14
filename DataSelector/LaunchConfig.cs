@@ -245,35 +245,26 @@ namespace DataTools
         /// <returns></returns>
         private static string GetConfigFilePath()
         {
-            //OpenFolderDialog folderDialog = new OpenFolderDialog
-            //{
-            //    Title = "Select folder containing 'DataSelector.xml' file ...",
-            //    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
-            //};
-
-            //if (folderDialog.ShowDialog() == true)
-            //{
-            //    var folderName = folderDialog.FolderName;
-            //    return folderName;
-            //}
-            //else
-            //    return null;
-
             // Create folder dialog.
             FolderBrowserDialog xmlFolder = new FolderBrowserDialog();
 
             // Set the folder dialog title.
-            xmlFolder.Description = String.Format("Select folder containing '{0}.xml' file ...", _toolName) ;
+            xmlFolder.Description = String.Format("Select folder containing '{0}.xml' file ...", _toolName);
+            xmlFolder.UseDescriptionForTitle = true;
             xmlFolder.ShowNewFolderButton = false;
 
             // Show folder dialog.
             if (xmlFolder.ShowDialog() == DialogResult.OK)
             {
                 // Return the selected path.
+                xmlFolder.Dispose();
                 return xmlFolder.SelectedPath;
             }
             else
+            {
+                xmlFolder.Dispose();
                 return null;
+            }
         }
 
         #endregion

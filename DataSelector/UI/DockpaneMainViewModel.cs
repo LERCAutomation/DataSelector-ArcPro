@@ -58,9 +58,10 @@ namespace DataSelector.UI
             PrimaryMenuList.Add(new TabControl() { Text = "Profile", Tooltip = "Select XML profile" });
             PrimaryMenuList.Add(new TabControl() { Text = "Query", Tooltip = "Build SQL query" });
 
-            // Load the default XML profile.
+            // Load the default XML profile (or let the user choose a profile.
             _paneH1VM = new PaneHeader1ViewModel(_dockPane);
 
+            // If the default (and only) profile was loaded.
             if (_paneH1VM.XMLLoaded)
             {
                 // Initialise the query pane.
@@ -112,17 +113,6 @@ namespace DataSelector.UI
         public static string DockPaneID
         {
             get => _dockPaneID;
-        }
-
-        /// <summary>
-        /// Text shown near the top of the DockPane.
-        /// </summary>
-        private string _heading = "DataSelector Heading";
-
-        public string Heading
-        {
-            get => _heading;
-            set => SetProperty(ref _heading, value);
         }
 
         /// <summary>
@@ -186,9 +176,11 @@ namespace DataSelector.UI
 
         #region Methods
 
-        public bool InitialiseQueryPane()
+        public async Task<bool> InitialiseQueryPane()
         {
             _paneH2VM = new PaneHeader2ViewModel(_dockPane, _paneH1VM.ToolConfig);
+
+            _paneH2VM.OpenGeodatabase();
 
             if (!_paneH2VM.SDEConnected)
             {

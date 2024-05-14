@@ -22,7 +22,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="76" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="28" />
                 </Grid.ColumnDefinitions>
 
                 <Label Name="LabelXMLFilePath"
@@ -36,7 +36,7 @@
                          Grid.Row="0"
                          Grid.Column="1"
                          Margin="0,0,0,0"
-                         Height="22"
+                         Height="24"
                          Text="{Binding Path=XMLFolder}"
                          IsReadOnly="True"
                          TabIndex="0"
@@ -45,15 +45,13 @@
                 <Button Name="ButtonXMLFilePath"
                         Grid.Row="0"
                         Grid.Column="2"
-                        Command="{Binding Path=SelectXMLPathCommand}"
                         Margin="4,0,0,0"
-                        Height="22"
-                        Width="26"
-                        FontWeight="ExtraBold"
+                        Height="24"
                         TabIndex="1"
                         VerticalAlignment="Center"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        Content=" ... ">
+                        Command="{Binding Path=SelectXMLPathCommand}"
+                        Style="{DynamicResource Esri_SmallButton}">
+                            <Image Source="{Binding CmdFolderOpenImg}" Width="16" Height="16"/>
                     <Button.ToolTip>
                         <ToolTip>
                             <TextBlock Text="Browse to the XML config folder" FontWeight="Normal"></TextBlock>
@@ -102,6 +100,7 @@
                             Grid.Column="1"
                             Margin="0,0,0,0"
                             VerticalAlignment="Center"
+                            Height="24"
                             IsEditable="False"
                             IsReadOnly="True"
                             IsEnabled="{Binding Path=CanSelectXMLProfile}"
@@ -115,7 +114,7 @@
                         Grid.Column="2"
                         Command="{Binding Path=OpenXMLCommand}"
                         Margin="4,0,0,0"
-                        Height="22"
+                        Height="24"
                         Width="60"
                         IsCancel="False"
                         IsDefault="True"

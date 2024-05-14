@@ -11,14 +11,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Config.daml" />
-    <Content Include="DarkImages\AddInDesktop16.png" />
-    <Content Include="DarkImages\AddInDesktop32.png" />
-    <Content Include="Images\DataSelector16.png">
+    <Resource Include="Images\DataSelector16.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-	<Content Include="Images\DataSelector32.png">
+    </Resource>
+	<Resource Include="Images\DataSelector32.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Content>
+	</Resource>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Collections" Version="4.3.0" />

@@ -35,21 +35,19 @@ namespace DataSelector
         #region Fields
 
         // Declare all the variables
-        private string _fileDSN;
-        private string _connectionString;
         private string _logFilePath;
+        private string _fileDSN;
+        private string _selectStoredProcedure;
+        private string _clearStoredProcedure;
         private string _defaultExtractPath;
         private string _defaultQueryPath;
         private string _defaultFormat;
         private string _databaseSchema;
         private string _includeWildcard;
         private string _excludeWildcard;
-        private string _recMax;
         private bool _defaultSetSymbology;
         private string _layerLocation;
-        private string _enableSpatialPlotting; // do not currently need this but keeping for reference.
         private bool _defaultClearLogFile;
-        private int _timeOutSeconds;
 
         private bool _xmlFound;
         private bool _xmlLoaded;
@@ -90,7 +88,7 @@ namespace DataSelector
                 XmlNode currNode = xmlConfig.DocumentElement.FirstChild;
                 xmlDataSelector = (XmlElement)currNode;
 
-                // Get all of the detail into the object
+                // The existing file location where log files will be saved with output messages.
                 try
                 {
                     _logFilePath = xmlDataSelector["LogFilePath"].InnerText;
@@ -101,6 +99,8 @@ namespace DataSelector
                     _xmlLoaded = false;
                     return;
                 }
+
+                // The location of the SDE file that specifies which SQL Server database to connect to.
                 try
                 {
                     _fileDSN = xmlDataSelector["FileDSN"].InnerText;
@@ -112,49 +112,31 @@ namespace DataSelector
                     return;
                 }
 
+                // Stored procedure to execute selection in SQL Server.
                 try
                 {
-                    _connectionString = xmlDataSelector["ConnectionString"].InnerText;
+                    _selectStoredProcedure = xmlDataSelector["SelectStoredProcedure"].InnerText;
                 }
                 catch
                 {
-                    MessageBox.Show("Could not locate the item 'ConnectionString' in the XML file");
+                    MessageBox.Show("Could not locate the item 'SelectStoredProcedure' in the XML file");
                     _xmlLoaded = false;
                     return;
                 }
 
+                // Stored procedure to clear selection in SQL Server.
                 try
                 {
-                    string strTimeout = xmlDataSelector["TimeoutSeconds"].InnerText;
-                    bool blSuccess;
-
-                    if (strTimeout != "")
-                    {
-
-                        blSuccess = int.TryParse(strTimeout, out _timeOutSeconds);
-                        if (!blSuccess)
-                        {
-                            MessageBox.Show("The value entered for TimeoutSeconds in the XML file is not an integer number");
-                            _xmlLoaded = false;
-                        }
-                        if (_timeOutSeconds < 0)
-                        {
-                            MessageBox.Show("The value entered for TimeoutSeconds in the XML file is negative");
-                            _xmlLoaded = false;
-                        }
-                    }
-                    else
-                    {
-                        _timeOutSeconds = 0; // None given.
-                    }
-
+                    _clearStoredProcedure = xmlDataSelector["ClearStoredProcedure"].InnerText;
                 }
                 catch
                 {
-                    _timeOutSeconds = 0; // We don't really care if it's not in because there's a default anyway.
+                    MessageBox.Show("Could not locate the item 'ClearStoredProcedure' in the XML file");
+                    _xmlLoaded = false;
                     return;
                 }
 
+                // The existing file location where extracts will be saved by default.
                 try
                 {
                     _defaultExtractPath = xmlDataSelector["DefaultExtractPath"].InnerText;
@@ -165,6 +147,8 @@ namespace DataSelector
                     _xmlLoaded = false;
                     return;
                 }
+
+                // The existing file location where queries will be saved and loaded by default.
                 try
                 {
                     _defaultQueryPath = xmlDataSelector["DefaultQueryPath"].InnerText;
@@ -175,6 +159,8 @@ namespace DataSelector
                     _xmlLoaded = false;
                     return;
                 }
+
+                // The default format of the output files to be created.
                 try
                 {
                     _defaultFormat = xmlDataSelector["DefaultFormat"].InnerText;
@@ -185,6 +171,8 @@ namespace DataSelector
                     _xmlLoaded = false;
                     return;
                 }
+
+                // The schema used in the SQL Server database.
                 try
                 {
                     _databaseSchema = xmlDataSelector["DatabaseSchema"].InnerText;
@@ -195,6 +183,9 @@ namespace DataSelector
                     _xmlLoaded = false;
                     return;
                 }
+
+                // The Include wildcard for table names to list all the species tables
+                // in SQL Server that can be selected by the user to extract from.
                 try
                 {
                     _includeWildcard = xmlDataSelector["IncludeWildcard"].InnerText;
@@ -205,6 +196,10 @@ namespace DataSelector
                     _xmlLoaded = false;
                     return;
                 }
+
+                // The Exclude wildcard for table names that should NOT be used
+                // for species tables in SQL Server that can be selected by the
+                // user to extract from.
                 try
                 {
                     _excludeWildcard = xmlDataSelector["ExcludeWildcard"].InnerText;
@@ -215,16 +210,8 @@ namespace DataSelector
                     _xmlLoaded = false;
                     return;
                 }
-                try
-                {
-                    _recMax = xmlDataSelector["RecMax"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'RecMax' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
+
+                // The default for whether the symbology should be set for feature classes or not.
                 try
                 {
                     _defaultSetSymbology = false;
@@ -238,6 +225,8 @@ namespace DataSelector
                     _xmlLoaded = false;
                     return;
                 }
+
+                // The location of layer files.
                 try
                 {
                     _layerLocation = xmlDataSelector["LayerLocation"].InnerText;
@@ -248,15 +237,8 @@ namespace DataSelector
                     _xmlLoaded = false;
                     return;
                 }
-                try
-                {
-                    _enableSpatialPlotting = xmlDataSelector["EnableSpatialPlotting"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'EnableSpatialPlotting' in the XML file");
-                    _xmlLoaded = false;
-                }
+
+                // The default for whether an existing log file should be cleared by default.
                 try
                 {
                     _defaultClearLogFile = false;
@@ -313,19 +295,19 @@ namespace DataSelector
             }
         }
 
-        public string GetConnectionString
+        public string GetSelectStoredProcedure
         {
             get
             {
-                return _connectionString;
+                return _selectStoredProcedure;
             }
         }
 
-        public int GetTimeoutSeconds
+        public string GetClearStoredProcedure
         {
             get
             {
-                return _timeOutSeconds;
+                return _clearStoredProcedure;
             }
         }
 
@@ -385,44 +367,28 @@ namespace DataSelector
             }
         }
 
-        public string GetRecMax
+        public bool GetDefaultSetSymbology
         {
             get
             {
-                return _recMax;
+                return _defaultSetSymbology;
             }
-        }
-
-        public bool GetDefaultSetSymbology
-        {
-        get
-        {
-            return _defaultSetSymbology;
-        }
         }
 
         public string GetLayerLocation
         {
-        get
-        {
-            return _layerLocation;
-        }
-        }
-
-        public string GetEnableSpatialPlotting
-        {
-        get
-        {
-            return _enableSpatialPlotting;
-        }
+            get
+            {
+                return _layerLocation;
+            }
         }
 
         public bool GetDefaultClearLogFile
         {
-        get
-        {
-            return _defaultClearLogFile;
-        }
+            get
+            {
+                return _defaultClearLogFile;
+            }
         }
 
         #endregion
