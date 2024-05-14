@@ -1,27 +1,25 @@
-﻿//// DataSelector is an ArcGIS add-in used to extract biodiversity
-//// information from SQL Server based on any selection criteria.
-////
-//// Copyright © 2016-2017 SxBRC, 2017-2018 TVERC
-////
-//// This file is part of DataSelector.
-////
-//// DataSelector is free software: you can redistribute it and/or modify
-//// it under the terms of the GNU General Public License as published by
-//// the Free Software Foundation, either version 3 of the License, or
-//// (at your option) any later version.
-////
-//// DataSelector is distributed in the hope that it will be useful,
-//// but WITHOUT ANY WARRANTY; without even the implied warranty of
-//// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//// GNU General Public License for more details.
-////
-//// You should have received a copy of the GNU General Public License
-//// along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
-
+﻿// The Data tools are a suite of ArcGIS Pro addins used to extract
+// and manage biodiversity information from ArcGIS Pro and SQL Server
+// based on pre-defined or user specified criteria.
+//
+// Copyright © 2024 Andy Foy Consulting.
+//
+// This file is part of DataSelector.
+//
+// DataSelector is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// DataSelector is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
 
 //using ArcGIS.Core.Geometry;
-
-
 
 //using System;
 //using System.IO;
@@ -279,7 +277,7 @@
 //        private static List<DatastoreCategory> LstDatastoreTypes = new List<DatastoreCategory>();
 
 //        /// <summary>
-//        /// List of all Datastore Types supported 
+//        /// List of all Datastore Types supported
 //        /// </summary>
 //        public static List<DatastoreCategory> AllDatastoreCategories
 //        {
@@ -611,7 +609,7 @@
 //                }
 //            });
 //        }
-        
+
 //        public static async Task ObtainingDefinitionsFromGeodatabase(string connectionFile)
 //        {
 

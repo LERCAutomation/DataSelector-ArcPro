@@ -1,7 +1,8 @@
-﻿// DataSelector is an ArcGIS add-in used to extract biodiversity
-// information from SQL Server based on any selection criteria.
+﻿// The Data tools are a suite of ArcGIS Pro addins used to extract
+// and manage biodiversity information from ArcGIS Pro and SQL Server
+// based on pre-defined or user specified criteria.
 //
-// Copyright © 2016-2017 SxBRC, 2017-2018 TVERC
+// Copyright © 2024 Andy Foy Consulting.
 //
 // This file is part of DataSelector.
 //
@@ -22,12 +23,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
 using System.Text.RegularExpressions;
 
 namespace DataTools
 {
-
     /// Original code from:
     /// http://www.codeproject.com/Articles/11556/Converting-Wildcards-to-Regexes<summary>
     /// Represents a wildcard running on the
@@ -74,6 +73,10 @@ namespace DataTools
         #endregion
     }
 
+    /// <summary>
+    /// This class provides a variety of functions to check and modify
+    /// strings.
+    /// </summary>
     public class StringFunctions
     {
 
@@ -176,6 +179,15 @@ namespace DataTools
             return anInputString.Substring(a, anInputString.Length - a);
         }
 
+        /// <summary>
+        /// Replace standard search strings in a supplied text string.
+        /// </summary>
+        /// <param name="RawName"></param>
+        /// <param name="Reference"></param>
+        /// <param name="SiteName"></param>
+        /// <param name="ShortRef"></param>
+        /// <param name="Subref"></param>
+        /// <returns></returns>
         public static string ReplaceSearchStrings(string RawName, string Reference, string SiteName, string ShortRef, string Subref)
         {
             string CleanName = RawName;
@@ -183,6 +195,7 @@ namespace DataTools
             CleanName = CleanName.Replace("%shortref%", ShortRef);
             CleanName = CleanName.Replace("%subref%", Subref);
             CleanName = CleanName.Replace("%sitename%", SiteName);
+
             // Take account of the occurrence of dangling underscores (if no site name was given).
             if (CleanName.Substring(CleanName.Length - 1, 1) == "_")
                 CleanName = CleanName.Substring(0, CleanName.Length - 1);
@@ -321,5 +334,4 @@ namespace DataTools
         #endregion
 
     }
-
 }

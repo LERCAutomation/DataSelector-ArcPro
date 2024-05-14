@@ -28,6 +28,9 @@ using System.Xml;
 
 namespace DataTools
 {
+    /// <summary>
+    /// This class reads the tool XML file and stores the results.
+    /// </summary>
     class LaunchConfig
     {
 

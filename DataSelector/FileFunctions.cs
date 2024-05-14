@@ -1,7 +1,8 @@
-﻿// DataSelector is an ArcGIS add-in used to extract biodiversity
-// information from SQL Server based on any selection criteria.
+﻿// The Data tools are a suite of ArcGIS Pro addins used to extract
+// and manage biodiversity information from ArcGIS Pro and SQL Server
+// based on pre-defined or user specified criteria.
 //
-// Copyright © 2016-2017 SxBRC, 2017-2018 TVERC
+// Copyright © 2024 Andy Foy Consulting.
 //
 // This file is part of DataSelector.
 //
@@ -24,15 +25,11 @@ using System.IO;
 
 namespace DataTools
 {
-    class FileFunctions
+    /// <summary>
+    /// This class provides basic file and folder functions.
+    /// </summary>
+    static class FileFunctions
     {
-        #region Constructor
-
-        public FileFunctions()
-        {
-        }
-
-        #endregion
 
         #region Directories
 

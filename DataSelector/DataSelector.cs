@@ -1,22 +1,26 @@
-﻿using ArcGIS.Core.CIM;
-using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Catalog;
-using ArcGIS.Desktop.Core;
-using ArcGIS.Desktop.Editing;
-using ArcGIS.Desktop.Extensions;
+﻿// The Data tools are a suite of ArcGIS Pro addins used to extract
+// and manage biodiversity information from ArcGIS Pro and SQL Server
+// based on pre-defined or user specified criteria.
+//
+// Copyright © 2024 Andy Foy Consulting.
+//
+// This file is part of DataSelector.
+//
+// DataSelector is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// DataSelector is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
+
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Dialogs;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Layouts;
-using ArcGIS.Desktop.Mapping;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace DataSelector
 {

@@ -1,5 +1,25 @@
-﻿using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
+﻿// The Data tools are a suite of ArcGIS Pro addins used to extract
+// and manage biodiversity information from ArcGIS Pro and SQL Server
+// based on pre-defined or user specified criteria.
+//
+// Copyright © 2024 Andy Foy Consulting.
+//
+// This file is part of DataSelector.
+//
+// DataSelector is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// DataSelector is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
+
+using ArcGIS.Desktop.Framework;
 using DataTools;
 using System;
 using System.Collections.Generic;
@@ -15,6 +35,7 @@ using System.Windows.Input;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
+using ArcGIS.Core.Data;
 
 namespace DataSelector.UI
 {
@@ -108,19 +129,8 @@ namespace DataSelector.UI
                 return;
             }
 
-            // Open an connection to SQL Server
-            //IWorkspace wsSQLWorkspace = null;
-            try
-            {
-                //wsSQLWorkspace = ArcSDEFunctions.OpenArcSDEConnection(sdeFileName);
-                //_ = ArcSDEFunctions.ObtainingDefinitionsFromGeodatabase(sdeFileName);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Cannot open ArcSDE connection " + _sdeFileName + ". Error is " + ex.Message, "DataSelector", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                _sdeConnected = false;
-                return;
-            }
+            // Open the SQL Server geodatabase (don't wait for the response).
+            SQLServerFunctions.OpenGeodatabase(_sdeFileName);
 
             _sdeConnected = true;
 
@@ -1132,6 +1142,12 @@ namespace DataSelector.UI
 
         #region SQL
 
+        public async Task OpenGeodatabase()
+        {
+            // Open a connection to the geodatabase if not already open.
+            Geodatabase geodatabase = await SQLServerFunctions.OpenGeodatabase(_sdeFileName);
+        }
+
         /// <summary>
         /// Get a list of the table names from the SQL Server.
         /// </summary>
@@ -1148,8 +1164,7 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(SelectedTable));
 
             // Get the full list of feature classess and tables from SQL Server.
-            Task getTableNamesTask = _sqlFunctions.GetTableNamesAsync();
-            await getTableNamesTask;
+            await _sqlFunctions.GetTableNamesAsync();
 
             // Save the list of tables returned from SQL Server.
             List<String> tabList = _sqlFunctions.TableNames;
@@ -1182,8 +1197,8 @@ namespace DataSelector.UI
             else
                 SelectedTable = null;
 
+            // Update the fields and buttons in the form.
             OnPropertyChanged(nameof(SelectedTable));
-
             OnPropertyChanged(nameof(LoadColumnsEnabled));
             OnPropertyChanged(nameof(OkButtonEnabled));
             OnPropertyChanged(nameof(OtherButtonsEnabled));

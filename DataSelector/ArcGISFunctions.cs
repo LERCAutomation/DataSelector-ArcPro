@@ -1,7 +1,8 @@
-﻿// DataSelector is an ArcGIS add-in used to extract biodiversity
-// information from SQL Server based on any selection criteria.
+﻿// The Data tools are a suite of ArcGIS Pro addins used to extract
+// and manage biodiversity information from ArcGIS Pro and SQL Server
+// based on pre-defined or user specified criteria.
 //
-// Copyright © 2016-2017 SxBRC, 2017-2018 TVERC
+// Copyright © 2024 Andy Foy Consulting.
 //
 // This file is part of DataSelector.
 //
@@ -25,7 +26,6 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-//using ArcGIS.Core.CIM;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -34,17 +34,19 @@ using System.Linq;
 using System.Collections.Generic;
 using ArcGIS.Core.CIM;
 using ArcGIS.Desktop.Framework.Contracts;
-//using ArcGIS.Core.Internal.CIM;
 
 namespace DataTools
 {
+    /// <summary>
+    /// This class provides ArcGIS Pro map functions.
+    /// </summary>
     class MapFunctions
     {
 
         #region Fields
 
-        Map _map;
-        MapView _mapView;
+        Map _activeMap;
+        MapView _activeMapView;
 
         #endregion
 
@@ -54,19 +56,38 @@ namespace DataTools
         public MapFunctions()
         {
             // Get the active map view (if there is one).
-            _mapView = GetActiveMapView();
+            _activeMapView = GetActiveMapView();
 
             // Set the map currently displayed in the active map view.
-            if (_mapView != null)
-                _map = _mapView.Map;
+            if (_activeMapView != null)
+                _activeMap = _activeMapView.Map;
             else
-                _map = null;
+                _activeMap = null;
+        }
+
+        #endregion
+
+        #region Properties
+
+        public string MapName
+        {
+            get
+            {
+                if (_activeMap == null)
+                    return null;
+                else
+                    return _activeMap.Name;
+            }
         }
 
         #endregion
 
         #region Map
 
+        /// <summary>
+        /// Get the active map view.
+        /// </summary>
+        /// <returns></returns>
         internal MapView GetActiveMapView()
         {
             // Get the active map view.
@@ -77,25 +98,30 @@ namespace DataTools
             return mapView;
         }
 
+        /// <summary>
+        /// Create a new map.
+        /// </summary>
+        /// <param name="mapName"></param>
+        /// <returns></returns>
         public async Task<string> CreateMapAsync(String mapName)
         {
-            _map = null;
-            _mapView = null;
+            _activeMap = null;
+            _activeMapView = null;
 
             await QueuedTask.Run(() =>
             {
                 try
                 {
                     // Create a new map without a basemap.
-                    _map = MapFactory.Instance.CreateMap(mapName, basemap:Basemap.None);
+                    _activeMap = MapFactory.Instance.CreateMap(mapName, basemap:Basemap.None);
 
                     // Create and activate new map.
-                    ProApp.Panes.CreateMapPaneAsync(_map, MapViewingMode.Map);
-                    //var paneTask = ProApp.Panes.CreateMapPaneAsync(_map, MapViewingMode.Map);
+                    ProApp.Panes.CreateMapPaneAsync(_activeMap, MapViewingMode.Map);
+                    //var paneTask = ProApp.Panes.CreateMapPaneAsync(_activeMap, MapViewingMode.Map);
                     //paneTask.Wait();
 
                     // Get the active map view;
-                    //_mapView = GetActiveMapView();
+                    //_activeMapView = GetActiveMapView();
 
                     //Pane pane = ProApp.Panes.ActivePane;
                     //pane.Activate();
@@ -108,22 +134,16 @@ namespace DataTools
             });
 
             // Get the active map view;
-            _mapView = GetActiveMapView();
+            _activeMapView = GetActiveMapView();
 
-            return _map.Name;
+            return _activeMap.Name;
         }
 
-        public string MapName
-        {
-            get
-            {
-                if (_map == null)
-                    return null;
-                else
-                    return _map.Name;
-            }
-        }
-
+        /// <summary>
+        /// Add a layer to the active map.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
         public async Task AddLayerToMap(string url)
         {
             try
@@ -133,11 +153,11 @@ namespace DataTools
                     Uri uri = new(url);
 
                     //var layerParams = new FeatureLayerCreationParams(fc);
-                    var layer = LayerFactory.Instance.CreateLayer(uri, _map);
+                    var layer = LayerFactory.Instance.CreateLayer(uri, _activeMap);
                 });
 
                 // Redraw the active map.
-                //_mapView.Redraw(false);
+                //_activeMapView.Redraw(false);
             }
             catch (Exception ex)
             {
@@ -148,16 +168,21 @@ namespace DataTools
 
         #region Layers
 
+        /// <summary>
+        /// Fine a layer by name in the active map.
+        /// </summary>
+        /// <param name="layerName"></param>
+        /// <returns></returns>
         internal Layer FindLayer(String layerName)
         {
             //Finds layers by name and returns a read only list of Layers
-            IReadOnlyList<Layer> layers = _map.FindLayers(layerName, true);
+            IReadOnlyList<Layer> layers = _activeMap.FindLayers(layerName, true);
 
             while (layers.Count > 0)
             {
                 Layer layer = layers.First();
 
-                if (layer.Map.Name == _map.Name)
+                if (layer.Map.Name == _activeMap.Name)
                     return layer;
             }
 
@@ -168,6 +193,12 @@ namespace DataTools
 
         #region Symbology
 
+        /// <summary>
+        /// Apply symbology to a layer by name using a layer file.
+        /// </summary>
+        /// <param name="layerName"></param>
+        /// <param name="layerFile"></param>
+        /// <returns></returns>
         public async Task<bool> ApplySymbologyFromLayerFileAsync(string layerName, string layerFile)
         {
             // Check the layer file exists.
@@ -235,64 +266,11 @@ namespace DataTools
         //    }
     }
 
-    class ArcGISFunctions
+    /// <summary>
+    /// This class provides ArcGIS Pro feature class and table functions.
+    /// </summary>
+    static class ArcGISFunctions
     {
-        #region Constructor
-
-        // Class constructor.
-        public ArcGISFunctions()
-        {
-        }
-
-        #endregion
-
-        //    public IWorkspaceFactory GetWorkspaceFactory(string filePath, bool aTextFile = false, bool messages = false)
-        //    {
-        //        // This function decides what type of feature workspace factory would be best for this file.
-        //        // it is up to the user to decide whether the file path and file names exist (or should exist).
-
-        //        // Reworked 18/05/2016 to deal with the singleton issue.
-
-        //        IWorkspaceFactory pWSF;
-        //        // What type of output file it it? This defines what kind of workspace factory will be returned.
-        //        if (filePath.Substring(filePath.Length - 4, 4) == ".gdb")
-        //        {
-        //            // It is a file geodatabase file.
-        //            Type t = Type.GetTypeFromProgID("esriDataSourcesGDB.FileGDBWorkspaceFactory");
-        //            System.Object obj = Activator.CreateInstance(t);
-        //            pWSF = obj as IWorkspaceFactory;
-        //        }
-        //        else if (filePath.Substring(filePath.Length - 4, 4) == ".mdb")
-        //        {
-        //            // Personal geodatabase.
-        //            Type t = Type.GetTypeFromProgID("esriDataSourcesGDB.AccessWorkspaceFactory");
-        //            System.Object obj = Activator.CreateInstance(t);
-        //            pWSF = obj as IWorkspaceFactory;
-        //        }
-        //        else if (filePath.Substring(filePath.Length - 4, 4) == ".sde")
-        //        {
-        //            // ArcSDE connection
-        //            Type t = Type.GetTypeFromProgID("esriDataSourcesGDB.SdeWorkspaceFactory");
-        //            System.Object obj = Activator.CreateInstance(t);
-        //            pWSF = obj as IWorkspaceFactory;
-        //        }
-        //        else if (aTextFile == true)
-        //        {
-        //            // Text file
-        //            //Type t = Type.GetTypeFromProgID("esriDataSourcesOleDB.TextFileWorkspaceFactory");
-        //            //System.Object obj = Activator.CreateInstance(t);
-        //            pWSF = new TextFileWorkspaceFactory();
-        //        }
-        //        else // Shapefile
-        //        {
-        //            Type t = Type.GetTypeFromProgID("esriDataSourcesFile.ShapefileWorkspaceFactory");
-        //            System.Object obj = Activator.CreateInstance(t);
-        //            pWSF = obj as IWorkspaceFactory;
-        //        }
-        //        return pWSF;
-        //    }
-
-
         #region Feature Class
 
         /// <summary>
@@ -385,6 +363,12 @@ namespace DataTools
 
         #region Geodatabase
 
+        /// <summary>
+        /// Check if the feature class exists in a geodatabase.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public static async Task<bool> FeatureClassExistsGDBAsync(string filePath, string fileName)
         {
             bool exists = false;
@@ -1144,6 +1128,8 @@ namespace DataTools
 
         //    #endregion
 
+        #region Outputs
+
         /// <summary>
         /// Prompt the user to specify an output file in the required format.
         /// </summary>
@@ -1196,6 +1182,8 @@ namespace DataTools
             return strOutFile; // Null if user pressed exit
         }
 
+        #endregion
+
         #region CopyFeatures
 
         /// <summary>
@@ -1222,45 +1210,6 @@ namespace DataTools
             try
             {
                 IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("management.CopyFeatures", parameters, environments);
-
-                if (gp_result.IsFailed)
-                {
-                    var messages = gp_result.Messages;
-                    var errMessages = gp_result.ErrorMessages;
-                }
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Export the input table to the output table.
-        /// </summary>
-        /// <param name="InTable"></param>
-        /// <param name="OutFile"></param>
-        /// <param name="Messages"></param>
-        /// <returns></returns>
-        public static async Task<bool> ExportFeaturesAsync(string inTable, string outTable, bool Messages = false)
-        {
-            //// prepare input parameter values to CopyFeaturesAsync tool
-            //string input_data = @"C:\data\california.gdb\ca_highways";
-            //string out_workspace = ArcGIS.Desktop.Core.Project.Current.DefaultGeodatabasePath;
-            //string out_data = System.IO.Path.Combine(out_workspace, "ca_highways2");
-
-            // Make a value array of strings to be passed to the tool.
-            var parameters = Geoprocessing.MakeValueArray(inTable, outTable);
-
-            // Make a value array of the environments to be passed to the tool.
-            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
-
-            // Execute the tool.
-            try
-            {
-                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("conversion.ExportTable", parameters, environments);
 
                 if (gp_result.IsFailed)
                 {
@@ -1304,6 +1253,45 @@ namespace DataTools
             string inFeatureClass = InWorkspace + @"\" + InDatasetName;
             string outFeatureClass = OutWorkspace + @"\" + OutDatasetName;
             return await CopyFeaturesAsync(inFeatureClass, outFeatureClass, Messages);
+        }
+
+        /// <summary>
+        /// Export the input table to the output table.
+        /// </summary>
+        /// <param name="InTable"></param>
+        /// <param name="OutFile"></param>
+        /// <param name="Messages"></param>
+        /// <returns></returns>
+        public static async Task<bool> ExportFeaturesAsync(string inTable, string outTable, bool Messages = false)
+        {
+            //// prepare input parameter values to CopyFeaturesAsync tool
+            //string input_data = @"C:\data\california.gdb\ca_highways";
+            //string out_workspace = ArcGIS.Desktop.Core.Project.Current.DefaultGeodatabasePath;
+            //string out_data = System.IO.Path.Combine(out_workspace, "ca_highways2");
+
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(inTable, outTable);
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            // Execute the tool.
+            try
+            {
+                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("conversion.ExportTable", parameters, environments);
+
+                if (gp_result.IsFailed)
+                {
+                    var messages = gp_result.Messages;
+                    var errMessages = gp_result.ErrorMessages;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return true;
         }
 
         #endregion
