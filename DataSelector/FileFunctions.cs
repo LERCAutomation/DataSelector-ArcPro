@@ -63,13 +63,6 @@ namespace DataTools
             FileInfo fileInfo = new(fullPath);
             string dirName = fileInfo.DirectoryName;
             return dirName;
-
-            //// Split at the last '\'.
-            //int LastIndex = fullPath.LastIndexOf(@"\");
-            //string filePath = fullPath;
-            //if (LastIndex > -1)
-            //    filePath = fullPath.Substring(0, LastIndex);
-            //return filePath;
         }
 
         #endregion
@@ -136,13 +129,6 @@ namespace DataTools
             FileInfo fileInfo = new(fullPath);
             string fileName = fileInfo.Name;
             return fileName;
-
-            //// Split at the last '\'.
-            //int LastIndex = fullPath.LastIndexOf(@"\");
-            //string aFile = fullPath;
-            //if (LastIndex > -1)
-            //    aFile = fullPath.Substring(LastIndex + 1, fullPath.Length - (LastIndex + 1));
-            //return aFile;
         }
 
         /// <summary>
@@ -159,15 +145,6 @@ namespace DataTools
             FileInfo fileInfo = new(fullPath);
             string aExt = fileInfo.Extension;
             return aExt;
-
-            //int aLen = fullPath.Length;
-            //// check if it has an extension at all
-            //string pathEnd = fullPath.Substring(aLen - 4, 1);
-            //if (pathEnd != ".") return null;
-
-            //// get the last three letters.
-            //string anExtension = fullPath.Substring(fullPath.Length - 3, 3);
-            //return anExtension;
         }
 
         /// <summary>
@@ -206,13 +183,6 @@ namespace DataTools
             string fileName = Path.GetFileNameWithoutExtension(fullName);
 
             return filePath + @"\" + fileName;
-
-            //int aLen = aFileName.Length;
-            //// check if it has an extension at all
-            //string pathEnd = aFileName.Substring(aLen - 4, 1);
-            //if (pathEnd != ".") return aFileName;
-
-            //return aFileName.Substring(0, aLen - 4);
         }
 
         /// <summary>
@@ -229,14 +199,8 @@ namespace DataTools
             fileName = Path.GetFileNameWithoutExtension(fileName);
 
             return fileName;
-
-            //int aLen = aFileName.Length;
-            //// check if it has an extension at all
-            //string pathEnd = aFileName.Substring(aLen - 4, 1);
-            //if (pathEnd != ".") return aFileName;
-
-            //return aFileName.Substring(0, aLen - 4);
         }
+
         /// <summary>
         /// Delete a file.
         /// </summary>

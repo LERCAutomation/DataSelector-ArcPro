@@ -37,6 +37,7 @@ using DataSelector.Properties;
 using System.Windows;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace DataSelector.UI
 {
@@ -47,7 +48,7 @@ namespace DataSelector.UI
 
         private DockpaneMainViewModel _dockPane;
 
-        private String _displayName = "DataSelector";
+        private string _displayName = "DataSelector";
 
         private string _configFile = null;
 
@@ -93,22 +94,12 @@ namespace DataSelector.UI
             LaunchConfig launchConfig;
             launchConfig = new(_xmlFolder, _displayName, false);
 
-            //// If the app config file can't be found.
-            //if (!launchConfig.XMLFound)
-            //{
-            //    MessageBox.Show("XML file 'DataSelector.xml' not found in folder.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            //    return false;
-            //}
-            //// If the app config file hasn't been loaded.
-            //else if (!launchConfig.XMLLoaded)
-            //{
-            //    MessageBox.Show("Error loading XML File 'DataSelector.xml.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            //    return false;
-            //}
-
             // If the app config file can't be found or loaded.
             if (!launchConfig.XMLFound || !launchConfig.XMLLoaded)
                 return;
+
+            // Set the help URL.
+            _dockPane.HelpURL = launchConfig.HelpURL;
 
             List<string> xmlFilesList = new();
             bool blOnlyDefault = false;
@@ -123,7 +114,7 @@ namespace DataSelector.UI
 
                 if (xmlFilesList is null || xmlFilesList.Count() == 0)
                 {
-                    //MessageBox.Show("No valid XML files found in the XML directory.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    //MessageBox.Show("No valid XML files found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
             }
@@ -145,7 +136,7 @@ namespace DataSelector.UI
                 // Check the default XML file exists.
                 if (!FileFunctions.FileExists(_configFile))
                 {
-                    //MessageBox.Show("The default XML file '" + launchConfig.DefaultXML + "' was not found in the XML directory.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    //MessageBox.Show("The default XML file '" + launchConfig.DefaultXML + "' was not found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
@@ -162,7 +153,7 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(SelectedXMLProfile));
 
             OnPropertyChanged(nameof(CanSelectXMLPath));
-            OnPropertyChanged(nameof(CanOpenXML));
+            OnPropertyChanged(nameof(CanLoadProfile));
 
             // Cancel if no XML config file has been selected.
             if (_configFile == null) return;
@@ -221,7 +212,7 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(SelectedXMLProfile));
 
             OnPropertyChanged(nameof(CanSelectXMLPath));
-            OnPropertyChanged(nameof(CanOpenXML));
+            OnPropertyChanged(nameof(CanLoadProfile));
 
             //// Load the default profile.
             //LoadConfig(_configFile);
@@ -233,11 +224,17 @@ namespace DataSelector.UI
         /// <value></value>
         /// <returns></returns>
         /// <remarks></remarks>
-        public bool CanSelectXMLPath { get { return true; } }
+        public bool CanSelectXMLPath
+        {
+            get
+            {
+                return (!_dockPane.QueryRunning);
+            }
+        }
 
         #endregion
 
-        #region Select XML Profile
+            #region Select XML Profile
 
         private List<string> _availableXMLFiles;
 
@@ -253,7 +250,7 @@ namespace DataSelector.UI
             set => SetProperty(ref _availableXMLFiles, value);
         }
 
-        private String _selectedXMLProfile;
+        private string _selectedXMLProfile;
 
         /// <summary>
         /// The XML profile that the user has chosen.
@@ -277,15 +274,15 @@ namespace DataSelector.UI
         {
             get
             {
-                return (!String.IsNullOrEmpty(XMLFolder));
+                return (!string.IsNullOrEmpty(XMLFolder));
             }
         }
 
         #endregion
 
-        #region Open XML Command
+        #region Load Profile Command
 
-        private ICommand _openXMLCommand;
+        private ICommand _loadProfileCommand;
 
         /// <summary>
         /// Create Open XML button command
@@ -293,17 +290,17 @@ namespace DataSelector.UI
         /// <value></value>
         /// <returns></returns>
         /// <remarks></remarks>
-        public ICommand OpenXMLCommand
+        public ICommand LoadProfileCommand
         {
             get
             {
-                if (_openXMLCommand == null)
+                if (_loadProfileCommand == null)
                 {
-                    Action<object> openXMLAction = new Action<object>(this.OpenXMLCommandClick);
-                    _openXMLCommand = new RelayCommand(openXMLAction, param => this.CanOpenXML);
+                    Action<object> openXMLAction = new Action<object>(this.LoadProfileCommandClick);
+                    _loadProfileCommand = new RelayCommand(openXMLAction, param => this.CanLoadProfile);
                 }
 
-                return _openXMLCommand;
+                return _loadProfileCommand;
             }
         }
 
@@ -312,7 +309,7 @@ namespace DataSelector.UI
         /// </summary>
         /// <param name="param"></param>
         /// <remarks></remarks>
-        private void OpenXMLCommandClick(object param)
+        private void LoadProfileCommandClick(object param)
         {
             // Skip if no profile selected (shouldn't be possible).
             if (SelectedXMLProfile == null)
@@ -324,16 +321,20 @@ namespace DataSelector.UI
             // Check the file (still) exists.
             if (!FileFunctions.FileExists(configFile))
             {
-                MessageBox.Show("The selected XML file '" + SelectedXMLProfile + "' was not found in the XML directory.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("The selected XML file '" + SelectedXMLProfile + "' was not found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             // Load the selected profile.
             LoadConfig(configFile);
 
-            // Exit if the XML wasn't loaded.
+            // Clear the query pane if the XML wasn't loaded.
             if (!XMLLoaded)
+            {
+                // Clear the query pane.
+                _dockPane.ClearQueryPane();
                 return;
+            }
 
             // Initialise the query pane.
             if (!_dockPane.InitialiseQueryPane()) return;
@@ -343,12 +344,19 @@ namespace DataSelector.UI
         }
 
         /// <summary>
-        /// Can the Open XML button be pressed (has a profile been selected)?
+        /// Can the Load Profile button be pressed (has a profile been selected)?
         /// </summary>
         /// <value></value>
         /// <returns></returns>
         /// <remarks></remarks>
-        public bool CanOpenXML { get { return !String.IsNullOrEmpty(SelectedXMLProfile); } }
+        public bool CanLoadProfile
+        {
+            get
+            {
+                return (!string.IsNullOrEmpty(SelectedXMLProfile)
+                    && !_dockPane.QueryRunning);
+            }
+        }
 
         #endregion
 
@@ -385,18 +393,6 @@ namespace DataSelector.UI
             set => SetProperty(ref _xmlFolder, value);
         }
 
-        private ImageSource _imageFolderOpen;
-
-        public ImageSource CmdFolderOpenImg
-        {
-            get
-            {
-                if (_imageFolderOpen == null)
-                    _imageFolderOpen = System.Windows.Application.Current.Resources["FolderOpenState16"] as ImageSource;
-                return _imageFolderOpen;
-            }
-        }
-
         #endregion
 
         #region Methods
@@ -421,13 +417,13 @@ namespace DataSelector.UI
             // If the app config file can't be found.
             if (!launchConfig.XMLFound)
             {
-                MessageBox.Show("XML file 'DataSelector.xml' not found in folder.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("XML file 'DataSelector.xml' not found in folder.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
             // If the app config file hasn't been loaded.
             else if (!launchConfig.XMLLoaded)
             {
-                MessageBox.Show("Error loading XML File 'DataSelector.xml.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error loading XML File 'DataSelector.xml.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -452,7 +448,7 @@ namespace DataSelector.UI
 
                 if (xmlFilesList is null || xmlFilesList.Count() == 0)
                 {
-                    MessageBox.Show("No valid XML files found in the XML directory.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("No valid XML files found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                     return false;
                 }
             }
@@ -474,7 +470,7 @@ namespace DataSelector.UI
                 // Check the default XML file exists.
                 if (!FileFunctions.FileExists(_configFile))
                 {
-                    MessageBox.Show("The default XML file '" + launchConfig.DefaultXML + "' was not found in the XML directory.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("The default XML file '" + launchConfig.DefaultXML + "' was not found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                     return false;
                 }
 
@@ -538,14 +534,16 @@ namespace DataSelector.UI
             // the app.
             if (!_toolConfig.XMLFound)
             {
-                MessageBox.Show(String.Format("XML file '{0}' not found; form cannot load.", _configFile), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format("XML file '{0}' not found.", _configFile), "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                 _xmlLoaded = false;
+                return;
             }
             // If the tool XML config file hasn't been loaded.
             else if (!_toolConfig.XMLLoaded)
             {
-                MessageBox.Show(String.Format("Error loading XML File '{0}'; form cannot load.", _configFile), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format("Error loading XML File '{0}'.", _configFile), "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                 _xmlLoaded = false;
+                return;
             }
 
             // Indicate the XML has been loaded.
@@ -593,7 +591,7 @@ namespace DataSelector.UI
         /// <summary>
         /// Raised when a property on this object has a new value.
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public new event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
         /// Raises this object's PropertyChanged event.

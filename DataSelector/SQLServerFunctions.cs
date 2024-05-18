@@ -330,7 +330,7 @@ namespace DataTools
 
         #endregion
 
-        #region ExecuteSQL
+        #region Execute SQL
 
         /// <summary>
         /// Execute a raw SQL statement on the underlying database management system.
@@ -358,7 +358,6 @@ namespace DataTools
                 }
             });
         }
-
 
         #endregion
 

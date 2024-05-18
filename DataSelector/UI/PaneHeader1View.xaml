@@ -18,7 +18,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid Name="GridFilePath" Grid.Row="0" Margin="0,4,0,8">
+            <Grid Name="GridFilePath" Grid.Row="0" Margin="0,8,0,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="76" />
                     <ColumnDefinition Width="*" />
@@ -26,111 +26,91 @@
                 </Grid.ColumnDefinitions>
 
                 <Label Name="LabelXMLFilePath"
-                       Grid.Row="0"
                        Grid.Column="0"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Left"
                        Margin="0,0,0,0"
                        Content="XML Folder:" />
                 <TextBox Name="TextXMLFilePath"
-                         Grid.Row="0"
                          Grid.Column="1"
                          Margin="0,0,0,0"
-                         Height="24"
+                         Height="22"
                          Text="{Binding Path=XMLFolder}"
                          IsReadOnly="True"
                          TabIndex="0"
                          HorizontalAlignment="Stretch"
                          VerticalAlignment="Center" />
                 <Button Name="ButtonXMLFilePath"
-                        Grid.Row="0"
                         Grid.Column="2"
                         Margin="4,0,0,0"
-                        Height="24"
+                        MinWidth="0"
+                        MinHeight="0"
+                        Padding="0"
+                        Height="22"
+                        Width="24"
                         TabIndex="1"
                         VerticalAlignment="Center"
                         Command="{Binding Path=SelectXMLPathCommand}"
-                        Style="{DynamicResource Esri_SmallButton}">
-                            <Image Source="{Binding CmdFolderOpenImg}" Width="16" Height="16"/>
-                    <Button.ToolTip>
-                        <ToolTip>
-                            <TextBlock Text="Browse to the XML config folder" FontWeight="Normal"></TextBlock>
-                        </ToolTip>
-                    </Button.ToolTip>
+                        IsEnabled="{Binding Path=CanSelectXMLPath}"
+                        Style="{DynamicResource Esri_SimpleButton}"
+                        Content="..."
+                        FontWeight="ExtraBold">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                <TextBlock Text="Browse to the XML config folder" FontWeight="Normal"></TextBlock>
+                            </ToolTip>
+                        </Button.ToolTip>
                 </Button>
-                <!--
-                <Button Name="ButtonXMLFilePath"
-                        Grid.Row="0"
-                        Grid.Column="2"
-                        Command="{Binding SelectXMLPathCommand}"
-                        HorizontalAlignment="Right"
-                        Margin="6,0,0,0"
-                        Style="{DynamicResource Esri_SmallButton}">
-                    <Button.Content>
-                        <Border>
-                            <StackPanel Orientation="Horizontal">
-                                <Image Source="{Binding CmdBrowseFolderImg}" Margin="0,0,0,0" HorizontalAlignment="Center"
-                                       Width="20" Height="20"></Image>
-                                <TextBlock HorizontalAlignment="Center" Text=""
-                               VerticalAlignment="Center"
-                               Margin="0,0,0,0" />
-                            </StackPanel>
-                        </Border>
-                    </Button.Content>
-                </Button>
-                -->
             </Grid>
 
-            <Grid Name="GridHLULayers" Grid.Row="1" Margin="0,0,0,8">
+            <Grid Name="GridHLULayers" Grid.Row="1" Margin="0,4,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="76" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="60" />
                 </Grid.ColumnDefinitions>
                 <Label Name="LabelChooseXML"
                        Content="XML Profile:"
-                       Grid.Row="0"
                        Grid.Column="0"
                        Margin="0,0,0,2"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Left"
                     />
                 <ComboBox Name="ComboBoxChooseXML"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Margin="0,0,0,0"
-                            VerticalAlignment="Center"
-                            Height="24"
-                            IsEditable="False"
-                            IsReadOnly="True"
-                            IsEnabled="{Binding Path=CanSelectXMLProfile}"
-                            ItemsSource="{Binding Path=AvailableXMLFiles,
+                          Grid.Column="1"
+                          Margin="0,0,0,0"
+                          VerticalAlignment="Center"
+                          Height="22"
+                          IsEditable="False"
+                          IsReadOnly="True"
+                          IsEnabled="{Binding Path=CanSelectXMLProfile}"
+                          ItemsSource="{Binding Path=AvailableXMLFiles,
                                                 Mode=TwoWay,
                                                 UpdateSourceTrigger=PropertyChanged}"
-                            SelectedValue="{Binding Path=SelectedXMLProfile,
-                                                    ValidatesOnDataErrors=True}"
-                            TabIndex="2" />
-                <Button Name="ButtonOpenXML"
+                          SelectedValue="{Binding Path=SelectedXMLProfile,
+                                                  ValidatesOnDataErrors=True}"
+                          TabIndex="2" />
+                <Button Name="ButtonLoadProfile"
                         Grid.Column="2"
-                        Command="{Binding Path=OpenXMLCommand}"
                         Margin="4,0,0,0"
-                        Height="24"
-                        Width="60"
-                        IsCancel="False"
+                        MinWidth="0"
+                        MinHeight="0"
+                        Padding="0"
+                        Height="22"
                         IsDefault="True"
-                        IsEnabled="{Binding Path=CanOpenXML}"
-                        Style="{DynamicResource Esri_SimpleButton}"
                         TabIndex="3"
                         VerticalAlignment="Center"
-                        Content="Open">
+                        Command="{Binding Path=LoadProfileCommand}"
+                        IsEnabled="{Binding Path=CanLoadProfile}"
+                        Style="{DynamicResource Esri_SimpleButton}"
+                        Content="Load"
+                        FontWeight="Bold">
+                        <Button.ToolTip>
+                            <ToolTip>
+                            <TextBlock Text="Load XML profile" FontWeight="Normal"></TextBlock>
+                            </ToolTip>
+                        </Button.ToolTip>
                 </Button>
-            </Grid>
-
-            <Grid Name="GridButtons" Grid.Row="2" Margin="8,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="82" />
-                </Grid.ColumnDefinitions>
             </Grid>
         </Grid>
     </DockPanel>

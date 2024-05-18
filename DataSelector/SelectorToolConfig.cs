@@ -22,6 +22,11 @@
 using System;
 using System.Windows.Forms;
 using System.Xml;
+using System.Windows;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+
+//This configuration file reader loads all of the variables to
+// be used by the tool. Some are mandatory, the remainder optional.
 
 namespace DataSelector
 {
@@ -33,236 +38,251 @@ namespace DataSelector
 
         #region Fields
 
-        // Declare all the variables
-        private string _logFilePath;
-        private string _fileDSN;
-        private string _selectStoredProcedure;
-        private string _clearStoredProcedure;
-        private string _defaultExtractPath;
-        private string _defaultQueryPath;
-        private string _defaultFormat;
-        private string _databaseSchema;
-        private string _includeWildcard;
-        private string _excludeWildcard;
-        private bool _defaultSetSymbology;
-        private string _layerLocation;
-        private bool _defaultClearLogFile;
-
-        private bool _xmlFound;
-        private bool _xmlLoaded;
-
         // Initialise component to read XML
-        private XmlElement xmlDataSelector;
+        private XmlElement _xmlDataSelector;
 
         #endregion
 
         #region Constructor
 
-        public SelectorToolConfig(string anXMLProfile)
+        public SelectorToolConfig(string xmlFile)
         {
 
-            string strXMLFile = anXMLProfile; // The user has specified this and we've checked it exists.
-
-            _xmlFound = true;   // We have already checked that it exists.
+            // The user has specified the xmlFile and we've checked it exists.
+            _xmlFound = true;
             _xmlLoaded = true;
 
-            // Now get the variables from the XML file.
-            if (_xmlFound)
+            // Load the XML file into memory.
+            XmlDocument xmlConfig = new XmlDocument();
+            try
             {
-                // Load the XML file into memory.
-                XmlDocument xmlConfig = new XmlDocument();
-                try
-                {
-                    xmlConfig.Load(strXMLFile);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error in XML file; cannot load. System error message: " + ex.Message, "XML Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // Get the InitialConfig node (the first node).
-                string strRawText;
-                XmlNode currNode = xmlConfig.DocumentElement.FirstChild;
-                xmlDataSelector = (XmlElement)currNode;
-
-                // The existing file location where log files will be saved with output messages.
-                try
-                {
-                    _logFilePath = xmlDataSelector["LogFilePath"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'LogFilePath' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // The location of the SDE file that specifies which SQL Server database to connect to.
-                try
-                {
-                    _fileDSN = xmlDataSelector["FileDSN"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'FileDSN' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // Stored procedure to execute selection in SQL Server.
-                try
-                {
-                    _selectStoredProcedure = xmlDataSelector["SelectStoredProcedure"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'SelectStoredProcedure' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // Stored procedure to clear selection in SQL Server.
-                try
-                {
-                    _clearStoredProcedure = xmlDataSelector["ClearStoredProcedure"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'ClearStoredProcedure' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // The existing file location where extracts will be saved by default.
-                try
-                {
-                    _defaultExtractPath = xmlDataSelector["DefaultExtractPath"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'DefaultExtractPath' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // The existing file location where queries will be saved and loaded by default.
-                try
-                {
-                    _defaultQueryPath = xmlDataSelector["DefaultQueryPath"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'DefaultQueryPath' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // The default format of the output files to be created.
-                try
-                {
-                    _defaultFormat = xmlDataSelector["DefaultFormat"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'DefaultFormat' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // The schema used in the SQL Server database.
-                try
-                {
-                    _databaseSchema = xmlDataSelector["DatabaseSchema"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'DatabaseSchema' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // The Include wildcard for table names to list all the species tables
-                // in SQL Server that can be selected by the user to extract from.
-                try
-                {
-                    _includeWildcard = xmlDataSelector["IncludeWildcard"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'IncludeWildcard' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // The Exclude wildcard for table names that should NOT be used
-                // for species tables in SQL Server that can be selected by the
-                // user to extract from.
-                try
-                {
-                    _excludeWildcard = xmlDataSelector["ExcludeWildcard"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'ExcludeWildcard' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // The default for whether the symbology should be set for feature classes or not.
-                try
-                {
-                    _defaultSetSymbology = false;
-                    strRawText = xmlDataSelector["DefaultSetSymbology"].InnerText;
-                    if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
-                        _defaultSetSymbology = true;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'DefaultSetSymbology' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // The location of layer files.
-                try
-                {
-                    _layerLocation = xmlDataSelector["LayerLocation"].InnerText;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'LayerLocation' in the XML file");
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // The default for whether an existing log file should be cleared by default.
-                try
-                {
-                    _defaultClearLogFile = false;
-                    strRawText = xmlDataSelector["DefaultClearLogFile"].InnerText;
-                    if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
-                        _defaultClearLogFile = true;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'DefaultClearLogFile' in the XML file", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    _xmlLoaded = false;
-                    return;
-                }
-
+                xmlConfig.Load(xmlFile);
             }
-            else
+            catch (Exception ex)
             {
-                _xmlFound = false; // this has to be checked first; all other properties are empty.
+                MessageBox.Show("Error in XML file; cannot load. System error message: " + ex.Message, "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                _xmlLoaded = false;
+                return;
             }
 
+            // Get the InitialConfig node (the first node).
+            XmlNode currNode = xmlConfig.DocumentElement.FirstChild;
+            _xmlDataSelector = (XmlElement)currNode;
+
+            if (_xmlDataSelector == null)
+            {
+                MessageBox.Show("Error loading XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                _xmlLoaded = false;
+                return;
+            }
+
+            // Get the mandatory variables.
+            if (!GetMandatoryVariables())
+            {
+                _xmlLoaded = false;
+                return;
+            }
+
+            // Get the optional variables.
+            GetOptionalVariables();
+        }
+
+        public bool GetMandatoryVariables()
+        {
+            // The existing file location where log files will be saved with output messages.
+            try
+            {
+                _logFilePath = _xmlDataSelector["LogFilePath"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'LogFilePath' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // The location of the SDE file that specifies which SQL Server database to connect to.
+            try
+            {
+                _sdeName = _xmlDataSelector["SDEFile"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'SDEFile' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // Stored procedure to execute selection in SQL Server.
+            try
+            {
+                _selectStoredProcedure = _xmlDataSelector["SelectStoredProcedure"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'SelectStoredProcedure' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // Stored procedure to clear selection in SQL Server.
+            try
+            {
+                _clearStoredProcedure = _xmlDataSelector["ClearStoredProcedure"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'ClearStoredProcedure' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // The schema used in the SQL Server database.
+            try
+            {
+                _databaseSchema = _xmlDataSelector["DatabaseSchema"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'DatabaseSchema' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // The Include wildcard for table names to list all the species tables
+            // in SQL Server that can be selected by the user to extract from.
+            try
+            {
+                _includeWildcard = _xmlDataSelector["IncludeWildcard"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'IncludeWildcard' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // The Exclude wildcard for table names that should NOT be used
+            // for species tables in SQL Server that can be selected by the
+            // user to extract from.
+            try
+            {
+                _excludeWildcard = _xmlDataSelector["ExcludeWildcard"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'ExcludeWildcard' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // All mandatory variables were loaded successfully.
+            return true;
+        }
+
+        public void GetOptionalVariables()
+        {
+            string strRawText;
+
+            // The existing file location where extracts will be saved by default.
+            try
+            {
+                _defaultExtractPath = _xmlDataSelector["DefaultExtractPath"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'DefaultExtractPath' in the XML file", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // The existing file location where queries will be saved and loaded by default.
+            try
+            {
+                _defaultQueryPath = _xmlDataSelector["DefaultQueryPath"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'DefaultQueryPath' in the XML file", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // The default format of the output files to be created.
+            try
+            {
+                _defaultFormat = _xmlDataSelector["DefaultFormat"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'DefaultFormat' in the XML file", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // The default for whether the symbology should be set for feature classes or not.
+            try
+            {
+                _defaultSetSymbology = false;
+                strRawText = _xmlDataSelector["DefaultSetSymbology"].InnerText;
+                if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
+                    _defaultSetSymbology = true;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'DefaultSetSymbology' in the XML file", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // The location of layer files.
+            try
+            {
+                _layerLocation = _xmlDataSelector["LayerLocation"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'LayerLocation' in the XML file", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // The default for whether an existing log file should be cleared by default.
+            try
+            {
+                _defaultClearLogFile = false;
+                strRawText = _xmlDataSelector["DefaultClearLogFile"].InnerText;
+                if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
+                    _defaultClearLogFile = true;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'DefaultClearLogFile' in the XML file", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // The default for whether the log file should be opened by default.
+            try
+            {
+                _defaultOpenLogFile = false;
+                strRawText = _xmlDataSelector["DefaultOpenLogFile"].InnerText;
+                if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
+                    _defaultOpenLogFile = true;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'DefaultOpenLogFile' in the XML file", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Whether to validate the SQL before running.
+            try
+            {
+                _validateSQL = false;
+                strRawText = _xmlDataSelector["ValidateSQL"].InnerText;
+                if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
+                    _validateSQL = true;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'ValidateSQL' in the XML file", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
         }
 
         #endregion
 
         #region Members
+
+        private bool _xmlFound;
 
         /// <summary>
         /// Has the XML file been found.
@@ -275,6 +295,8 @@ namespace DataSelector
             }
         }
 
+        private bool _xmlLoaded;
+
         /// <summary>
         ///  Has the XML file been loaded.
         /// </summary>
@@ -286,13 +308,17 @@ namespace DataSelector
             }
         }
 
+        private string _sdeName;
+
         public string GetSDEName
         {
             get
             {
-                return _fileDSN;
+                return _sdeName;
             }
         }
+
+        private string _selectStoredProcedure;
 
         public string GetSelectStoredProcedure
         {
@@ -302,6 +328,8 @@ namespace DataSelector
             }
         }
 
+        private string _clearStoredProcedure;
+
         public string GetClearStoredProcedure
         {
             get
@@ -309,6 +337,8 @@ namespace DataSelector
                 return _clearStoredProcedure;
             }
         }
+
+        private string _logFilePath;
 
         public string GetLogFilePath
         {
@@ -318,6 +348,8 @@ namespace DataSelector
             }
         }
 
+        private string _defaultExtractPath;
+
         public string GetDefaultExtractPath
         {
             get
@@ -325,6 +357,8 @@ namespace DataSelector
                 return _defaultExtractPath;
             }
         }
+
+        private string _defaultQueryPath;
 
         public string GetDefaultQueryPath
         {
@@ -334,6 +368,8 @@ namespace DataSelector
             }
         }
 
+        private string _defaultFormat;
+
         public string GetDefaultFormat
         {
             get
@@ -341,6 +377,8 @@ namespace DataSelector
                 return _defaultFormat;
             }
         }
+
+        private string _databaseSchema;
 
         public string GetDatabaseSchema
         {
@@ -350,6 +388,8 @@ namespace DataSelector
             }
         }
 
+        private string _includeWildcard;
+
         public string GetIncludeWildcard
         {
             get
@@ -357,6 +397,8 @@ namespace DataSelector
                 return _includeWildcard;
             }
         }
+
+        private string _excludeWildcard;
 
         public string GetExcludeWildcard
         {
@@ -366,6 +408,8 @@ namespace DataSelector
             }
         }
 
+        private bool _defaultSetSymbology;
+
         public bool GetDefaultSetSymbology
         {
             get
@@ -373,6 +417,8 @@ namespace DataSelector
                 return _defaultSetSymbology;
             }
         }
+
+        private string _layerLocation;
 
         public string GetLayerLocation
         {
@@ -382,11 +428,33 @@ namespace DataSelector
             }
         }
 
+        private bool _defaultClearLogFile;
+
         public bool GetDefaultClearLogFile
         {
             get
             {
                 return _defaultClearLogFile;
+            }
+        }
+
+        private bool _defaultOpenLogFile;
+
+        public bool GetDefaultOpenLogFile
+        {
+            get
+            {
+                return _defaultOpenLogFile;
+            }
+        }
+
+        private bool _validateSQL;
+
+        public bool GetValidateSQL
+        {
+            get
+            {
+                return _validateSQL;
             }
         }
 

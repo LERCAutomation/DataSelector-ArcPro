@@ -1,7 +1,8 @@
-﻿// DataSelector is an ArcGIS add-in used to extract biodiversity
-// information from SQL Server based on any selection criteria.
+﻿// The Data tools are a suite of ArcGIS Pro addins used to extract
+// and manage biodiversity information from ArcGIS Pro and SQL Server
+// based on pre-defined or user specified criteria.
 //
-// Copyright © 2016-2017 SxBRC, 2017-2018 TVERC
+// Copyright © 2024 Andy Foy Consulting.
 //
 // This file is part of DataSelector.
 //
@@ -21,6 +22,8 @@
 using System;
 using System.Windows.Forms;
 using System.Xml;
+using System.Windows;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 // This configuration file reader defines how the tool behaves at start up:
 // Does it show a dropdown list to choose a configuration file, or does it launch
@@ -50,11 +53,44 @@ namespace DataTools
         public LaunchConfig(string xmlFolder, string toolName, bool promptFilePath)
         {
             _toolName = toolName;
+
             _xmlFound = false;
-            _xmlLoaded = true;
+            _xmlLoaded = false;
             _selectCancelled = false;
 
-            string xmlFile = xmlFolder + String.Format(@"\{0}.xml", toolName);
+            // Check the XML file exists (or prompt the user)
+            _xmlFound = XMLFileFound(xmlFolder, toolName, promptFilePath);
+            if (!_xmlFound)
+            {
+                return;
+            }
+
+            // Load the XML file into memory.
+            XmlDocument xmlConfig = new XmlDocument();
+            try
+            {
+                xmlConfig.Load(_xmlFile);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error in XML file; cannot load. System error message: " + ex.Message, "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            // Get the InitialConfig node (the first node).
+            XmlNode currNode = xmlConfig.DocumentElement.FirstChild;
+            xmlToolNode = (XmlElement)currNode;
+
+            // Get the mandatory variables.
+            if (!GetMandatoryVariables())
+                return;
+
+            _xmlLoaded = true;
+        }
+
+        private bool XMLFileFound(string xmlFolder, string toolName, bool promptFilePath)
+        {
+            string xmlFile = xmlFolder + String.Format(@"\{0}.xml", _toolName);
 
             // Open and read the app XML file.
             try
@@ -68,17 +104,17 @@ namespace DataTools
                     if (String.IsNullOrEmpty(xmlFilePath))
                     {
                         _selectCancelled = true;
-                        return;
+                        return false;
                     }
 
                     xmlFolder = xmlFilePath;
-                    xmlFile = xmlFolder + String.Format(@"\{0}.xml", toolName);
+                    xmlFile = xmlFolder + String.Format(@"\{0}.xml", _toolName);
                 }
                 // If the app XML file path is blank or doesn't exist.
                 else if (String.IsNullOrEmpty(xmlFile) || !FileFunctions.FileExists(xmlFile))
                 {
                     _xmlLoaded = false;
-                    return;
+                    return false;
                 }
 
                 // Check the app XML file path exists.
@@ -86,66 +122,62 @@ namespace DataTools
                 {
                     _xmlFolder = xmlFolder;
                     _xmlFile = xmlFile;
-                    _xmlFound = true;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error " + ex.ToString(), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message, "XML Error " + ex.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
-            // Now get the variables from the XML file.
-            if (_xmlFound)
+            return true;
+        }
+
+        public bool GetMandatoryVariables()
+        {
+            string strRawText;
+
+            // Get the user choice variable.
+            try
             {
-                // Load the XML file into memory.
-                XmlDocument xmlConfig = new XmlDocument();
-                try
+                blChooseConfig = false;
+                strRawText = xmlToolNode["ChooseXML"].InnerText;
+                if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
                 {
-                    xmlConfig.Load(xmlFile);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error in XML file; cannot load. System error message: " + ex.Message, "XML Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // Get the InitialConfig node (the first node).
-                string strRawText;
-                XmlNode currNode = xmlConfig.DocumentElement.FirstChild;
-                xmlToolNode = (XmlElement)currNode;
-
-                // Get the user choice variable.
-                try
-                {
-                    blChooseConfig = false;
-                    strRawText = xmlToolNode["ChooseXML"].InnerText;
-                    if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
-                    {
-                        blChooseConfig = true;
-                    }
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'ChooseXML' in the XML file", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    _xmlLoaded = false;
-                    return;
-                }
-
-                // Get the default XML file name.
-                try
-                {
-                    strRawText = xmlToolNode["DefaultProfile"].InnerText;
-                    if (strRawText != "")
-                        _defaultXML = strRawText; // If there is an entry; otherwise use the default.
-                }
-                catch
-                {
-                    MessageBox.Show("Could not locate the item 'DefaultProfile' in the XML file", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    _xmlLoaded = false;
-                    return;
+                    blChooseConfig = true;
                 }
             }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'ChooseXML' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // Get the default XML file name.
+            try
+            {
+                strRawText = xmlToolNode["DefaultProfile"].InnerText;
+                if (strRawText != "")
+                    _defaultXML = strRawText; // If there is an entry; otherwise use the default.
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'DefaultProfile' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // Get the URL of the help page.
+            try
+            {
+                _helpURL = xmlToolNode["HelpURL"].InnerText;
+            }
+            catch
+            {
+                MessageBox.Show("Could not locate item 'HelpURL' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // All mandatory variables were loaded successfully.
+            return true;
         }
 
         #endregion
@@ -235,6 +267,16 @@ namespace DataTools
             get
             {
                 return _selectCancelled;
+            }
+        }
+
+        private string _helpURL;
+
+        public string HelpURL
+        {
+            get
+            {
+                return _helpURL;
             }
         }
 

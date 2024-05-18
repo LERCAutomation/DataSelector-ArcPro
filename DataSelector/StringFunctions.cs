@@ -19,6 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Internal.Framework.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,6 +59,37 @@ namespace DataTools
         }
 
         /// <summary>
+        /// Initializes a wildcard with the given search pattern, schema and options.
+        /// </summary>
+        /// <param name="pattern">The wildcard pattern to match.</param>
+        /// <param name="options">A combination of one or more
+        /// <see cref="System.Text.RegexOptions"/>.</param>
+        public Wildcard(string pattern, string schema, RegexOptions options)
+            : base(WildcardToRegex(pattern, schema), options)
+        {
+        }
+
+        /// <summary>
+        /// Converts a wildcard to a regex.
+        /// </summary>
+        /// <param name="pattern">The wildcard pattern to convert.</param>
+        /// <param name="schema">"The database schema to append before each part.</param>
+        /// <returns>A regex equivalent of the given wildcard.</returns>
+        public static string WildcardToRegex(string pattern, string schema)
+        {
+            if (schema is null)
+                return "^" + Regex.Escape(pattern).
+                 Replace("\\*", ".*").
+                 Replace("\\?", "*").
+                 Replace("\\|", "|") + "$";
+            else
+                return "^" + schema + "." + Regex.Escape(pattern).
+                 Replace("\\*", ".*").
+                 Replace("\\?", "*").
+                 Replace("\\|", "|" + schema + ".") + "$";
+        }
+
+        /// <summary>
         /// Converts a wildcard to a regex.
         /// </summary>
         /// <param name="pattern">The wildcard pattern to convert.</param>
@@ -66,8 +98,9 @@ namespace DataTools
         {
             return "^" + Regex.Escape(pattern).
              Replace("\\*", ".*").
-             Replace("\\?", ".*").
+             Replace("\\?", "*").
              Replace("\\|", "|") + "$";
+            //Replace("\\*", ".*").
         }
 
         #endregion

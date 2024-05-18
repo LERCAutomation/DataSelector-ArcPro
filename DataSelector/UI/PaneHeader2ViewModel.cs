@@ -36,6 +36,15 @@ using System.Text.RegularExpressions;
 using System.Windows.Media;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 using ArcGIS.Core.Data;
+using System.Windows.Media.Imaging;
+using System.Windows;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using System.Data.Common;
+using System.Data;
+//using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
+using ArcGIS.Desktop.Internal.Mapping.Georeference;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DataSelector.UI
 {
@@ -52,6 +61,7 @@ namespace DataSelector.UI
 
         private string _layerLocation;
         private string _logFile;
+        private bool _validateSQL;
 
         string _includeWildcard;
         string _excludeWildcard;
@@ -68,8 +78,6 @@ namespace DataSelector.UI
 
         private SelectorToolConfig _toolConfig;
         private SQLServerFunctions _sqlFunctions;
-        private ArcGISFunctions _gisFunctions;
-        private MapFunctions _mapFunctions;
 
         #endregion
 
@@ -124,20 +132,18 @@ namespace DataSelector.UI
             // Check if the SDE file exists.
             if (!FileFunctions.FileExists(_sdeFileName))
             {
-                MessageBox.Show("ArcSDE connection file " + _sdeFileName + " not found. Cannot load Data Selector.", "DataSelector", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("ArcSDE connection file " + _sdeFileName + " not found. Cannot load Data Selector.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                 _sdeConnected = false;
                 return;
             }
 
             // Open the SQL Server geodatabase (don't wait for the response).
-            SQLServerFunctions.OpenGeodatabase(_sdeFileName);
+            //SQLServerFunctions.OpenGeodatabase(_sdeFileName);
 
             _sdeConnected = true;
 
+            // Create a new SQL functions object.
             _sqlFunctions = new(_sdeFileName);
-            _gisFunctions = new();
-            _mapFunctions = new();
-
 
             _outputFormats = new() {
                             "Geodatabase",
@@ -151,325 +157,14 @@ namespace DataSelector.UI
             _defaultFormat = _toolConfig.GetDefaultFormat;
             _defaultSchema = _toolConfig.GetDatabaseSchema;
             _clearLogFile = _toolConfig.GetDefaultClearLogFile;
+            _openLogFile = _toolConfig.GetDefaultOpenLogFile;
             _setSymbology = _toolConfig.GetDefaultSetSymbology;
             _layerLocation = _toolConfig.GetLayerLocation;
+            _validateSQL = _toolConfig.GetValidateSQL;
 
             // Set the window properties.
             _selectedOutputFormat = _defaultFormat;
         }
-
-        #endregion
-
-        #region Ok Command
-
-        private ICommand _okCommand;
-
-        /// <summary>
-        /// Create Ok button command
-        /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        public ICommand OkCommand
-        {
-            get
-            {
-                if (_okCommand == null)
-                {
-                    Action<object> okAction = new(OkCommandClick);
-                    _okCommand = new RelayCommand(okAction, param => CanOk);
-                }
-
-                return _okCommand;
-            }
-        }
-
-        /// <summary>
-        /// Handles event when Ok button is clicked
-        /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
-        private async void OkCommandClick(object param)
-        {
-            // Replace any illegal characters in the user name string.
-            string userID = StringFunctions.StripIllegals(Environment.UserName, "_", false);
-
-            // User ID should be something at least.
-            if (string.IsNullOrEmpty(userID))
-            {
-                userID = "Temp";
-                FileFunctions.WriteLine(_logFile, "User ID not found. User ID used will be 'Temp'");
-            }
-
-            // Set the destination log file path.
-            _logFile = _toolConfig.GetLogFilePath + @"\DataSelector_" + userID + ".log";
-
-            // Clear the log file if required.
-            if (ClearLogFile)
-            {
-                bool blDeleted = FileFunctions.DeleteFile(_logFile);
-                if (!blDeleted)
-                {
-                    MessageBox.Show("Cannot delete log file. Please make sure it is not open in another window.", "DataSelector", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                //myFileFuncs.CreateLogFile(_logFile);
-            }
-
-            // Check the user entered parameters.
-            if (string.IsNullOrEmpty(ColumnsText))
-            {
-                MessageBox.Show("Please specify which columns you wish to select.", "DataSelector", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                //this.BringToFront();
-                //this.Cursor = Cursors.Default;
-                return;
-            }
-
-            // Table name should always be selected.
-            if (string.IsNullOrEmpty(SelectedTable))
-            {
-                MessageBox.Show("Please select a table to query from", "DataSelector.", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                //this.BringToFront();
-                //this.Cursor = Cursors.Default;
-                return;
-            }
-
-            // Output format should always be selected.
-            if (string.IsNullOrEmpty(SelectedOutputFormat))
-            {
-                MessageBox.Show("Please select an output format.", "DataSelector", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                //this.BringToFront();
-                //this.Cursor = Cursors.Default;
-                return;
-            }
-
-            // Perform the selection.
-            bool success = await ExecuteSelectionAsync(userID);
-
-            //// Close the main window when done.
-            //DialogResult dlResult = MessageBox.Show("Process complete. Do you wish to close the form?", "Data Selector", MessageBoxButtons.YesNo);
-            //if (dlResult == DialogResult.Yes)
-            //    this.RequestClose();
-        }
-
-        /// <summary>
-        /// Can the Ok button be pressed (has a profile been selected)?
-        /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        public static bool CanOk { get { return true; } }
-
-        private async Task<bool> ExecuteSelectionAsync(string userID)
-        {
-            // Save the parameters.
-            string tableName = SelectedTable;
-            string columnNames = ColumnsText == null ? "" : ColumnsText.Replace("\r\n", " ");
-            string whereClause = WhereText == null ? "" : WhereText.Replace("\r\n", " ");
-            string groupClause = GroupByText == null ? "" : GroupByText.Replace("\r\n", " ");
-            string orderClause = OrderByText == null ? "" : OrderByText.Replace("\r\n", " ");
-            string outputFormat = SelectedOutputFormat;
-            string outputFile;
-
-            FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
-            FileFunctions.WriteLine(_logFile, "Process started");
-            FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
-
-            //TODO: No need to pause drawing at this stage.
-            //myArcMapFuncs.ToggleDrawing();
-            //myArcMapFuncs.ToggleTOC();
-
-            // Check if there is a geometry field in the returned data
-            // and select the stored procedure accordingly
-            bool isSpatial = await IsQuerySpatial(tableName, columnNames);
-
-            // Set the temporary table names and the stored procedure names
-            bool isSplit = false;
-
-            // Set/adjust the output formats as necessary.
-            if (isSpatial)
-            {
-                isSplit = true;
-                if (outputFormat == "Geodatabase")
-                    outputFormat = "Geodatabase FC";
-
-                FileFunctions.WriteLine(_logFile, "Output is spatial. Output (Shapefile, Geodatabase) will be split into _point and _poly components");
-            }
-            else
-            {
-                if (outputFormat == "Geodatabase")
-                    outputFormat = "Geodatabase Table";
-                else if (outputFormat == "Shapefile")
-                    outputFormat = "CSV file (comma delimited)";
-
-                FileFunctions.WriteLine(_logFile, "Output is not spatial. Output file type is " + outputFormat);
-            }
-
-            // Prompt the user for the output file path and name.
-            outputFile = await GetOutputFileNameAsync(isSpatial, outputFormat);
-
-            //this.BringToFront();
-
-            if (outputFile == null)
-            {
-                // User has pressed Cancel. Bring original menu to the front.
-                //MessageBox.Show("Please select an output file");
-
-                //myArcMapFuncs.ToggleDrawing();
-                //myArcMapFuncs.ToggleTOC();
-
-                //this.Cursor = Cursors.Default;
-
-                return false;
-            }
-
-            FileFunctions.WriteLine(_logFile, "Output format is " + outputFormat);
-            FileFunctions.WriteLine(_logFile, "Output file is " + outputFile);
-
-            // Run the stored procedure to perform the selection.
-            bool success = await PerformSelection(isSpatial, isSplit, _defaultSchema, tableName, columnNames,
-                                 whereClause, groupClause, orderClause, userID);
-            if (!success)
-            {
-                return false;
-            }
-
-            if (isSpatial)
-            {
-                FileFunctions.WriteLine(_logFile, "Procedure returned " + _pointCount.ToString() + " point and " + _polyCount.ToString() +
-                    " polygon records");
-            }
-            else
-            {
-                FileFunctions.WriteLine(_logFile, "Procedure returned " + _tableCount.ToString() + " records");
-            }
-
-            // Check if there is an active map.
-            bool addToMap = (_mapFunctions.MapName == null);
-
-            // If there is no active map then create one, ready to add the results to.
-            if (addToMap)
-            {
-                await _mapFunctions.CreateMapAsync("DataMap");
-            }
-
-            // Get the map name of the active map.
-            string mapName = _mapFunctions.MapName;
-
-            // Prepare to export the results.
-            string polyFeatureClass = _defaultSchema + "." + tableName + "_poly_" + userID;
-            string pointFeatureClass = _defaultSchema + "." + tableName + "_point_" + userID;
-            string flatTable = _defaultSchema + "." + tableName + "_" + userID;
-
-            string inPoints = _toolConfig.GetSDEName + @"\" + pointFeatureClass;
-            string inPolys = _toolConfig.GetSDEName + @"\" + polyFeatureClass;
-            string flatInTable = _toolConfig.GetSDEName + @"\" + flatTable;
-
-            string outPoints = null;
-            string outPolys = null;
-
-            switch (outputFormat)
-            {
-                case "Geodatabase FC":
-                    outPoints = outputFile + "_Point";
-                    outPolys = outputFile + "_Poly";
-                    break;
-                case "Geodatabase Table":
-                    break;
-                case "Shapefile":
-                    outputFile = FileFunctions.GetFullNameWithoutExtension(outputFile);
-                    outPoints = outputFile + "_Point.shp";
-                    outPolys = outputFile + "_Poly.shp";
-                    break;
-                case "CSV file (comma delimited)":
-                    break;
-                case "Text file (tab delimited)":
-                    break;
-                default:
-                    break;
-            }
-
-            // Export the results in the required format.
-            bool result = await ExportResults(isSpatial, outputFormat, inPoints, inPolys, flatInTable, outPoints, outPolys, outputFile, false);
-
-            //// Set the layer name(s) for use later.
-            //string outputLayerName = FileFunctions.GetFileName(outputFile);
-            //if (!outputFormat.Contains("Geodatabase"))
-            //    outputLayerName = FileFunctions.GetFileNameWithoutExtension(outputLayerName);
-
-            // Add the result to the map (but only if spatial).
-            if (isSpatial)
-            {
-                if (_pointCount > 0)
-                {
-                    if (addToMap)
-                    {
-                        // Add the layer to the map.
-                        await _mapFunctions.AddLayerToMap(outPoints);
-                    }
-
-                    if (SetSymbology)
-                    {
-                        string pointsLayerName = FileFunctions.GetFileName(outPoints);
-                        if (!outputFormat.Contains("Geodatabase"))
-                            pointsLayerName = FileFunctions.GetFileNameWithoutExtension(pointsLayerName);
-
-                        // Set the symbology for the new layer.
-                        await _mapFunctions.ApplySymbologyFromLayerFileAsync(pointsLayerName, _layerLocation);
-                    }
-                }
-
-                if (_polyCount > 0)
-                {
-                    if (addToMap)
-                    {
-                        // Add the layer to the map.
-                        await _mapFunctions.AddLayerToMap(outPolys);
-                    }
-
-                    if (SetSymbology)
-                    {
-                        string polysLayerName = FileFunctions.GetFileName(outPolys);
-                        if (!outputFormat.Contains("Geodatabase"))
-                            polysLayerName = FileFunctions.GetFileNameWithoutExtension(polysLayerName);
-
-
-                        // Set the symbology for the new layer.
-                        await _mapFunctions.ApplySymbologyFromLayerFileAsync(polysLayerName, _layerLocation);
-                    }
-                }
-            }
-
-            //// Refresh the catalog.
-            //ArcGISFunctions.RefreshFolders();
-
-            // Run the stored procedure to clear the selection.
-            success = await ClearSelection(_defaultSchema, tableName, userID);
-            if (!success)
-            {
-                return false;
-            }
-
-
-
-
-            FileFunctions.WriteLine(_logFile, "---------------------------------------------------------------------------");
-            FileFunctions.WriteLine(_logFile, "Process complete");
-            FileFunctions.WriteLine(_logFile, "---------------------------------------------------------------------------");
-
-
-
-            // Open the log file.
-            Process.Start("notepad.exe", _logFile);
-
-            // Tidy up.
-            //sqlCmd.Dispose();
-            //sqlCmd2.Dispose();
-            //dbConn.Dispose();
-
-            return true;
-        }
-
 
         #endregion
 
@@ -482,7 +177,9 @@ namespace DataSelector.UI
         {
             get
             {
-                return (!_tableListLoading && _tablesList != null);
+                return (!_tableListLoading
+                    && _tablesList != null
+                    && !_dockPane.QueryRunning);
             }
         }
 
@@ -494,31 +191,55 @@ namespace DataSelector.UI
             get
             {
                 return (_tablesList != null)
-                    && (_selectedTable != null);
+                    && (_selectedTable != null
+                    && !_dockPane.QueryRunning);
             }
         }
 
         /// <summary>
-        /// If the ok command buttons is enabled
+        /// Can the Clear button be pressed?
         /// </summary>
-        public bool OkButtonEnabled
+        /// <value></value>
+        /// <returns></returns>
+        /// <remarks></remarks>
+        public bool ClearButtonEnabled
+        {
+            get { return (!_dockPane.QueryRunning); }
+        }
+
+        /// <summary>
+        /// Can the Load button be pressed?
+        /// </summary>
+        /// <value></value>
+        /// <returns></returns>
+        /// <remarks></remarks>
+        public bool LoadButtonEnabled
+        {
+            get { return (!_dockPane.QueryRunning); }
+        }
+
+        /// <summary>
+        /// Can the Save button be pressed?
+        /// </summary>
+        /// <value></value>
+        /// <returns></returns>
+        /// <remarks></remarks>
+        public bool SaveButtonEnabled
+        {
+            get { return (!_dockPane.QueryRunning); }
+        }
+
+        /// <summary>
+        /// If the run command button is enabled
+        /// </summary>
+        public bool RunButtonEnabled
         {
             get
             {
                 return (_tablesList != null)
                     && (_selectedTable != null)
-                    && (!String.IsNullOrEmpty(ColumnsText));
-            }
-        }
-
-        /// <summary>
-        /// If the other command buttons are enabled
-        /// </summary>
-        public bool OtherButtonsEnabled
-        {
-            get
-            {
-                return (_tablesList != null);
+                    && (!String.IsNullOrEmpty(ColumnsText)
+                    && !_dockPane.QueryRunning);
             }
         }
 
@@ -541,7 +262,7 @@ namespace DataSelector.UI
                 if (_clearCommand == null)
                 {
                     Action<object> clearAction = new(ClearCommandClick);
-                    _clearCommand = new RelayCommand(clearAction, param => CanClear);
+                    _clearCommand = new RelayCommand(clearAction, param => ClearButtonEnabled);
                 }
                 return _clearCommand;
             }
@@ -567,16 +288,8 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(WhereText));
             OnPropertyChanged(nameof(GroupByText));
             OnPropertyChanged(nameof(OrderByText));
-            OnPropertyChanged(nameof(OkButtonEnabled));
+            OnPropertyChanged(nameof(RunButtonEnabled));
         }
-
-        /// <summary>
-        /// Can the Clear button be pressed?
-        /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        private static bool CanClear { get { return true; } }
 
         #endregion
 
@@ -597,7 +310,7 @@ namespace DataSelector.UI
                 if (_saveCommand == null)
                 {
                     Action<object> saveAction = new(SaveCommandClick);
-                    _saveCommand = new RelayCommand(saveAction, param => CanSave);
+                    _saveCommand = new RelayCommand(saveAction, param => SaveButtonEnabled);
                 }
                 return _saveCommand;
             }
@@ -611,10 +324,6 @@ namespace DataSelector.UI
         private async void SaveCommandClick(object param)
         {
             bool saved = await SaveQueryAsync();
-
-            //// Inform the user the load was successful.
-            //if (saved)
-            //    MessageBox.Show("Query saved.", "Save query", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /// <summary>
@@ -654,7 +363,7 @@ namespace DataSelector.UI
                         // Check the file extension is valid.
                         if (saveFileNameExtension.ToLower() != "qsf")
                         {
-                            MessageBox.Show("File name has incorrect extension. Save cancelled.", "Save query", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show("File name has incorrect extension. Save cancelled.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                             return false;
                         }
                     }
@@ -662,7 +371,6 @@ namespace DataSelector.UI
                 }
                 else // User pressed Cancel.
                 {
-                    //MessageBox.Show("Please select an output file.", "Save query", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
             }
@@ -675,11 +383,17 @@ namespace DataSelector.UI
                 // Create a new stream reader for the file.
                 StreamWriter qryFile = File.CreateText(saveFileName);
 
+                // Save the parameters.
+                string columnNames = ColumnsText == null ? "" : ColumnsText.Replace("\r\n", " ");
+                string whereClause = WhereText == null ? "" : WhereText.Replace("\r\n", " ");
+                string groupClause = GroupByText == null ? "" : GroupByText.Replace("\r\n", " ");
+                string orderClause = OrderByText == null ? "" : OrderByText.Replace("\r\n", " ");
+
                 // Replace carriage return and line feeds in the consituent parts.
-                string columns = "Fields {" + ColumnsText.Replace("\r\n", "$$") + "}";
-                string where = "Where {" + WhereText.Replace("\r\n", "$$") + "}";
-                string groupBy = "Group By {" + GroupByText.Replace("\r\n", "$$") + "}";
-                string orderBy = "Order By {" + OrderByText.Replace("\r\n", "$$") + "}";
+                string columns = String.Format("Fields /{{0/}}", columnNames);
+                string where = String.Format("Where /{{0/}}\"", whereClause);
+                string groupBy = String.Format("Group By /{{0/}}\"", groupClause);
+                string orderBy = String.Format("Order By /{{0/}}\"{", orderClause);
 
                 // Write the constituent parts to the file.
                 qryFile.WriteLine(columns);
@@ -694,14 +408,6 @@ namespace DataSelector.UI
 
             return true;
         }
-
-        /// <summary>
-        /// Can the Save button be pressed?
-        /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        private static bool CanSave { get { return true; } }
 
         #endregion
 
@@ -722,7 +428,7 @@ namespace DataSelector.UI
                 if (_loadCommand == null)
                 {
                     Action<object> loadAction = new(LoadCommandClick);
-                    _loadCommand = new RelayCommand(loadAction, param => CanLoad);
+                    _loadCommand = new RelayCommand(loadAction, param => LoadButtonEnabled);
                 }
                 return _loadCommand;
             }
@@ -737,10 +443,6 @@ namespace DataSelector.UI
         private async void LoadCommandClick(object param)
         {
             bool loaded = await LoadQueryAsync();
-
-            //// Inform the user the load was successful.
-            //if (loaded)
-            //    MessageBox.Show("Query loaded.", "Load query", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /// <summary>
@@ -814,7 +516,7 @@ namespace DataSelector.UI
                     OnPropertyChanged(nameof(WhereText));
                     OnPropertyChanged(nameof(GroupByText));
                     OnPropertyChanged(nameof(OrderByText));
-                    OnPropertyChanged(nameof(OkButtonEnabled));
+                    OnPropertyChanged(nameof(RunButtonEnabled));
                 });
 
                 return true;
@@ -825,13 +527,415 @@ namespace DataSelector.UI
             }
         }
 
+        #endregion
+
+        #region Run Command
+
+        private ICommand _runCommand;
+
         /// <summary>
-        /// Can the Load button be pressed?
+        /// Create Run button command
         /// </summary>
         /// <value></value>
         /// <returns></returns>
         /// <remarks></remarks>
-        private static bool CanLoad { get { return true; } }
+        public ICommand RunCommand
+        {
+            get
+            {
+                if (_runCommand == null)
+                {
+                    Action<object> runAction = new(RunCommandClick);
+                    _runCommand = new RelayCommand(runAction, param => RunButtonEnabled);
+                }
+
+                return _runCommand;
+            }
+        }
+
+        /// <summary>
+        /// Handles event when Run button is clicked
+        /// </summary>
+        /// <param name="param"></param>
+        /// <remarks></remarks>
+        private async void RunCommandClick(object param)
+        {
+            // Replace any illegal characters in the user name string.
+            string userID = StringFunctions.StripIllegals(Environment.UserName, "_", false);
+
+            // User ID should be something at least.
+            if (string.IsNullOrEmpty(userID))
+            {
+                userID = "Temp";
+                FileFunctions.WriteLine(_logFile, "User ID not found. User ID used will be 'Temp'");
+            }
+
+            // Set the destination log file path.
+            _logFile = _toolConfig.GetLogFilePath + @"\DataSelector_" + userID + ".log";
+
+            // Clear the log file if required.
+            if (ClearLogFile)
+            {
+                bool blDeleted = FileFunctions.DeleteFile(_logFile);
+                if (!blDeleted)
+                {
+                    MessageBox.Show("Cannot delete log file. Please make sure it is not open in another window.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+            }
+
+            // Check the user entered parameters.
+            if (string.IsNullOrEmpty(ColumnsText))
+            {
+                MessageBox.Show("Please specify which columns you wish to select.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Information);
+                //this.BringToFront();
+                //this.Cursor = Cursors.Default;
+                return;
+            }
+
+            // Table name should always be selected.
+            if (string.IsNullOrEmpty(SelectedTable))
+            {
+                MessageBox.Show("Please select a table to query from", "Data Selector.", MessageBoxButton.OK, MessageBoxImage.Information);
+                //this.BringToFront();
+                //this.Cursor = Cursors.Default;
+                return;
+            }
+
+            // Output format should always be selected.
+            if (string.IsNullOrEmpty(SelectedOutputFormat))
+            {
+                MessageBox.Show("Please select an output format.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Information);
+                //this.BringToFront();
+                //this.Cursor = Cursors.Default;
+                return;
+            }
+
+            // Indicate execution has started.
+            _dockPane.QueryRunning = true;
+
+            // Update the fields and buttons in the form.
+            OnPropertyChanged(nameof(TablesList));
+            OnPropertyChanged(nameof(TablesListEnabled));
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
+            OnPropertyChanged(nameof(RunButtonEnabled));
+            OnPropertyChanged(nameof(ClearButtonEnabled));
+            OnPropertyChanged(nameof(SaveButtonEnabled));
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
+
+            // Perform the selection.
+            bool success = await ExecuteSelectionAsync(userID);
+
+            // Indicate execution has finished.
+            _dockPane.QueryRunning = false;
+
+            // Update the fields and buttons in the form.
+            OnPropertyChanged(nameof(TablesList));
+            OnPropertyChanged(nameof(TablesListEnabled));
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
+            OnPropertyChanged(nameof(RunButtonEnabled));
+            OnPropertyChanged(nameof(ClearButtonEnabled));
+            OnPropertyChanged(nameof(SaveButtonEnabled));
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
+        }
+
+        private bool ValidateQuery(string sqlCommand)
+        {
+            string errorMessage = String.Empty;
+            if (String.IsNullOrEmpty(sqlCommand))
+            {
+                errorMessage = "Sql is null or empty";
+                return false;
+            }
+
+            DatabaseConnectionFile connectionFile = new DatabaseConnectionFile(new Uri(_sdeFileName));
+            DatabaseConnectionProperties connectionProperties = DatabaseClient.GetDatabaseConnectionProperties(connectionFile);
+
+            SqlConnectionStringBuilder connBuilder = new SqlConnectionStringBuilder();
+
+            connBuilder.DataSource = connectionProperties.Instance;
+            connBuilder.InitialCatalog = connectionProperties.Database;
+            connBuilder.PersistSecurityInfo = false;
+            connBuilder.IntegratedSecurity= true;
+            connBuilder.TrustServerCertificate = true;
+
+            SqlConnection conn = new();
+            conn.ConnectionString = connBuilder.ConnectionString;
+            conn.Open();
+
+            SqlCommand command;
+            command = conn.CreateCommand();
+
+            SqlDataAdapter adapter;
+            adapter = new SqlDataAdapter(command);
+
+            SqlCommandBuilder commandBuilder;
+            commandBuilder = new SqlCommandBuilder(adapter);
+
+            //SqlTransaction transaction;
+
+            try
+            {
+                command.CommandType = System.Data.CommandType.Text;
+                command.CommandTimeout = 0;
+                command.CommandText = sqlCommand;
+
+                //if (transaction != null) command.Transaction = transaction;
+                commandBuilder.RefreshSchema();
+
+                if ((conn.State & ConnectionState.Open) != ConnectionState.Open) conn.Open();
+
+                command.ExecuteNonQuery();
+
+                conn.Close();
+
+                return true;
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                errorMessage = ex.Message;
+                MessageBox.Show("Sql is invalid. Error returned is '" + errorMessage + "'", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Information);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+                throw;
+            }
+        }
+
+
+        private async Task<bool> ExecuteSelectionAsync(string userID)
+        {
+            // Save the parameters.
+            string tableName = SelectedTable;
+            string columnNames = ColumnsText == null ? "" : ColumnsText.Replace("\r\n", " ");
+            string whereClause = WhereText == null ? "" : WhereText.Replace("\r\n", " ");
+            string groupClause = GroupByText == null ? "" : GroupByText.Replace("\r\n", " ");
+            string orderClause = OrderByText == null ? "" : OrderByText.Replace("\r\n", " ");
+            string outputFormat = SelectedOutputFormat;
+            string outputFile;
+
+            // Validate the sql command if required.
+            if (_validateSQL)
+            {
+                // Build a sql command.
+                StringBuilder sqlCommand = new("SELECT TOP 1 ");
+                sqlCommand.Append(columnNames);
+
+                if (String.IsNullOrEmpty(whereClause))
+                {
+                    sqlCommand.Append(" FROM " + tableName);
+                }
+                else
+                {
+                    if (whereClause.Substring(1, 5).ToLower() != "from ")
+                    {
+                        sqlCommand.Append(" " + whereClause);
+                    }
+                    else
+                    {
+                        sqlCommand.Append(" FROM " + tableName);
+                        sqlCommand.Append(" WHERE " + whereClause);
+                    }
+                }
+
+                if (!String.IsNullOrEmpty(groupClause))
+                    sqlCommand.Append(" GROUP BY " + groupClause);
+
+                if (!String.IsNullOrEmpty(orderClause))
+                    sqlCommand.Append(" ORDER BY " + orderClause);
+
+                if (!ValidateQuery(sqlCommand.ToString()))
+                    return false;
+            }
+
+            // Check if there is a geometry field in the returned data
+            // and select the stored procedure accordingly
+            bool isSpatial = await IsQuerySpatial(tableName, columnNames);
+
+            // Set the temporary table names and the stored procedure names
+            bool isSplit = false;
+
+            // Set/adjust the output formats as necessary.
+            if (isSpatial)
+            {
+                isSplit = true;
+                if (outputFormat == "Geodatabase")
+                    outputFormat = "Geodatabase FC";
+
+                FileFunctions.WriteLine(_logFile, "Output is spatial. Output (Shapefile, Geodatabase) will be split into _point and _poly components");
+            }
+            else
+            {
+                if (outputFormat == "Geodatabase")
+                    outputFormat = "Geodatabase Table";
+                else if (outputFormat == "Shapefile")
+                    outputFormat = "CSV file (comma delimited)";
+
+                FileFunctions.WriteLine(_logFile, "Output is not spatial. Output file type is " + outputFormat);
+            }
+
+            // Prompt the user for the output file path and name.
+            outputFile = await GetOutputFileNameAsync(isSpatial, outputFormat);
+
+            // Exit if no output file path was entered/selected.
+            if (outputFile == null)
+                return false;
+
+            FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
+            FileFunctions.WriteLine(_logFile, "Process started");
+            FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
+
+            FileFunctions.WriteLine(_logFile, "Output format is " + outputFormat);
+            FileFunctions.WriteLine(_logFile, "Output file is " + outputFile);
+
+            // Run the stored procedure to perform the selection.
+            bool success = await PerformSelection(isSpatial, isSplit, _defaultSchema, tableName, columnNames,
+                                 whereClause, groupClause, orderClause, userID);
+
+            // Exit if the stored procedure failed.
+            if (!success)
+            {
+                return false;
+            }
+
+            // Log the results of the stored procedure.
+            if (isSpatial)
+            {
+                FileFunctions.WriteLine(_logFile, "Procedure returned " + _pointCount.ToString() + " point and " + _polyCount.ToString() +
+                    " polygon records");
+            }
+            else
+            {
+                FileFunctions.WriteLine(_logFile, "Procedure returned " + _tableCount.ToString() + " records");
+            }
+
+            // Prepare to export the results.
+            string polyFeatureClass = _defaultSchema + "." + tableName + "_poly_" + userID;
+            string pointFeatureClass = _defaultSchema + "." + tableName + "_point_" + userID;
+            string flatTable = _defaultSchema + "." + tableName + "_" + userID;
+
+            string inPoints = _toolConfig.GetSDEName + @"\" + pointFeatureClass;
+            string inPolys = _toolConfig.GetSDEName + @"\" + polyFeatureClass;
+            string flatInTable = _toolConfig.GetSDEName + @"\" + flatTable;
+
+            string outPoints = null;
+            string outPolys = null;
+
+            // Set the output names depending on the output type.
+            switch (outputFormat)
+            {
+                case "Geodatabase FC":
+                    outPoints = outputFile + "_Point";
+                    outPolys = outputFile + "_Poly";
+                    break;
+                case "Geodatabase Table":
+                    break;
+                case "Shapefile":
+                    outputFile = FileFunctions.GetFullNameWithoutExtension(outputFile);
+                    outPoints = outputFile + "_Point.shp";
+                    outPolys = outputFile + "_Poly.shp";
+                    break;
+                case "CSV file (comma delimited)":
+                    break;
+                case "Text file (tab delimited)":
+                    break;
+                default:
+                    break;
+            }
+
+            // Create a new map functions object.
+            MapFunctions mapFunctions;
+            mapFunctions = new();
+
+            // Check if there is an active map.
+            bool addToMap = (mapFunctions.MapName == null);
+
+            // If there is no active map then create one, ready to add the results to.
+            if (addToMap)
+                await mapFunctions.CreateMapAsync("DataMap");
+
+            // Get the map name of the active map.
+            string mapName = mapFunctions.MapName;
+
+            // Export the results in the required format.
+            bool result = await ExportResults(mapFunctions, isSpatial, outputFormat, inPoints, inPolys, flatInTable, outPoints, outPolys, outputFile, false);
+
+            //// Set the layer name(s) for use later.
+            //string outputLayerName = FileFunctions.GetFileName(outputFile);
+            //if (!outputFormat.Contains("Geodatabase"))
+            //    outputLayerName = FileFunctions.GetFileNameWithoutExtension(outputLayerName);
+
+            // Add the result to the map (but only if spatial).
+            if (isSpatial)
+            {
+                if (_pointCount > 0)
+                {
+                    if (addToMap)
+                    {
+                        // Add the layer to the map.
+                        await mapFunctions.AddLayerToMap(outPoints);
+                    }
+
+                    if (SetSymbology)
+                    {
+                        string pointsLayerName = FileFunctions.GetFileName(outPoints);
+                        if (!outputFormat.Contains("Geodatabase"))
+                            pointsLayerName = FileFunctions.GetFileNameWithoutExtension(pointsLayerName);
+
+                        // Set the symbology for the new layer.
+                        await mapFunctions.ApplySymbologyFromLayerFileAsync(pointsLayerName, _layerLocation);
+                    }
+                }
+
+                if (_polyCount > 0)
+                {
+                    if (addToMap)
+                    {
+                        // Add the layer to the map.
+                        await mapFunctions.AddLayerToMap(outPolys);
+                    }
+
+                    if (SetSymbology)
+                    {
+                        string polysLayerName = FileFunctions.GetFileName(outPolys);
+                        if (!outputFormat.Contains("Geodatabase"))
+                            polysLayerName = FileFunctions.GetFileNameWithoutExtension(polysLayerName);
+
+
+                        // Set the symbology for the new layer.
+                        await mapFunctions.ApplySymbologyFromLayerFileAsync(polysLayerName, _layerLocation);
+                    }
+                }
+            }
+
+            //// Refresh the catalog.
+            //ArcGISFunctions.RefreshFolders();
+
+            // Run the stored procedure to clear the selection.
+            success = await ClearSelection(_defaultSchema, tableName, userID);
+            if (!success)
+            {
+                return false;
+            }
+
+            FileFunctions.WriteLine(_logFile, "---------------------------------------------------------------------------");
+            FileFunctions.WriteLine(_logFile, "Process complete");
+            FileFunctions.WriteLine(_logFile, "---------------------------------------------------------------------------");
+
+            // Open the log file (if required).
+            if (OpenLogFile)
+                Process.Start("notepad.exe", _logFile);
+
+            // Tidy up.
+            mapFunctions = null;
+            //sqlCmd.Dispose();
+            //sqlCmd2.Dispose();
+            //dbConn.Dispose();
+
+            return true;
+        }
 
         #endregion
 
@@ -846,7 +950,7 @@ namespace DataSelector.UI
                 if (_refreshCommand == null)
                 {
                     Action<object> refreshAction = new(RefreshTablesListCommandClick);
-                    _refreshCommand = new RelayCommand(refreshAction, param => CanRefreshTablesList);
+                    _refreshCommand = new RelayCommand(refreshAction, param => TablesListEnabled);
                 }
                 return _refreshCommand;
             }
@@ -866,23 +970,14 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(TablesList));
             OnPropertyChanged(nameof(TablesListEnabled));
             OnPropertyChanged(nameof(LoadColumnsEnabled));
-            OnPropertyChanged(nameof(OkButtonEnabled));
-            OnPropertyChanged(nameof(OtherButtonsEnabled));
+            OnPropertyChanged(nameof(RunButtonEnabled));
+            OnPropertyChanged(nameof(ClearButtonEnabled));
+            OnPropertyChanged(nameof(SaveButtonEnabled));
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
 
+            // Get the table names from SQL Server (and wait).
             await GetTableNames();
-
-            //// Inform the user the load was successful.
-            //if (loaded)
-            //    MessageBox.Show("Query loaded.", "Load query", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-
-        /// <summary>
-        /// Can the refresh tables list button be pressed?
-        /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        private static bool CanRefreshTablesList { get { return true; } }
 
         #endregion
 
@@ -903,7 +998,7 @@ namespace DataSelector.UI
                 if (_loadColumnsCommand == null)
                 {
                     Action<object> loadColumnsAction = new(LoadColumnsCommandClick);
-                    _loadColumnsCommand = new RelayCommand(loadColumnsAction, param => CanLoadColumns);
+                    _loadColumnsCommand = new RelayCommand(loadColumnsAction, param => LoadColumnsEnabled);
                 }
                 return _loadColumnsCommand;
             }
@@ -918,14 +1013,6 @@ namespace DataSelector.UI
         {
             await LoadColumnsAsync(_selectedTable);
         }
-
-        /// <summary>
-        /// Can the LoadColumns button be pressed?
-        /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        private static bool CanLoadColumns { get { return true; } }
 
         #endregion
 
@@ -957,7 +1044,7 @@ namespace DataSelector.UI
                 _columnsText = value;
 
                 // Update the fields and buttons in the form.
-                OnPropertyChanged(nameof(OkButtonEnabled));
+                OnPropertyChanged(nameof(RunButtonEnabled));
             }
         }
 
@@ -1026,22 +1113,10 @@ namespace DataSelector.UI
                 _selectedTable = value;
 
                 // Update the fields and buttons in the form.
-                OnPropertyChanged(nameof(OkButtonEnabled));
+                OnPropertyChanged(nameof(RunButtonEnabled));
             }
 
             //set => SetProperty(ref _selectedTable, value);
-        }
-
-        private ImageSource _imageRefresh;
-
-        public ImageSource CmdRefreshImg
-        {
-            get
-            {
-                if (_imageRefresh == null)
-                    _imageRefresh = System.Windows.Application.Current.Resources["GenericRefresh16"] as ImageSource;
-                return _imageRefresh;
-            }
         }
 
         #endregion
@@ -1061,8 +1136,8 @@ namespace DataSelector.UI
             {
                 if (!String.IsNullOrEmpty(_columnsText))
                 {
-                    DialogResult dlResult = MessageBox.Show("There is already text in the Columns field. Do you want to overwrite it?", "Data Selector", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    if (dlResult == System.Windows.Forms.DialogResult.No)
+                    MessageBoxResult dlResult = MessageBox.Show("There is already text in the Columns field. Do you want to overwrite it?", "Data Selector", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    if (dlResult == MessageBoxResult.No)
                         return; //User clicked by accident; leave routine.
                 }
 
@@ -1082,7 +1157,7 @@ namespace DataSelector.UI
 
                 // Update the fields and buttons in the form.
                 OnPropertyChanged(nameof(ColumnsText));
-                OnPropertyChanged(nameof(OkButtonEnabled));
+                OnPropertyChanged(nameof(RunButtonEnabled));
             }
         }
 
@@ -1121,6 +1196,20 @@ namespace DataSelector.UI
             set
             {
                 _clearLogFile = value;
+            }
+        }
+
+        private bool _openLogFile;
+
+        public bool OpenLogFile
+        {
+            get
+            {
+                return _openLogFile;
+            }
+            set
+            {
+                _openLogFile = value;
             }
         }
 
@@ -1170,12 +1259,14 @@ namespace DataSelector.UI
             List<String> tabList = _sqlFunctions.TableNames;
 
             // Get the include and exclude wildcard settings.
-            string includeWC = String.Format("{0}.{1}", _defaultSchema, _includeWildcard);
-            string excludeWC = String.Format("{0}.{1}", _defaultSchema, _excludeWildcard);
+            //string includeWC = String.Format("{0}.{1}", _defaultSchema, _includeWildcard);
+            //string excludeWC = String.Format("{0}.{1}", _defaultSchema, _excludeWildcard);
+            string includeWC = _includeWildcard;
+            string excludeWC = _excludeWildcard;
 
             // Filter the SQL table names and add them to a list.
             ObservableCollection<String> tablesList = new();
-            List<string> tableList = FilterTableNames(tabList, includeWC, excludeWC, false);
+            List<string> tableList = FilterTableNames(tabList, _defaultSchema, includeWC, excludeWC, false);
             foreach (string strItem in tableList)
             {
                 tablesList.Add(strItem);
@@ -1200,8 +1291,10 @@ namespace DataSelector.UI
             // Update the fields and buttons in the form.
             OnPropertyChanged(nameof(SelectedTable));
             OnPropertyChanged(nameof(LoadColumnsEnabled));
-            OnPropertyChanged(nameof(OkButtonEnabled));
-            OnPropertyChanged(nameof(OtherButtonsEnabled));
+            OnPropertyChanged(nameof(RunButtonEnabled));
+            OnPropertyChanged(nameof(ClearButtonEnabled));
+            OnPropertyChanged(nameof(SaveButtonEnabled));
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
         }
 
         /// <summary>
@@ -1211,12 +1304,12 @@ namespace DataSelector.UI
         /// <param name="excludeWildcard"></param>
         /// <param name="includeFullName"></param>
         /// <returns></returns>
-        internal static List<string> FilterTableNames(List<String> inputNames, string includeWildcard, string excludeWildcard,
+        internal List<string> FilterTableNames(List<String> inputNames, string schema, string includeWildcard, string excludeWildcard,
                               bool includeFullName = false)
         {
             // Define the wildcards as case insensitive
-            Wildcard theInclude = new(includeWildcard, RegexOptions.IgnoreCase);
-            Wildcard theExclude = new(excludeWildcard, RegexOptions.IgnoreCase);
+            Wildcard theInclude = new(includeWildcard, schema, RegexOptions.IgnoreCase);
+            Wildcard theExclude = new(excludeWildcard, schema, RegexOptions.IgnoreCase);
 
             List<string> theStringList = new();
 
@@ -1317,7 +1410,7 @@ namespace DataSelector.UI
                     }
                     else if ((outputFormat.Contains("Geodatabase")) && (blHasExtension || !outputFile.Contains(".gdb"))) // It is a geodatabase file and should not have an extension.
                     {
-                        MessageBox.Show("Please select a file geodatabase output file");
+                        MessageBox.Show("Please select a file geodatabase output file", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Information);
                         //myArcMapFuncs.ToggleDrawing();
                         //myArcMapFuncs.ToggleTOC();
                         //this.Cursor = Cursors.Default;
@@ -1326,7 +1419,7 @@ namespace DataSelector.UI
                     }
                     else if ((!outputFormat.Contains("Geodatabase")) && (outputFile.Contains(".gdb"))) // Trying to store a non-geoDB in a gdb
                     {
-                        MessageBox.Show("Cannot store " + outputFormat + " inside a geodatabase. Please choose a different output location");
+                        MessageBox.Show("Cannot store " + outputFormat + " inside a geodatabase. Please choose a different output location", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Information);
                         //myArcMapFuncs.ToggleDrawing();
                         //myArcMapFuncs.ToggleTOC();
                         //this.Cursor = Cursors.Default;
@@ -1370,8 +1463,8 @@ namespace DataSelector.UI
                         bool polyExists = await ArcGISFunctions.FeatureClassExistsAsync(polyFile);
                         if (pointExists || polyExists)
                         {
-                            DialogResult dlResult1 = MessageBox.Show("The output file already exists. Do you want to overwrite it?", "Data Selector", MessageBoxButtons.YesNo);
-                            if (dlResult1 == System.Windows.Forms.DialogResult.Yes)
+                            MessageBoxResult dlResult1 = MessageBox.Show("The output file already exists. Do you want to overwrite it?", "Data Selector", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                            if (dlResult1 == MessageBoxResult.Yes)
                                 blDone = true;
                         }
                         else
@@ -1385,8 +1478,8 @@ namespace DataSelector.UI
                         {
                             if (FileFunctions.FileExists(outputFile))
                             {
-                                DialogResult dlResult1 = MessageBox.Show("The output file already exists. Do you want to overwrite it?", "Data Selector", MessageBoxButtons.YesNo);
-                                if (dlResult1 == System.Windows.Forms.DialogResult.Yes)
+                                MessageBoxResult dlResult1 = MessageBox.Show("The output file already exists. Do you want to overwrite it?", "Data Selector", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                                if (dlResult1 == MessageBoxResult.Yes)
                                     blDone = true;
                             }
                             else
@@ -1404,8 +1497,8 @@ namespace DataSelector.UI
                     {
                         if (ArcGISFunctions.TableExists(outputFile))
                         {
-                            DialogResult dlResult1 = MessageBox.Show("The output file already exists. Do you want to overwrite it?", "Data Selector", MessageBoxButtons.YesNo);
-                            if (dlResult1 == System.Windows.Forms.DialogResult.Yes)
+                            MessageBoxResult dlResult1 = MessageBox.Show("The output file already exists. Do you want to overwrite it?", "Data Selector", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                            if (dlResult1 == MessageBoxResult.Yes)
                                 blDone = true;
                         }
                         else
@@ -1416,8 +1509,8 @@ namespace DataSelector.UI
                     {
                         if (FileFunctions.FileExists(outputFile))
                         {
-                            DialogResult dlResult1 = MessageBox.Show("The output file already exists. Do you want to overwrite it?", "Data Selector", MessageBoxButtons.YesNo);
-                            if (dlResult1 == System.Windows.Forms.DialogResult.Yes)
+                            MessageBoxResult dlResult1 = MessageBox.Show("The output file already exists. Do you want to overwrite it?", "Data Selector", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                            if (dlResult1 == MessageBoxResult.Yes)
                                 blDone = true;
                         }
                         else
@@ -1537,7 +1630,7 @@ namespace DataSelector.UI
                 FileFunctions.WriteLine(_logFile, "Error executing the stored procedure. System returned the following message: " +
                     ex.Message);
                 MessageBox.Show("Error executing the stored procedure. System returned the following message: " +
-                    ex.Message);
+                    ex.Message, "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             return success;
@@ -1573,13 +1666,14 @@ namespace DataSelector.UI
                 FileFunctions.WriteLine(_logFile, "Error deleting the temporary tables. System returned the following message: " +
                     ex.Message);
                 MessageBox.Show("Error deleting the temporary tables. System returned the following message: " +
-                    ex.Message);
+                    ex.Message, "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             return success;
         }
 
-        internal async Task<bool> ExportResults(bool isSpatial, string outputFormat,
+        internal async Task<bool> ExportResults(MapFunctions mapFunctions,
+                                  bool isSpatial, string outputFormat,
                                   string inPoints, string inPolys, string inTable,
                                   string outPoints, string outPolys, string outFile,
                                   bool addToMap)
@@ -1602,7 +1696,7 @@ namespace DataSelector.UI
                         if (!result)
                         {
                             FileFunctions.WriteLine(_logFile, "Error exporting point geodatabase file");
-                            MessageBox.Show("Error exporting point geodatabase file");
+                            MessageBox.Show("Error exporting point geodatabase file", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                             //this.Cursor = Cursors.Default;
                             //_gisFunctions.ToggleDrawing();
@@ -1614,7 +1708,7 @@ namespace DataSelector.UI
 
                         // Add the result to the map.
                         if (addToMap)
-                            await _mapFunctions.AddLayerToMap(outPoints);
+                            await mapFunctions.AddLayerToMap(outPoints);
                     }
                     if (_polyCount > 0)
                     {
@@ -1624,7 +1718,7 @@ namespace DataSelector.UI
                         if (!result)
                         {
                             FileFunctions.WriteLine(_logFile, "Error exporting polygon geodatabase file");
-                            MessageBox.Show("Error exporting polygon geodatabase file");
+                            MessageBox.Show("Error exporting polygon geodatabase file", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                             //this.Cursor = Cursors.Default;
                             //myArcMapFuncs.ToggleDrawing();
@@ -1636,7 +1730,7 @@ namespace DataSelector.UI
 
                         // Add the result to the map.
                         if (addToMap)
-                            await _mapFunctions.AddLayerToMap(outPolys);
+                            await mapFunctions.AddLayerToMap(outPolys);
                     }
 
                     return true;
@@ -1655,7 +1749,7 @@ namespace DataSelector.UI
                         if (!result)
                         {
                             FileFunctions.WriteLine(_logFile, "Error exporting point shapefile");
-                            MessageBox.Show("Error exporting point shapefile");
+                            MessageBox.Show("Error exporting point shapefile", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                             //this.Cursor = Cursors.Default;
                             //myArcMapFuncs.ToggleDrawing();
@@ -1667,7 +1761,7 @@ namespace DataSelector.UI
 
                         // Add the result to the map.
                         if (addToMap)
-                            await _mapFunctions.AddLayerToMap(outPoints);
+                            await mapFunctions.AddLayerToMap(outPoints);
                     }
                     if (_polyCount > 0)
                     {
@@ -1677,7 +1771,7 @@ namespace DataSelector.UI
                         if (!result)
                         {
                             FileFunctions.WriteLine(_logFile, "Error exporting polygon shapefile");
-                            MessageBox.Show("Error exporting polygon shapefile");
+                            MessageBox.Show("Error exporting polygon shapefile", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                             //this.Cursor = Cursors.Default;
                             //myArcMapFuncs.ToggleDrawing();
@@ -1689,7 +1783,7 @@ namespace DataSelector.UI
 
                         // Add the result to the map.
                         if (addToMap)
-                            await _mapFunctions.AddLayerToMap(outPolys);
+                            await mapFunctions.AddLayerToMap(outPolys);
                     }
 
                     return true;
@@ -1717,7 +1811,7 @@ namespace DataSelector.UI
                         if (!result)
                         {
                             FileFunctions.WriteLine(_logFile, "Error exporting output table to text file " + outFile);
-                            MessageBox.Show("Error exporting output table to text file " + outFile);
+                            MessageBox.Show("Error exporting output table to text file " + outFile, "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                             //this.Cursor = Cursors.Default;
                             //myArcMapFuncs.ToggleDrawing();
@@ -1738,7 +1832,7 @@ namespace DataSelector.UI
                         if (!result)
                         {
                             FileFunctions.WriteLine(_logFile, "Error appending output table to text file " + outFile);
-                            MessageBox.Show("Error appending output table to text file " + outFile);
+                            MessageBox.Show("Error appending output table to text file " + outFile, "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                             //this.Cursor = Cursors.Default;
                             //myArcMapFuncs.ToggleDrawing();
@@ -1766,8 +1860,6 @@ namespace DataSelector.UI
                     }
 
                     isFlatTable = true;
-                    string sFinalFile = "";
-
                     bool blAppend = false;
                     if (_pointCount > 0)
                     {
@@ -1779,7 +1871,7 @@ namespace DataSelector.UI
                         if (!result)
                         {
                             FileFunctions.WriteLine(_logFile, "Error exporting output table to CSV file " + outFile);
-                            MessageBox.Show("Error exporting output table to CSV file " + outFile);
+                            MessageBox.Show("Error exporting output table to CSV file " + outFile, "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                             //this.Cursor = Cursors.Default;
                             //myArcMapFuncs.ToggleDrawing();
@@ -1802,7 +1894,7 @@ namespace DataSelector.UI
                         if (!result)
                         {
                             FileFunctions.WriteLine(_logFile, "Error appending output table to CSV file " + outFile);
-                            MessageBox.Show("Error appending output table to CSV file " + outFile);
+                            MessageBox.Show("Error appending output table to CSV file " + outFile, "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                             //this.Cursor = Cursors.Default;
                             //myArcMapFuncs.ToggleDrawing();
@@ -1829,7 +1921,7 @@ namespace DataSelector.UI
                     if (!result)
                     {
                         FileFunctions.WriteLine(_logFile, "Error exporting output table to CSV file " + outFile);
-                        MessageBox.Show("Error exporting output table to CSV file " + outFile);
+                        MessageBox.Show("Error exporting output table to CSV file " + outFile, "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                         //this.Cursor = Cursors.Default;
                         //myArcMapFuncs.ToggleDrawing();
@@ -1853,7 +1945,7 @@ namespace DataSelector.UI
                     if (!result)
                     {
                         FileFunctions.WriteLine(_logFile, "Error exporting output table to text file " + outFile);
-                        MessageBox.Show("Error exporting output table to text file " + outFile);
+                        MessageBox.Show("Error exporting output table to text file " + outFile, "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                         //this.Cursor = Cursors.Default;
                         //myArcMapFuncs.ToggleDrawing();
@@ -1873,7 +1965,7 @@ namespace DataSelector.UI
                     if (!result)
                     {
                         FileFunctions.WriteLine(_logFile, "Error exporting output table");
-                        MessageBox.Show("Error exporting output table");
+                        MessageBox.Show("Error exporting output table", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                         //this.Cursor = Cursors.Default;
                         //myArcMapFuncs.ToggleDrawing();
@@ -1888,7 +1980,7 @@ namespace DataSelector.UI
             }
         }
 
-        internal static bool CreateEmptyOutput()
+        internal bool CreateEmptyOutput()
         {
             //if (outputFormat == "CSV file")
             //{
@@ -1961,7 +2053,7 @@ namespace DataSelector.UI
         /// <summary>
         /// Raised when a property on this object has a new value.
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public new event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
         /// Raises this object's PropertyChanged event.

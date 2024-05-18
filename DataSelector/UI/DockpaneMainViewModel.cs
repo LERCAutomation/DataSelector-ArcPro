@@ -129,11 +129,14 @@ namespace DataSelector.UI
         /// </summary>
         protected override void OnHelpRequested()
         {
-            System.Diagnostics.Process.Start(new ProcessStartInfo
+            if (_helpURL != null)
             {
-                FileName = "https://dataselector-userguide.readthedocs.io/en/latest/",
-                UseShellExecute = true
-            });
+                System.Diagnostics.Process.Start(new ProcessStartInfo
+                {
+                    FileName = _helpURL,
+                    UseShellExecute = true
+                });
+            }
         }
 
         private List<TabControl> _primaryMenuList = new List<TabControl>();
@@ -180,6 +183,22 @@ namespace DataSelector.UI
             }
         }
 
+        private bool _queryRunning;
+
+        public bool QueryRunning
+        {
+            get { return _queryRunning; }
+            set { _queryRunning = value; }
+        }
+
+        private string _helpURL;
+
+        public string HelpURL
+        {
+            get { return _helpURL; }
+            set { _helpURL = value; }
+        }
+
         #endregion
 
         #region Methods
@@ -200,6 +219,11 @@ namespace DataSelector.UI
             _paneH2VM.GetTableNames();
 
             return true;
+        }
+
+        public void ClearQueryPane()
+        {
+            _paneH2VM = null;
         }
 
         protected override void OnHidden()

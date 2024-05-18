@@ -30,9 +30,9 @@ as a spreadsheet.
   </LogFilePath>
 
   <!-- The location of the SDE file that specifies which SQL Server database to connect to. -->
-  <FileDSN>
+  <SDEFile>
 	<value>D:\GitHub\DataSelector-ArcPro-DockPane\Config\NBNExtract.sde</value>
-  </FileDSN>
+  </SDEFile>
 
   <!-- The stored procedure to execute selection in SQL Server. -->
   <SelectStoredProcedure>
@@ -67,7 +67,7 @@ as a spreadsheet.
   <!-- The Include wildcard for table names to list all the species tables in SQL Server that can be selected
          by the user to extract from. -->
   <IncludeWildcard>
-	<value>Spp_*_*Names</value>
+	<value>Spp_PointPoly_*Names|Spp_Poly_*Names</value>
   </IncludeWildcard>
 
   <!-- The Exclude wildcard for table names that should NOT be used for species tables in SQL Server that can be selected
@@ -90,6 +90,16 @@ as a spreadsheet.
   <DefaultClearLogFile>
 	<value>Yes</value>
   </DefaultClearLogFile>
+  
+  <!-- The default for whether log file should be opened by default. -->
+  <DefaultOpenLogFile>
+	<value>No</value>
+  </DefaultOpenLogFile>
+  
+  <!-- Whether to validate the SQL before running. -->
+  <ValidateSQL>
+	<value>Yes</value>
+  </ValidateSQL>
   
 </DataSelector>
 </configuration>
