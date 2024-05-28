@@ -62,6 +62,7 @@ namespace DataTools
             _xmlFound = XMLFileFound(xmlFolder, toolName, promptFilePath);
             if (!_xmlFound)
             {
+                MessageBox.Show("Error loading XML file. '" + toolName + ".xml' was not found in the XML directory.", toolName, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -73,7 +74,7 @@ namespace DataTools
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error in XML file; cannot load. System error message: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error loading XML file. System error message: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -89,7 +90,7 @@ namespace DataTools
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error in XML file; cannot load. System error message: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error loading XML file. System error message: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             _xmlLoaded = true;
@@ -133,7 +134,7 @@ namespace DataTools
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error opening XML file: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error loading XML file: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             return true;

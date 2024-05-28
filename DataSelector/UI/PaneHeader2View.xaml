@@ -8,18 +8,16 @@
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
 
-    <DockPanel MinWidth="300"
-               Margin="6,0,6,6"
-               HorizontalAlignment="Stretch"
-               VerticalAlignment="Stretch">
+    <DockPanel MinWidth="270"
+               Margin="6,0,6,6">
 
-        <Grid>
+        <Grid DockPanel.Dock="Top">
             <Grid.RowDefinitions>
-                <RowDefinition MinHeight="150" Height="*" />
+                <RowDefinition MinHeight="166" Height="*" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition MinHeight="100" Height="*" />
-                <RowDefinition MinHeight="80" Height="*" />
-                <RowDefinition MinHeight="80" Height="*" />
+                <RowDefinition MinHeight="91" Height="*" />
+                <RowDefinition MinHeight="76" Height="*" />
+                <RowDefinition MinHeight="76" Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -74,7 +72,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="10" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="55" />
+                    <ColumnDefinition Width="22" />
                 </Grid.ColumnDefinitions>
 
                 <Label Name="AsterixTables"
@@ -95,7 +93,7 @@
                 <ComboBox Name="ComboBoxTables"
                         Grid.Row="1"
                         Grid.Column="1"
-                        Margin="0,0,0,0"
+                        Margin="0,0,4,0"
                         IsEditable="False"
                         IsReadOnly="True"
                         ToolTip="Select a source table"
@@ -116,18 +114,22 @@
                 <Button Name="ButtonTablesListRefresh"
                         Grid.Row="1"
                         Grid.Column="2"
-                        Margin="4,0,0,0"
+                        Margin="0,0,0,0"
                         MinWidth="0"
                         MinHeight="0"
                         Padding="0"
+                        Width="22"
                         Height="22"
+                        BorderThickness="0"
+                        Background="Transparent"
                         FontWeight="Normal"
                         VerticalAlignment="Center"
                         IsEnabled="{Binding Path=TablesListEnabled}"
                         Command="{Binding RefreshTablesListCommand}"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        Content="Refresh"
-                        ToolTip="Refresh tables list" />
+                        ToolTip="Refresh tables list"
+                        Style="{DynamicResource Esri_SimpleButton}">
+                    <Image Source="{Binding ButtonTablesListRefreshImg}" Width="16" Height="16"/>
+                </Button>
             </Grid>
 
             <Grid Name="GridWhere" Grid.Row="2" Margin="0,4,0,4">
@@ -354,20 +356,21 @@
 
             <Grid Name="GridButtons" Grid.Row="7" Margin="0,18,0,0">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="22" />
+                    <RowDefinition Height="24" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="55" />
-                    <ColumnDefinition Width="55" />
-                    <ColumnDefinition Width="55" />
-                    <ColumnDefinition Width="55" />
+                    <ColumnDefinition Width="48" />
+                    <ColumnDefinition Width="48" />
+                    <ColumnDefinition Width="48" />
+                    <ColumnDefinition Width="48" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="55" />
+                    <ColumnDefinition Width="70" />
                 </Grid.ColumnDefinitions>
 
                 <Button Name="ButtonLoad"
                         Grid.Column="0"
-                        Margin="2,0,0,0"
+                        Margin="0,0,2,0"
+                        Padding="0"
                         MinWidth="0"
                         MinHeight="0"
                         Command="{Binding Path=LoadCommand}"
@@ -381,6 +384,7 @@
                 <Button Name="ButtonSave"
                         Grid.Column="1"
                         Margin="0,0,2,0"
+                        Padding="0"
                         MinWidth="0"
                         MinHeight="0"
                         Command="{Binding Path=SaveCommand}"
@@ -394,6 +398,7 @@
                 <Button Name="ButtonClear"
                         Grid.Column="2"
                         Margin="0,0,2,0"
+                        Padding="0"
                         MinWidth="0"
                         MinHeight="0"
                         Command="{Binding Path=ClearCommand}"
@@ -406,7 +411,8 @@
                         ToolTip="Clear the query form" />
                 <Button Name="ButtonVerify"
                         Grid.Column="3"
-                        Margin="2,0,0,0"
+                        Margin="0,0,2,0"
+                        Padding="0"
                         MinWidth="0"
                         MinHeight="0"
                         Command="{Binding Path=VerifyCommand}"
@@ -420,17 +426,20 @@
                 <Button Name="ButtonRun"
                         Grid.Column="5"
                         Margin="2,0,0,0"
+                        Padding="0"
                         MinWidth="0"
                         MinHeight="0"
                         Command="{Binding Path=RunCommand}"
                         IsCancel="False"
                         IsDefault="True"
                         IsEnabled="{Binding Path=RunButtonEnabled}"
-                        Style="{DynamicResource Esri_SimpleButton}"
                         TabIndex="5"
-                        Content="Run"
-                        FontWeight="Bold">
-                        <Button.ToolTip>
+                        Style="{DynamicResource Esri_SimpleButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{Binding ButtonRunImg}" Width="16" Height="16"/>
+                            <Label Content="Run" Padding="4,0,0,0"/>
+                        </StackPanel>
+                    <Button.ToolTip>
                             <ToolTip>
                                 <TextBlock Text="Run the query" FontWeight="Normal"></TextBlock>
                             </ToolTip>
@@ -446,4 +455,5 @@
                    Content="{Binding Path=ProcessingLabel}" />
         </Grid>
     </DockPanel>
+
 </UserControl>

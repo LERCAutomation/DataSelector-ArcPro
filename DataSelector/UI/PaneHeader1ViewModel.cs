@@ -85,6 +85,8 @@ namespace DataSelector.UI
 
         private void InitializeComponent()
         {
+            _xmlError = false;
+
             // Get the app XML config file path and name from settings.
             _xmlFolder = Settings.Default.XMLFolder;
 
@@ -94,9 +96,20 @@ namespace DataSelector.UI
             LaunchConfig launchConfig;
             launchConfig = new(_xmlFolder, _displayName, false);
 
-            // If the app config file can't be found or loaded.
-            if (!launchConfig.XMLFound || !launchConfig.XMLLoaded)
+            // If the app config file can't be found.
+            if (!launchConfig.XMLFound)
+            {
+                //MessageBox.Show("XML file 'DataSelector.xml' not found in folder.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                //_xmlError = true;
                 return;
+            }
+            // If the app config file hasn't been loaded.
+            else if (!launchConfig.XMLLoaded)
+            {
+                //MessageBox.Show("Error loading XML File 'DataSelector.xml'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                //_xmlError = true;
+                return;
+            }
 
             // Set the help URL.
             _dockPane.HelpURL = launchConfig.HelpURL;
@@ -115,6 +128,7 @@ namespace DataSelector.UI
                 if (xmlFilesList is null || xmlFilesList.Count() == 0)
                 {
                     //MessageBox.Show("No valid XML files found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                    //_xmlError = true;
                     return;
                 }
             }
@@ -137,6 +151,7 @@ namespace DataSelector.UI
                 if (!FileFunctions.FileExists(_configFile))
                 {
                     //MessageBox.Show("The default XML file '" + launchConfig.DefaultXML + "' was not found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                    //_xmlError = true;
                     return;
                 }
 
@@ -156,7 +171,8 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(CanLoadProfile));
 
             // Cancel if no XML config file has been selected.
-            if (_configFile == null) return;
+            if (_configFile == null)
+                return;
 
             // Load the default profile.
             LoadConfig(_configFile);
@@ -309,7 +325,7 @@ namespace DataSelector.UI
         /// </summary>
         /// <param name="param"></param>
         /// <remarks></remarks>
-        private void LoadProfileCommandClick(object param)
+        private async void LoadProfileCommandClick(object param)
         {
             // Skip if no profile selected (shouldn't be possible).
             if (SelectedXMLProfile == null)
@@ -337,7 +353,12 @@ namespace DataSelector.UI
             }
 
             // Initialise the query pane.
-            if (!_dockPane.InitialiseQueryPane()) return;
+            bool initialised = await _dockPane.InitialiseQueryPaneAsync();
+            if (!initialised)
+            {
+                MessageBox.Show("SDE connection file not valid.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
             // Select the query pane.
             _dockPane.SelectedPanelHeaderIndex = 1;
@@ -372,6 +393,16 @@ namespace DataSelector.UI
             }
         }
 
+        private bool _xmlError = false;
+
+        public bool XMLError
+        {
+            get
+            {
+                return _xmlError;
+            }
+        }
+
         private bool _xmlLoaded = false;
 
         public bool XMLLoaded
@@ -391,6 +422,24 @@ namespace DataSelector.UI
                 return _xmlFolder;
             }
             set => SetProperty(ref _xmlFolder, value);
+        }
+
+        public ImageSource ButtonXMLFilePathImg
+        {
+            get
+            {
+                var imageSource = System.Windows.Application.Current.Resources["FolderOpenState16"] as ImageSource;
+                return imageSource;
+            }
+        }
+
+        public ImageSource ButtonLoadProfileImg
+        {
+            get
+            {
+                var imageSource = System.Windows.Application.Current.Resources["GenericBlueRightArrowLongTail16"] as ImageSource;
+                return imageSource;
+            }
         }
 
         #endregion

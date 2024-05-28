@@ -60,7 +60,7 @@ namespace DataSelector
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error in XML file; cannot load. System error message: " + ex.Message, "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error loading XML file. System error message: " + ex.Message, "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 _xmlLoaded = false;
                 return;
             }

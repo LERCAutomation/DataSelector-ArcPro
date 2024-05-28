@@ -114,57 +114,44 @@ namespace DataSelector.UI
         /// </summary>
         /// <param name="xmlFilesList"></param>
         /// <param name="defaultXMLFile"></param>
-        public PaneHeader2ViewModel(DockpaneMainViewModel dockPane, SelectorToolConfig configFile)
+        public PaneHeader2ViewModel(DockpaneMainViewModel dockPane, SelectorToolConfig toolConfig)
         {
             _dockPane = dockPane;
 
-            if (configFile == null) return;
+            if (toolConfig == null) return;
 
-            _toolConfig = configFile;
+            _toolConfig = toolConfig;
 
             InitializeComponent();
         }
 
         private void InitializeComponent()
         {
-            var addin_infos = FrameworkApplication.GetAddInInfos();
-            StringBuilder sb = new StringBuilder();
-            foreach (var info in addin_infos)
-            {
-                if (info == null)
-                    break;//no addins probed
+            //var addin_infos = FrameworkApplication.GetAddInInfos();
+            //StringBuilder sb = new StringBuilder();
+            //foreach (var info in addin_infos)
+            //{
+            //    if (info == null)
+            //        break;//no addins probed
 
-                sb.AppendLine($"Addin: {info.Name}");
-                sb.AppendLine($"Description {info.Description}");
-                sb.AppendLine($"ImagePath {info.ImagePath}");
-                sb.AppendLine($"Author {info.Author}");
-                sb.AppendLine($"Company {info.Company}");
-                sb.AppendLine($"Date {info.Date}");
-                sb.AppendLine($"Version {info.Version}");
-                sb.AppendLine($"FullPath {info.FullPath}");
-                sb.AppendLine($"DigitalSignature {info.DigitalSignature}");
-                sb.AppendLine($"IsCompatible {info.IsCompatible}");
-                sb.AppendLine($"IsDeleted {info.IsDeleted}");
-                sb.AppendLine($"TargetVersion {info.TargetVersion}");
-                sb.AppendLine($"ErrorMsg {info.ErrorMsg}");
-                sb.AppendLine($"ID {info.ID}");
-                sb.AppendLine("");
-            }
+            //    sb.AppendLine($"Addin: {info.Name}");
+            //    sb.AppendLine($"Description {info.Description}");
+            //    sb.AppendLine($"ImagePath {info.ImagePath}");
+            //    sb.AppendLine($"Author {info.Author}");
+            //    sb.AppendLine($"Company {info.Company}");
+            //    sb.AppendLine($"Date {info.Date}");
+            //    sb.AppendLine($"Version {info.Version}");
+            //    sb.AppendLine($"FullPath {info.FullPath}");
+            //    sb.AppendLine($"DigitalSignature {info.DigitalSignature}");
+            //    sb.AppendLine($"IsCompatible {info.IsCompatible}");
+            //    sb.AppendLine($"IsDeleted {info.IsDeleted}");
+            //    sb.AppendLine($"TargetVersion {info.TargetVersion}");
+            //    sb.AppendLine($"ErrorMsg {info.ErrorMsg}");
+            //    sb.AppendLine($"ID {info.ID}");
+            //    sb.AppendLine("");
+            //}
 
             _sdeFileName = _toolConfig.GetSDEName;
-
-            // Check if the SDE file exists.
-            if (!FileFunctions.FileExists(_sdeFileName))
-            {
-                MessageBox.Show("ArcSDE connection file '" + _sdeFileName + "' not found. Cannot load Data Selector.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-                _sdeConnected = false;
-                return;
-            }
-
-            // Open the SQL Server geodatabase (don't wait for the response).
-            //SQLServerFunctions.OpenGeodatabase(_sdeFileName);
-
-            _sdeConnected = true;
 
             // Create a new SQL functions object.
             _sqlFunctions = new(_sdeFileName);
@@ -849,16 +836,6 @@ namespace DataSelector.UI
 
         #region Properties
 
-        private bool _sdeConnected;
-
-        public bool SDEConnected
-        {
-            get
-            {
-                return _sdeConnected;
-            }
-        }
-
         private string _columnsText;
 
         /// <summary>
@@ -1001,6 +978,24 @@ namespace DataSelector.UI
             }
         }
 
+        public ImageSource ButtonTablesListRefreshImg
+        {
+            get
+            {
+                var imageSource = System.Windows.Application.Current.Resources["GenericRefresh16"] as ImageSource;
+                return imageSource;
+            }
+        }
+
+        public ImageSource ButtonRunImg
+        {
+            get
+            {
+                var imageSource = System.Windows.Application.Current.Resources["GenericRun16"] as ImageSource;
+                return imageSource;
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -1116,12 +1111,6 @@ namespace DataSelector.UI
         #endregion
 
         #region SQL
-
-        public async Task OpenGeodatabase()
-        {
-            // Open a connection to the geodatabase if not already open.
-            Geodatabase geodatabase = await SQLServerFunctions.OpenGeodatabase(_sdeFileName);
-        }
 
         /// <summary>
         /// Get a list of the table names from the SQL Server.
@@ -2219,9 +2208,6 @@ namespace DataSelector.UI
                     //await mapFunctions.ApplySymbologyFromLayerFileAsync(polysLayerName, _layerLocation);
                 }
             }
-
-            //// Refresh the catalog.
-            //ArcGISFunctions.RefreshFolders();
 
             // Run the stored procedure to clear the selection.
             await ClearSelection(_defaultSchema, tableName, userID);

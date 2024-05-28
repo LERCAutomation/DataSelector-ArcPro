@@ -56,10 +56,11 @@ namespace DataSelector.UI
             InitializeComponent();
         }
 
-        public void InitializeComponent()
+        public async void InitializeComponent()
         {
             _dockPane = this;
             _initialised = false;
+            _inError = false;
 
             // Setup the tab controls.
             PrimaryMenuList.Clear();
@@ -70,11 +71,20 @@ namespace DataSelector.UI
             // Load the default XML profile (or let the user choose a profile.
             _paneH1VM = new PaneHeader1ViewModel(_dockPane);
 
+            // If the profile was in error.
+            if (_paneH1VM.XMLError)
+            {
+                _inError = true;
+                return;
+            }
+
             // If the default (and only) profile was loaded.
             if (_paneH1VM.XMLLoaded)
             {
                 // Initialise the query pane.
-                if (!InitialiseQueryPane()) return;
+                bool initialised = await InitialiseQueryPaneAsync();
+                if (!initialised)
+                    return;
 
                 // Select the profile tab.
                 SelectedPanelHeaderIndex = 1;
@@ -105,6 +115,13 @@ namespace DataSelector.UI
             // If the ViewModel is uninitialised then initialise it.
             if (!vm.Initialised)
                 vm.InitializeComponent();
+
+            // If the ViewModel is in error then don't show the dockpane.
+            if (vm.InError)
+            {
+                pane = null;
+                return;
+            }
 
             // Active the dockpane.
             pane.Activate();
@@ -184,6 +201,17 @@ namespace DataSelector.UI
             }
         }
 
+        private bool _inError = false;
+
+        public bool InError
+        {
+            get { return _inError; }
+            set
+            {
+                _inError = value;
+            }
+        }
+
         private bool _queryRunning;
 
         public bool QueryRunning
@@ -204,13 +232,33 @@ namespace DataSelector.UI
 
         #region Methods
 
-        public bool InitialiseQueryPane()
+        public async Task<bool> InitialiseQueryPaneAsync()
         {
             _paneH2VM = new PaneHeader2ViewModel(_dockPane, _paneH1VM.ToolConfig);
 
-            //_paneH2VM.OpenGeodatabase();
+            string sdeFileName = _paneH1VM.ToolConfig.GetSDEName;
 
-            if (!_paneH2VM.SDEConnected)
+            // Check if the SDE file exists.
+            if (!FileFunctions.FileExists(sdeFileName))
+            {
+                MessageBox.Show("SDE connection file '" + sdeFileName + "' not found.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // Open the SQL Server geodatabase.
+            bool sdeConnectionValid;
+            try
+            {
+                sdeConnectionValid = await SQLServerFunctions.CheckSDEConnection(sdeFileName);
+            }
+            catch (Exception)
+            {
+                _paneH2VM = null;
+                return false;
+            }
+
+            // In the SDE connection is not valid.
+            if (!sdeConnectionValid)
             {
                 _paneH2VM = null;
                 return false;
@@ -253,7 +301,7 @@ namespace DataSelector.UI
 
         protected override void OnClick()
         {
-            string uri = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            //string uri = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
             // Show the dock pane.
             DockpaneMainViewModel.Show();

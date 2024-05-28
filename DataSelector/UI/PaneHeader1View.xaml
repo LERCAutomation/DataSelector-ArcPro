@@ -22,7 +22,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="76" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="28" />
+                    <ColumnDefinition Width="22" />
                 </Grid.ColumnDefinitions>
 
                 <Label Name="LabelXMLFilePath"
@@ -33,7 +33,7 @@
                        Content="XML Folder:" />
                 <TextBox Name="TextXMLFilePath"
                          Grid.Column="1"
-                         Margin="0,0,0,0"
+                         Margin="0,0,4,0"
                          Height="22"
                          Text="{Binding Path=XMLFolder}"
                          IsReadOnly="True"
@@ -42,19 +42,19 @@
                          VerticalAlignment="Center" />
                 <Button Name="ButtonXMLFilePath"
                         Grid.Column="2"
-                        Margin="4,0,0,0"
+                        Margin="0,0,0,0"
                         MinWidth="0"
                         MinHeight="0"
                         Padding="0"
                         Height="22"
-                        Width="24"
                         TabIndex="1"
+                        BorderThickness="0"
+                        Background="Transparent"
                         VerticalAlignment="Center"
                         Command="{Binding Path=SelectXMLPathCommand}"
                         IsEnabled="{Binding Path=CanSelectXMLPath}"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        Content="..."
-                        FontWeight="ExtraBold">
+                        Style="{DynamicResource Esri_SimpleButton}">
+                            <Image Source="{Binding ButtonXMLFilePathImg}" Width="16" Height="16"/>
                         <Button.ToolTip>
                             <ToolTip>
                                 <TextBlock Text="Browse to the XML config folder" FontWeight="Normal"></TextBlock>
@@ -99,17 +99,20 @@
                         Height="22"
                         IsDefault="True"
                         TabIndex="3"
+                        BorderBrush="Gray"
                         VerticalAlignment="Center"
                         Command="{Binding Path=LoadProfileCommand}"
                         IsEnabled="{Binding Path=CanLoadProfile}"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        Content="Load"
-                        FontWeight="Bold">
-                        <Button.ToolTip>
-                            <ToolTip>
+                        Style="{DynamicResource Esri_SimpleButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding ButtonLoadProfileImg}" Width="16" Height="16"/>
+                        <Label Content="Run" Padding="4,0,0,0"/>
+                    </StackPanel>
+                    <Button.ToolTip>
+                        <ToolTip>
                             <TextBlock Text="Load XML profile" FontWeight="Normal"></TextBlock>
-                            </ToolTip>
-                        </Button.ToolTip>
+                        </ToolTip>
+                    </Button.ToolTip>
                 </Button>
             </Grid>
         </Grid>

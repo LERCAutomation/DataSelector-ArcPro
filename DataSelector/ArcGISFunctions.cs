@@ -162,11 +162,8 @@ namespace DataTools
                         Layer layer = LayerFactory.Instance.CreateLayer(uri, _activeMap);
                     }
                 });
-
-                // Redraw the active map.
-                //_activeMapView.Redraw(false);
             }
-            catch (Exception ex)
+            catch
             {
             }
         }
@@ -193,11 +190,8 @@ namespace DataTools
                         StandaloneTable table = StandaloneTableFactory.Instance.CreateStandaloneTable(uri, _activeMap);
                     }
                 });
-
-                // Redraw the active map.
-                //_activeMapView.Redraw(false);
             }
-            catch (Exception ex)
+            catch
             {
             }
         }
@@ -207,7 +201,7 @@ namespace DataTools
         #region Layers
 
         /// <summary>
-        /// Fine a layer by name in the active map.
+        /// Find a layer by name in the active map.
         /// </summary>
         /// <param name="layerName"></param>
         /// <returns></returns>
@@ -265,7 +259,7 @@ namespace DataTools
                         featureLayer?.SetRenderer(rendererFromLayerFile);
                     });
                 }
-                catch (GeodatabaseNotFoundOrOpenedException exception)
+                catch (GeodatabaseNotFoundOrOpenedException)
                 {
                     // Handle Exception.
                     return false;
@@ -396,15 +390,12 @@ namespace DataTools
 
                     using FeatureClassDefinition featureClassDefinition = geodatabase.GetDefinition<FeatureClassDefinition>(fileName);
 
-                    exists = true;
-                    //if (featureClassDefinition != null)
-                    //    exists = true;
-
-                    //featureClassDefinition.Dispose();  // FeatureClass found, dispose of object
-                    //geodatabase.Dispose();
+                    //exists = true;
+                    if (featureClassDefinition != null)
+                        exists = true;
                 });
             }
-            catch (GeodatabaseNotFoundOrOpenedException exception)
+            catch (GeodatabaseNotFoundOrOpenedException)
             {
                 // Handle Exception.
                 return false;
@@ -464,15 +455,6 @@ namespace DataTools
 
         #endregion
 
-        //public static void RefreshFolders()
-        //{
-        //    foreach (var item in Project.Current.Items.OfType<FolderConnectionProjectItem>())
-        //    {
-        //        string itemName = item.Name;
-        //        ((ArcGIS.Desktop.Internal.Core.IItemInternal)item).RefreshChildren();
-        //    }
-        //}
-
         #region Outputs
 
         /// <summary>
@@ -489,7 +471,7 @@ namespace DataTools
             switch (fileType)
             {
                 case "Geodatabase FC":
-                    bf = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_featureClasses_all");
+                    bf = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_geodatabaseItems_featureClasses");
                     break;
                 case "Geodatabase Table":
                     bf = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_geodatabaseItems_tables");
@@ -513,7 +495,7 @@ namespace DataTools
             {
                 Title = "Save Output As...",
                 InitialLocation = initialDirectory,
-                AlwaysUseInitialLocation = true,
+                //AlwaysUseInitialLocation = true,
                 //Filter = ItemFilters.Files_All,
                 OverwritePrompt = false,    // This will be done later.
                 BrowseFilter = bf
@@ -609,11 +591,6 @@ namespace DataTools
         /// <returns></returns>
         public static async Task<bool> ExportFeaturesAsync(string inTable, string outTable, bool Messages = false)
         {
-            //// prepare input parameter values to CopyFeaturesAsync tool
-            //string input_data = @"C:\data\california.gdb\ca_highways";
-            //string out_workspace = ArcGIS.Desktop.Core.Project.Current.DefaultGeodatabasePath;
-            //string out_data = System.IO.Path.Combine(out_workspace, "ca_highways2");
-
             // Make a value array of strings to be passed to the tool.
             var parameters = Geoprocessing.MakeValueArray(inTable, outTable);
 
