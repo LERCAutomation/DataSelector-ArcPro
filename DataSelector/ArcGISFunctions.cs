@@ -20,21 +20,17 @@
 // along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.UtilityNetwork.Trace;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data.Exceptions;
 using System.Linq;
 using System.Collections.Generic;
 using ArcGIS.Core.CIM;
-using ArcGIS.Desktop.Framework.Contracts;
-using System.Windows;
 
 namespace DataTools
 {
@@ -53,7 +49,9 @@ namespace DataTools
 
         #region Constructor
 
-        // Class constructor.
+        /// <summary>
+        /// Set the global variables.
+        /// </summary>
         public MapFunctions()
         {
             // Get the active map view (if there is one).
@@ -70,6 +68,9 @@ namespace DataTools
 
         #region Properties
 
+        /// <summary>
+        /// The name of the active map.
+        /// </summary>
         public string MapName
         {
             get
@@ -275,7 +276,7 @@ namespace DataTools
     }
 
     /// <summary>
-    /// This class provides ArcGIS Pro feature class and table functions.
+    /// This helper class provides ArcGIS Pro feature class and table functions.
     /// </summary>
     static class ArcGISFunctions
     {

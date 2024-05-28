@@ -50,6 +50,12 @@ namespace DataTools
 
         #region Constructor
 
+        /// <summary>
+        /// Get the tool XML file and read the variables.
+        /// </summary>
+        /// <param name="xmlFolder"></param>
+        /// <param name="toolName"></param>
+        /// <param name="promptFilePath"></param>
         public LaunchConfig(string xmlFolder, string toolName, bool promptFilePath)
         {
             _toolName = toolName;
@@ -60,6 +66,11 @@ namespace DataTools
 
             // Check the XML file exists (or prompt the user)
             _xmlFound = XMLFileFound(xmlFolder, toolName, promptFilePath);
+
+            // If the user didn't select a folder when prompted.
+            if (GetSelectCancelled)
+                return;
+
             if (!_xmlFound)
             {
                 MessageBox.Show("Error loading XML file. '" + toolName + ".xml' was not found in the XML directory.", toolName, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -96,11 +107,17 @@ namespace DataTools
             _xmlLoaded = true;
         }
 
+        /// <summary>
+        /// Check the XML file exists and prompt the user if not.
+        /// </summary>
+        /// <param name="xmlFolder"></param>
+        /// <param name="toolName"></param>
+        /// <param name="promptFilePath"></param>
+        /// <returns></returns>
         private bool XMLFileFound(string xmlFolder, string toolName, bool promptFilePath)
         {
             string xmlFile = xmlFolder + String.Format(@"\{0}.xml", _toolName);
 
-            // Open and read the app XML file.
             try
             {
                 // If the user is to be prompted for a file path.
@@ -140,6 +157,10 @@ namespace DataTools
             return true;
         }
 
+        /// <summary>
+        /// Get the mandatory variables from the XML file.
+        /// </summary>
+        /// <returns></returns>
         public bool GetMandatoryVariables()
         {
             string strRawText;
@@ -208,7 +229,7 @@ namespace DataTools
         private bool _xmlLoaded;
 
         /// <summary>
-        ///  Has the XML file been loaded.
+        /// Has the XML file been loaded.
         /// </summary>
         public bool XMLLoaded
         {
@@ -255,12 +276,13 @@ namespace DataTools
             }
         }
 
+        #endregion
+
+        #region Variables
+
         private string _defaultXML = "DefaultProfile.xml";
 
-        /// <summary>
-        /// The name of the default XML profile.
-        /// </summary>
-        public string DefaultXML
+        public string GetDefaultXML
         {
             get
             {
@@ -270,7 +292,7 @@ namespace DataTools
 
         private bool _selectCancelled = false;
 
-        public bool SelectCancelled
+        public bool GetSelectCancelled
         {
             get
             {
@@ -280,7 +302,7 @@ namespace DataTools
 
         private string _helpURL;
 
-        public string HelpURL
+        public string GetHelpURL
         {
             get
             {

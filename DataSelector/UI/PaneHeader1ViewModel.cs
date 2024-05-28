@@ -23,24 +23,21 @@ using ArcGIS.Desktop.Framework;
 using DataTools;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Input;
-using System.Text.RegularExpressions;
 using DataSelector.Properties;
 using System.Windows;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace DataSelector.UI
 {
+    /// <summary>
+    /// Load the XML file and prompt the user to select
+    /// an XML profile to load.
+    /// </summary>
     internal class PaneHeader1ViewModel : PanelViewModelBase, INotifyPropertyChanged
     {
 
@@ -56,15 +53,9 @@ namespace DataSelector.UI
 
         #region ViewModelBase Members
 
-        //public override string DisplayName
-        //{
-        //    get { return "Select XML Profile"; }
-        //}
-
         public override string DisplayName
         {
             get { return _displayName; }
-            //set { _displayName = value; }
         }
 
         #endregion
@@ -72,7 +63,7 @@ namespace DataSelector.UI
         #region Creator
 
         /// <summary>
-        /// Set the global variables
+        /// Set the global variables.
         /// </summary>
         /// <param name="xmlFilesList"></param>
         /// <param name="defaultXMLFile"></param>
@@ -83,6 +74,9 @@ namespace DataSelector.UI
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Initialise the profile pane.
+        /// </summary>
         private void InitializeComponent()
         {
             _xmlError = false;
@@ -112,7 +106,7 @@ namespace DataSelector.UI
             }
 
             // Set the help URL.
-            _dockPane.HelpURL = launchConfig.HelpURL;
+            _dockPane.HelpURL = launchConfig.GetHelpURL;
 
             List<string> xmlFilesList = new();
             bool blOnlyDefault = false;
@@ -123,7 +117,7 @@ namespace DataSelector.UI
             if (launchConfig.ChooseConfig)
             {
                 // Get a list of all of the valid XML profiles in the folder.
-                GetValidXMLFiles(_xmlFolder, launchConfig.DefaultXML, ref xmlFilesList, ref blDefaultFound, ref blOnlyDefault);
+                GetValidXMLFiles(_xmlFolder, launchConfig.GetDefaultXML, ref xmlFilesList, ref blDefaultFound, ref blOnlyDefault);
 
                 if (xmlFilesList is null || xmlFilesList.Count() == 0)
                 {
@@ -139,34 +133,33 @@ namespace DataSelector.UI
             if (launchConfig.ChooseConfig && !blOnlyDefault)
             {
                 _availableXMLFiles = xmlFilesList;
-                _selectedXMLProfile = launchConfig.DefaultXML;
+                _selectedXMLProfile = launchConfig.GetDefaultXML;
             }
             else
             {
                 // If the user isn't allowed to choose, or if there is only the
                 // default XML file in the directory, then use the default.
-                _configFile = _xmlFolder + @"\" + launchConfig.DefaultXML;
+                _configFile = _xmlFolder + @"\" + launchConfig.GetDefaultXML;
 
                 // Check the default XML file exists.
                 if (!FileFunctions.FileExists(_configFile))
                 {
-                    //MessageBox.Show("The default XML file '" + launchConfig.DefaultXML + "' was not found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                    //MessageBox.Show("The default XML file '" + launchConfig.GetDefaultXML + "' was not found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                     //_xmlError = true;
                     return;
                 }
 
                 // Add the default file to the list and select it.
                 xmlFilesList = new();
-                xmlFilesList.Add(launchConfig.DefaultXML);
+                xmlFilesList.Add(launchConfig.GetDefaultXML);
                 _availableXMLFiles = xmlFilesList;
-                _selectedXMLProfile = launchConfig.DefaultXML;
+                _selectedXMLProfile = launchConfig.GetDefaultXML;
             }
 
             // Update the fields and buttons in the form.
             OnPropertyChanged(nameof(XMLFolder));
             OnPropertyChanged(nameof(AvailableXMLFiles));
             OnPropertyChanged(nameof(SelectedXMLProfile));
-
             OnPropertyChanged(nameof(CanSelectXMLPath));
             OnPropertyChanged(nameof(CanLoadProfile));
 
@@ -189,7 +182,7 @@ namespace DataSelector.UI
         private ICommand _selectXMLPathCommand;
 
         /// <summary>
-        /// Create SelectXMLPath button command
+        /// Create the SelectXMLPath button command.
         /// </summary>
         /// <value></value>
         /// <returns></returns>
@@ -209,7 +202,7 @@ namespace DataSelector.UI
         }
 
         /// <summary>
-        /// Handles event when SelectXMLPath button is clicked
+        /// Handles the event when the SelectXMLPath button is clicked.
         /// </summary>
         /// <param name="param"></param>
         /// <remarks></remarks>
@@ -250,7 +243,7 @@ namespace DataSelector.UI
 
         #endregion
 
-            #region Select XML Profile
+        #region Select XML Profile
 
         private List<string> _availableXMLFiles;
 
@@ -301,7 +294,7 @@ namespace DataSelector.UI
         private ICommand _loadProfileCommand;
 
         /// <summary>
-        /// Create Open XML button command
+        /// Create the Open XML button command.
         /// </summary>
         /// <value></value>
         /// <returns></returns>
@@ -321,7 +314,7 @@ namespace DataSelector.UI
         }
 
         /// <summary>
-        /// Handles event when Open XML button is clicked
+        /// Handles the event when the Open XML button is clicked.
         /// </summary>
         /// <param name="param"></param>
         /// <remarks></remarks>
@@ -433,15 +426,6 @@ namespace DataSelector.UI
             }
         }
 
-        public ImageSource ButtonLoadProfileImg
-        {
-            get
-            {
-                var imageSource = System.Windows.Application.Current.Resources["GenericBlueRightArrowLongTail16"] as ImageSource;
-                return imageSource;
-            }
-        }
-
         #endregion
 
         #region Methods
@@ -460,7 +444,7 @@ namespace DataSelector.UI
             launchConfig = new(_xmlFolder, _displayName, true);
 
             // If the user didn't select a folder when prompted.
-            if (launchConfig.SelectCancelled)
+            if (launchConfig.GetSelectCancelled)
                 return false;
 
             // If the app config file can't be found.
@@ -493,7 +477,7 @@ namespace DataSelector.UI
             if (launchConfig.ChooseConfig)
             {
                 // Get a list of all of the valid XML profiles in the folder.
-                GetValidXMLFiles(_xmlFolder, launchConfig.DefaultXML, ref xmlFilesList, ref blDefaultFound, ref blOnlyDefault);
+                GetValidXMLFiles(_xmlFolder, launchConfig.GetDefaultXML, ref xmlFilesList, ref blDefaultFound, ref blOnlyDefault);
 
                 if (xmlFilesList is null || xmlFilesList.Count() == 0)
                 {
@@ -508,26 +492,26 @@ namespace DataSelector.UI
             if (launchConfig.ChooseConfig && !blOnlyDefault)
             {
                 _availableXMLFiles = xmlFilesList;
-                _selectedXMLProfile = launchConfig.DefaultXML;
+                _selectedXMLProfile = launchConfig.GetDefaultXML;
             }
             else
             {
                 // If the user isn't allowed to choose, or if there is only the
                 // default XML file in the directory, then use the default.
-                _configFile = _xmlFolder + @"\" + launchConfig.DefaultXML;
+                _configFile = _xmlFolder + @"\" + launchConfig.GetDefaultXML;
 
                 // Check the default XML file exists.
                 if (!FileFunctions.FileExists(_configFile))
                 {
-                    MessageBox.Show("The default XML file '" + launchConfig.DefaultXML + "' was not found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("The default XML file '" + launchConfig.GetDefaultXML + "' was not found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                     return false;
                 }
 
                 // Add the default file to the list and select it.
                 xmlFilesList = new();
-                xmlFilesList.Add(launchConfig.DefaultXML);
+                xmlFilesList.Add(launchConfig.GetDefaultXML);
                 _availableXMLFiles = xmlFilesList;
-                _selectedXMLProfile = launchConfig.DefaultXML;
+                _selectedXMLProfile = launchConfig.GetDefaultXML;
             }
 
             return true;
@@ -572,6 +556,10 @@ namespace DataSelector.UI
             xmlFilesList.Sort();
         }
 
+        /// <summary>
+        /// Load the selected XML profile.
+        /// </summary>
+        /// <param name="configFile"></param>
         public void LoadConfig(string configFile)
         {
             _configFile = configFile;
@@ -597,6 +585,17 @@ namespace DataSelector.UI
 
             // Indicate the XML has been loaded.
             _xmlLoaded = true;
+        }
+
+        /// <summary>
+        /// Refresh the buttons on the pane (before/after the
+        /// query runs from the second pane).
+        /// </summary>
+        public void RefreshButtons()
+        {
+            // Update the fields and buttons in the form.
+            OnPropertyChanged(nameof(CanSelectXMLPath));
+            OnPropertyChanged(nameof(CanLoadProfile));
         }
 
         #endregion

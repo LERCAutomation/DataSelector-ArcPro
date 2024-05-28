@@ -34,17 +34,11 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 using ArcGIS.Core.Data;
-using System.Windows.Media.Imaging;
 using System.Windows;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
-using System.Data.Common;
 using System.Data;
-//using System.Data.SqlClient;
 using Microsoft.Data.SqlClient;
-using ArcGIS.Desktop.Internal.Mapping.Georeference;
-using Microsoft.IdentityModel.Tokens;
 
 namespace DataSelector.UI
 {
@@ -83,26 +77,9 @@ namespace DataSelector.UI
 
         #region ViewModelBase Members
 
-        //public override string DisplayName
-        //{
-        //    get { return "Select XML Profile"; }
-        //}
-
         public override string DisplayName
         {
             get { return _displayName; }
-            //set { _displayName = value; }
-        }
-
-        public string WindowTitle
-        {
-            get
-            {
-                var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                return String.Format("{0} - {1}.{2}.{3}", DisplayName, version.Major,
-                    version.MajorRevision,
-                    version.Minor);
-            }
         }
 
         #endregion
@@ -110,7 +87,7 @@ namespace DataSelector.UI
         #region Creator
 
         /// <summary>
-        /// Initialise the query pane.
+        /// Set the global variables.
         /// </summary>
         /// <param name="xmlFilesList"></param>
         /// <param name="defaultXMLFile"></param>
@@ -125,6 +102,9 @@ namespace DataSelector.UI
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Initialise the query pane.
+        /// </summary>
         private void InitializeComponent()
         {
             //var addin_infos = FrameworkApplication.GetAddInInfos();
@@ -151,6 +131,7 @@ namespace DataSelector.UI
             //    sb.AppendLine("");
             //}
 
+            // Set the SDE file name.
             _sdeFileName = _toolConfig.GetSDEName;
 
             // Create a new SQL functions object.
@@ -426,6 +407,7 @@ namespace DataSelector.UI
                 }
             }
 
+            // Save the query.
             await Task.Run(() =>
             {
                 // Save the query name ready for future saves.
@@ -513,77 +495,76 @@ namespace DataSelector.UI
 
             string saveFileName;
 
-            // If a file has been chosen.
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                await Task.Run(() =>
-                {
-                    // Clear the form.
-                    _columnsText = "";
-                    _whereText = "";
-                    _groupByText = "";
-                    _orderByText = "";
-
-                    // Get the name of the file to open.
-                    saveFileName = openFileDialog.FileName;
-
-                    // Save the query name ready for future saves.
-                    _queryName = FileFunctions.GetFileName(saveFileName);
-
-                    // Create a new stream reader for the file.
-                    StreamReader qryFile = new(saveFileName);
-
-                    // Loop through the lines in the query, separating them
-                    // into their constituent parts.
-                    string qryLine = "";
-                    while ((qryLine = qryFile.ReadLine()) != null)
-                    {
-                        if (qryLine.Length > 7 && qryLine.Substring(0, 8).ToUpper() == "FIELDS {" && qryLine.ToUpper() != "FIELDS {}")
-                        {
-                            qryLine = qryLine.Substring(8, qryLine.Length - 9);
-                            _columnsText = qryLine.Replace("$$", "\r\n");
-                        }
-                        else if (qryLine.Length > 6 && qryLine.Substring(0, 7).ToUpper() == "WHERE {" && qryLine.ToUpper() != "WHERE {}")
-                        {
-                            qryLine = qryLine.Substring(7, qryLine.Length - 8);
-                            _whereText = qryLine.Replace("$$", "\r\n");
-                        }
-                        else if (qryLine.Length > 9 && qryLine.Substring(0, 10).ToUpper() == "GROUP BY {" && qryLine.ToUpper() != "GROUP BY {}")
-                        {
-                            qryLine = qryLine.Substring(10, qryLine.Length - 11);
-                            _groupByText = qryLine.Replace("$$", "\r\n");
-                        }
-                        else if (qryLine.Length > 9 && qryLine.Substring(0, 10).ToUpper() == "ORDER BY {" && qryLine.ToUpper() != "ORDER BY {}")
-                        {
-                            qryLine = qryLine.Substring(10, qryLine.Length - 11);
-                            _orderByText = qryLine.Replace("$$", "\r\n");
-                        }
-                    }
-
-
-                    // Close the displose of the stream reader.
-                    qryFile.Close();
-                    qryFile.Dispose();
-
-                    // Update the fields and buttons in the form.
-                    OnPropertyChanged(nameof(ColumnsText));
-                    OnPropertyChanged(nameof(WhereText));
-                    OnPropertyChanged(nameof(GroupByText));
-                    OnPropertyChanged(nameof(OrderByText));
-                    OnPropertyChanged(nameof(SaveButtonEnabled));
-                    OnPropertyChanged(nameof(ClearButtonEnabled));
-                    OnPropertyChanged(nameof(VerifyButtonEnabled));
-                    OnPropertyChanged(nameof(RunButtonEnabled));
-                });
-
-                openFileDialog.Dispose();
-                return true;
-            }
-            else
+            // If a file has not been chosen.
+            if (openFileDialog.ShowDialog() != DialogResult.OK)
             {
                 openFileDialog.Dispose();
                 return false;
             }
+
+            // Load the query.
+            await Task.Run(() =>
+            {
+                // Clear the form.
+                _columnsText = "";
+                _whereText = "";
+                _groupByText = "";
+                _orderByText = "";
+
+                // Get the name of the file to open.
+                saveFileName = openFileDialog.FileName;
+
+                // Save the query name ready for future saves.
+                _queryName = FileFunctions.GetFileName(saveFileName);
+
+                // Create a new stream reader for the file.
+                StreamReader qryFile = new(saveFileName);
+
+                // Loop through the lines in the query, separating them
+                // into their constituent parts.
+                string qryLine = "";
+                while ((qryLine = qryFile.ReadLine()) != null)
+                {
+                    if (qryLine.Length > 7 && qryLine.Substring(0, 8).ToUpper() == "FIELDS {" && qryLine.ToUpper() != "FIELDS {}")
+                    {
+                        qryLine = qryLine.Substring(8, qryLine.Length - 9);
+                        _columnsText = qryLine.Replace("$$", "\r\n");
+                    }
+                    else if (qryLine.Length > 6 && qryLine.Substring(0, 7).ToUpper() == "WHERE {" && qryLine.ToUpper() != "WHERE {}")
+                    {
+                        qryLine = qryLine.Substring(7, qryLine.Length - 8);
+                        _whereText = qryLine.Replace("$$", "\r\n");
+                    }
+                    else if (qryLine.Length > 9 && qryLine.Substring(0, 10).ToUpper() == "GROUP BY {" && qryLine.ToUpper() != "GROUP BY {}")
+                    {
+                        qryLine = qryLine.Substring(10, qryLine.Length - 11);
+                        _groupByText = qryLine.Replace("$$", "\r\n");
+                    }
+                    else if (qryLine.Length > 9 && qryLine.Substring(0, 10).ToUpper() == "ORDER BY {" && qryLine.ToUpper() != "ORDER BY {}")
+                    {
+                        qryLine = qryLine.Substring(10, qryLine.Length - 11);
+                        _orderByText = qryLine.Replace("$$", "\r\n");
+                    }
+                }
+
+
+                // Close the displose of the stream reader.
+                qryFile.Close();
+                qryFile.Dispose();
+
+                // Update the fields and buttons in the form.
+                OnPropertyChanged(nameof(ColumnsText));
+                OnPropertyChanged(nameof(WhereText));
+                OnPropertyChanged(nameof(GroupByText));
+                OnPropertyChanged(nameof(OrderByText));
+                OnPropertyChanged(nameof(SaveButtonEnabled));
+                OnPropertyChanged(nameof(ClearButtonEnabled));
+                OnPropertyChanged(nameof(VerifyButtonEnabled));
+                OnPropertyChanged(nameof(RunButtonEnabled));
+            });
+
+            openFileDialog.Dispose();
+            return true;
         }
 
         #endregion
@@ -735,6 +716,7 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(VerifyButtonEnabled));
             OnPropertyChanged(nameof(RunButtonEnabled));
             OnPropertyChanged(nameof(ProcessingLabel));
+            _dockPane.RefreshPanel1Buttons();
 
             // Perform the selection.
             bool success = await ExecuteSelectionAsync(userID);
@@ -753,6 +735,7 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(VerifyButtonEnabled));
             OnPropertyChanged(nameof(RunButtonEnabled));
             OnPropertyChanged(nameof(ProcessingLabel));
+            _dockPane.RefreshPanel1Buttons();
         }
 
         #endregion
@@ -761,6 +744,9 @@ namespace DataSelector.UI
 
         private ICommand _refreshCommand;
 
+        /// <summary>
+        /// Create the RefreshTablesList button command.
+        /// </summary>
         public ICommand RefreshTablesListCommand
         {
             get
@@ -775,7 +761,7 @@ namespace DataSelector.UI
         }
 
         /// <summary>
-        /// Handles event when refresh tables list button is clicked
+        /// Handles the event when the refresh tables list button is clicked.
         /// </summary>
         /// <param name="param"></param>
         /// <remarks></remarks>
@@ -804,7 +790,7 @@ namespace DataSelector.UI
         private ICommand _loadColumnsCommand;
 
         /// <summary>
-        /// Create LoadColumns button command
+        /// Create the LoadColumns button command.
         /// </summary>
         /// <value></value>
         /// <returns></returns>
@@ -823,7 +809,7 @@ namespace DataSelector.UI
         }
 
         /// <summary>
-        /// Handles event when LoadColumns button is clicked
+        /// Handles the event when the LoadColumns button is clicked.
         /// </summary>
         /// <param name="param"></param>
         /// <remarks></remarks>
@@ -839,7 +825,7 @@ namespace DataSelector.UI
         private string _columnsText;
 
         /// <summary>
-        ///
+        /// Get/Set the SQL columns clause.
         /// </summary>
         public string ColumnsText
         {
@@ -874,7 +860,7 @@ namespace DataSelector.UI
         private string _whereText;
 
         /// <summary>
-        ///
+        /// Get/Set the SQL where clause.
         /// </summary>
         public string WhereText
         {
@@ -897,7 +883,7 @@ namespace DataSelector.UI
         private string _groupByText;
 
         /// <summary>
-        ///
+        /// Get/Set the SQL group by clause.
         /// </summary>
         public string GroupByText
         {
@@ -918,7 +904,7 @@ namespace DataSelector.UI
         private string _orderByText;
 
         /// <summary>
-        ///
+        /// Get/Set the SQL oerder by clause.
         /// </summary>
         public string OrderByText
         {
@@ -938,6 +924,9 @@ namespace DataSelector.UI
 
         private ObservableCollection<String> _tablesList;
 
+        /// <summary>
+        /// Get the list of SQL tables.
+        /// </summary>
         public ObservableCollection<String> TablesList
         {
             get
@@ -948,6 +937,9 @@ namespace DataSelector.UI
 
         private string _selectedTable;
 
+        /// <summary>
+        /// Get/Set the selected SQL table.
+        /// </summary>
         public string SelectedTable
         {
             get
@@ -964,12 +956,13 @@ namespace DataSelector.UI
                 OnPropertyChanged(nameof(VerifyButtonEnabled));
                 OnPropertyChanged(nameof(RunButtonEnabled));
             }
-
-            //set => SetProperty(ref _selectedTable, value);
         }
 
         private string _processingLabel;
 
+        /// <summary>
+        /// Get the query processing label.
+        /// </summary>
         public string ProcessingLabel
         {
             get
@@ -978,6 +971,9 @@ namespace DataSelector.UI
             }
         }
 
+        /// <summary>
+        /// Get the image for the TablesListRefresh button.
+        /// </summary>
         public ImageSource ButtonTablesListRefreshImg
         {
             get
@@ -987,6 +983,9 @@ namespace DataSelector.UI
             }
         }
 
+        /// <summary>
+        /// Get the image for the Run button.
+        /// </summary>
         public ImageSource ButtonRunImg
         {
             get
@@ -1043,6 +1042,9 @@ namespace DataSelector.UI
 
         private List<String> _outputFormats;
 
+        /// <summary>
+        /// Get the list of available output formats.
+        /// </summary>
         public List<String> OutputFormats
         {
             get
@@ -1053,6 +1055,9 @@ namespace DataSelector.UI
 
         private string _selectedOutputFormat;
 
+        /// <summary>
+        /// Get/Set the selected output format.
+        /// </summary>
         public string SelectedOutputFormat
         {
             get
@@ -1068,6 +1073,9 @@ namespace DataSelector.UI
 
         private bool _clearLogFile;
 
+        /// <summary>
+        /// Is the log file to be cleared before running the SQL query?
+        /// </summary>
         public bool ClearLogFile
         {
             get
@@ -1082,6 +1090,9 @@ namespace DataSelector.UI
 
         private bool _openLogFile;
 
+        /// <summary>
+        /// Is the log file to be opened after running the SQL query?
+        /// </summary>
         public bool OpenLogFile
         {
             get
@@ -1096,6 +1107,9 @@ namespace DataSelector.UI
 
         private bool _setSymbology;
 
+        /// <summary>
+        /// Is the symbology to be set for the output layer(s)?
+        /// </summary>
         public bool SetSymbology
         {
             get
@@ -1425,6 +1439,20 @@ namespace DataSelector.UI
             return outputFile;
         }
 
+        /// <summary>
+        /// Perform the selection by running the SQL query via a
+        /// stored procedure.
+        /// </summary>
+        /// <param name="isSpatial"></param>
+        /// <param name="isSplit"></param>
+        /// <param name="schema"></param>
+        /// <param name="tableName"></param>
+        /// <param name="columnNames"></param>
+        /// <param name="whereClause"></param>
+        /// <param name="groupClause"></param>
+        /// <param name="orderClause"></param>
+        /// <param name="userID"></param>
+        /// <returns></returns>
         internal async Task<bool> PerformSelection(bool isSpatial, bool isSplit, string schema, string tableName,
                                   string columnNames, string whereClause, string groupClause, string orderClause,
                                   string userID)
@@ -1433,16 +1461,6 @@ namespace DataSelector.UI
 
             // Get the name of the stored procedure to execute selection in SQL Server.
             string storedProcedureName = _toolConfig.GetSelectStoredProcedure;
-
-            // Hard-code the parameters (for testing).
-            //schema = "dbo";
-            //tableName = "Spp_Poly_NoNames";
-            //columnNames = "*";
-            //whereClause = "TaxonGroup LIKE 'Higher%'";
-            //groupClause = "";
-            //orderClause = "";
-            //userID = "Test";
-            //isSplit = "0";
 
             // Write the parameters to the log file.
             FileFunctions.WriteLine(_logFile, "Species table is " + tableName);
@@ -1482,6 +1500,7 @@ namespace DataSelector.UI
             sqlCmd.Append(string.Format(", '{0}'", userID));
             sqlCmd.Append(string.Format(", {0}", isSplit ? "1" : "0"));
 
+            // Set the SQL output file names.
             string polyFeatureClass = schema + "." + tableName + "_poly_" + userID;
             string pointFeatureClass = schema + "." + tableName + "_point_" + userID;
             string flatTable = schema + "." + tableName + "_" + userID;
@@ -1546,6 +1565,13 @@ namespace DataSelector.UI
             return true;
         }
 
+        /// <summary>
+        /// Clear the SQL output tables by running a stored procedure.
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <param name="tableName"></param>
+        /// <param name="userID"></param>
+        /// <returns></returns>
         internal async Task<bool> ClearSelection(string schema, string tableName, string userID)
         {
             bool success = false;
@@ -1582,6 +1608,19 @@ namespace DataSelector.UI
             return success;
         }
 
+        /// <summary>
+        /// Export the spatial results to a feature class, shapefile,
+        /// test file or CSV file.
+        /// </summary>
+        /// <param name="mapFunctions"></param>
+        /// <param name="outputFormat"></param>
+        /// <param name="inPoints"></param>
+        /// <param name="inPolys"></param>
+        /// <param name="outPoints"></param>
+        /// <param name="outPolys"></param>
+        /// <param name="outFile"></param>
+        /// <param name="addToMap"></param>
+        /// <returns></returns>
         internal async Task<bool> ExportSpatialResults(MapFunctions mapFunctions,
                                   string outputFormat,
                                   string inPoints, string inPolys,
@@ -1806,6 +1845,16 @@ namespace DataSelector.UI
             return false;
         }
 
+        /// <summary>
+        /// Export the non-spatial results to a geodatabase table,
+        /// test file or CSV file.
+        /// </summary>
+        /// <param name="mapFunctions"></param>
+        /// <param name="outputFormat"></param>
+        /// <param name="inTable"></param>
+        /// <param name="outFile"></param>
+        /// <param name="addToMap"></param>
+        /// <returns></returns>
         internal async Task<bool> ExportNonSpatialResults(MapFunctions mapFunctions,
                                   string outputFormat,
                                   string inTable,
@@ -1897,6 +1946,11 @@ namespace DataSelector.UI
             return true;
         }
 
+        /// <summary>
+        /// Create an empty output text file or CSV file (for when the
+        /// results are empty.
+        /// </summary>
+        /// <returns></returns>
         internal bool CreateEmptyOutput()
         {
             //if (outputFormat == "CSV file")
@@ -1929,6 +1983,15 @@ namespace DataSelector.UI
             return true;
         }
 
+        /// <summary>
+        /// Veryify the SQL query by executing it for a single row.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="columnNames"></param>
+        /// <param name="whereClause"></param>
+        /// <param name="groupClause"></param>
+        /// <param name="orderClause"></param>
+        /// <returns></returns>
         private bool VerifyQuery(string tableName, string columnNames, string whereClause, string groupClause, string orderClause)
         {
             // Build the sql command.
@@ -2010,6 +2073,11 @@ namespace DataSelector.UI
             }
         }
 
+        /// <summary>
+        /// Execute the SQL query.
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <returns></returns>
         private async Task<bool> ExecuteSelectionAsync(string userID)
         {
             // Save the parameters.

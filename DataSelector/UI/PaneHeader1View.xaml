@@ -5,12 +5,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:DataSelector.UI" d:DataContext="{d:DesignInstance Type=local:PaneHeader1ViewModel}"
              mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="200" d:DesignWidth="300">
 
-    <DockPanel Width="Auto"
-               Margin="6,0,6,6"
-               HorizontalAlignment="Stretch"
-               VerticalAlignment="Top">
+    <DockPanel MinWidth="270"
+               Margin="6,6,6,6">
 
         <Grid>
             <Grid.RowDefinitions>
@@ -18,7 +16,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid Name="GridFilePath" Grid.Row="0" Margin="0,8,0,4">
+            <Grid Name="GridFilePath" Grid.Row="0" Margin="0,4,0,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="76" />
                     <ColumnDefinition Width="*" />
@@ -26,6 +24,7 @@
                 </Grid.ColumnDefinitions>
 
                 <Label Name="LabelXMLFilePath"
+                       Padding="0"
                        Grid.Column="0"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Left"
@@ -70,6 +69,7 @@
                     <ColumnDefinition Width="60" />
                 </Grid.ColumnDefinitions>
                 <Label Name="LabelChooseXML"
+                       Padding="0"
                        Content="XML Profile:"
                        Grid.Column="0"
                        Margin="0,0,0,2"
@@ -97,22 +97,17 @@
                         MinHeight="0"
                         Padding="0"
                         Height="22"
-                        IsDefault="True"
                         TabIndex="3"
-                        BorderBrush="Gray"
                         VerticalAlignment="Center"
                         Command="{Binding Path=LoadProfileCommand}"
                         IsEnabled="{Binding Path=CanLoadProfile}"
-                        Style="{DynamicResource Esri_SimpleButton}">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="{Binding ButtonLoadProfileImg}" Width="16" Height="16"/>
-                        <Label Content="Run" Padding="4,0,0,0"/>
-                    </StackPanel>
-                    <Button.ToolTip>
-                        <ToolTip>
+                        Style="{DynamicResource Esri_SimpleButton}"
+                        Content="Load">
+                        <Button.ToolTip>
+                            <ToolTip>
                             <TextBlock Text="Load XML profile" FontWeight="Normal"></TextBlock>
-                        </ToolTip>
-                    </Button.ToolTip>
+                            </ToolTip>
+                        </Button.ToolTip>
                 </Button>
             </Grid>
         </Grid>

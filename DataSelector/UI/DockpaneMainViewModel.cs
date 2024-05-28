@@ -37,6 +37,9 @@ using System.Windows.Media;
 
 namespace DataSelector.UI
 {
+    /// <summary>
+    /// Build the DockPane.
+    /// </summary>
     internal class DockpaneMainViewModel : DockPane
     {
 
@@ -51,11 +54,17 @@ namespace DataSelector.UI
 
         #region ViewModelBase Members
 
+        /// <summary>
+        /// Set the global variables.
+        /// </summary>
         protected DockpaneMainViewModel()
         {
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Initialise the DockPane components.
+        /// </summary>
         public async void InitializeComponent()
         {
             _dockPane = this;
@@ -159,6 +168,9 @@ namespace DataSelector.UI
 
         private List<TabControl> _primaryMenuList = new List<TabControl>();
 
+        /// <summary>
+        /// Get the list of dock panes.
+        /// </summary>
         public List<TabControl> PrimaryMenuList
         {
             get { return _primaryMenuList; }
@@ -166,6 +178,9 @@ namespace DataSelector.UI
 
         private int _selectedPanelHeaderIndex = 0;
 
+        /// <summary>
+        /// Get/Set the active pane.
+        /// </summary>
         public int SelectedPanelHeaderIndex
         {
             get { return _selectedPanelHeaderIndex; }
@@ -181,6 +196,9 @@ namespace DataSelector.UI
 
         private PanelViewModelBase _currentPage;
 
+        /// <summary>
+        /// The currently active DockPane.
+        /// </summary>
         public PanelViewModelBase CurrentPage
         {
             get { return _currentPage; }
@@ -192,6 +210,9 @@ namespace DataSelector.UI
 
         private bool _initialised = false;
 
+        /// <summary>
+        /// Has the DockPane been initialised?
+        /// </summary>
         public bool Initialised
         {
             get { return _initialised; }
@@ -203,6 +224,9 @@ namespace DataSelector.UI
 
         private bool _inError = false;
 
+        /// <summary>
+        /// Is the DockPane in error?
+        /// </summary>
         public bool InError
         {
             get { return _inError; }
@@ -214,6 +238,9 @@ namespace DataSelector.UI
 
         private bool _queryRunning;
 
+        /// <summary>
+        /// Is the SQL query running?
+        /// </summary>
         public bool QueryRunning
         {
             get { return _queryRunning; }
@@ -222,6 +249,9 @@ namespace DataSelector.UI
 
         private string _helpURL;
 
+        /// <summary>
+        /// The URL of the help page.
+        /// </summary>
         public string HelpURL
         {
             get { return _helpURL; }
@@ -232,6 +262,10 @@ namespace DataSelector.UI
 
         #region Methods
 
+        /// <summary>
+        /// Initialise the query pane.
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> InitialiseQueryPaneAsync()
         {
             _paneH2VM = new PaneHeader2ViewModel(_dockPane, _paneH1VM.ToolConfig);
@@ -270,11 +304,17 @@ namespace DataSelector.UI
             return true;
         }
 
+        /// <summary>
+        /// Clear the query pane.
+        /// </summary>
         public void ClearQueryPane()
         {
             _paneH2VM = null;
         }
 
+        /// <summary>
+        /// Event when the DockPane is hidden.
+        /// </summary>
         protected override void OnHidden()
         {
             // Get the dockpane DAML id.
@@ -287,6 +327,11 @@ namespace DataSelector.UI
 
             // Force the dockpane to be re-initialised next time it's shown.
             vm.Initialised = false;
+        }
+
+        public void RefreshPanel1Buttons()
+        {
+            _paneH1VM.RefreshButtons();
         }
 
         #endregion

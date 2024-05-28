@@ -45,6 +45,10 @@ namespace DataSelector
 
         #region Constructor
 
+        /// <summary>
+        /// Load the XML profile and read the variables.
+        /// </summary>
+        /// <param name="xmlFile"></param>
         public SelectorToolConfig(string xmlFile)
         {
 
@@ -87,6 +91,10 @@ namespace DataSelector
             GetOptionalVariables();
         }
 
+        /// <summary>
+        /// Get the mandatory variables from the XML file.
+        /// </summary>
+        /// <returns></returns>
         public bool GetMandatoryVariables()
         {
             // The existing file location where log files will be saved with output messages.
@@ -173,6 +181,9 @@ namespace DataSelector
             return true;
         }
 
+        /// <summary>
+        /// Get the optional variables from the XML file.
+        /// </summary>
         public void GetOptionalVariables()
         {
             string strRawText;
@@ -307,6 +318,10 @@ namespace DataSelector
                 return _xmlLoaded;
             }
         }
+
+        #endregion
+
+        #region Variables
 
         private string _sdeName;
 
