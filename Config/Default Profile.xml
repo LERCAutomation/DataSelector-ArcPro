@@ -46,7 +46,7 @@ as a spreadsheet.
 
   <!-- The existing file location where extracts will be saved by default. -->
   <DefaultExtractPath>
-	<value>D:\</value>
+	<value>D:\Data Tools\DataSelector\</value>
   </DefaultExtractPath>
 
   <!-- The existing file location where queries will be saved and loaded by default. -->
@@ -56,7 +56,7 @@ as a spreadsheet.
 
   <!-- The default format of the output files to be created. -->
   <DefaultFormat>
-	<value>Geodatabase</value>
+	<value></value>
   </DefaultFormat>
 
   <!-- The schema used in the SQL Server database. -->

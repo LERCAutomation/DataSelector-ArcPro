@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
              xmlns:local="clr-namespace:DataSelector.UI" d:DataContext="{d:DesignInstance Type=local:PaneHeader2ViewModel}"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
@@ -22,6 +23,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <Grid Name="GridColumns" Grid.Row="0" Margin="0,4,0,4">
@@ -29,49 +31,74 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
+                <Label Name="AsterixColumns"
+                       Content="*"
+                       Grid.Row="0"
+                       Grid.Column="0"
+                       Margin="0,0,0,0"
+                       Padding="0"
+                       Foreground="Red"
+                       VerticalAlignment="Center" />
                 <Label Name="LabelColumns"
-                    Content="Select:"
-                    Grid.Row="0"
-                    Margin="0,0,0,2"
-                    Padding="0"
-                    VerticalAlignment="Center" />
+                       Content="Select:"
+                       Grid.Row="0"
+                       Grid.Column="1"
+                       Margin="0,0,0,2"
+                       Padding="0"
+                       VerticalAlignment="Center" />
                 <TextBox Name="TextColumns"
-                        Grid.Row="1"
-                        Margin="0,0,0,0"
-                        IsEnabled="True"
-                        IsReadOnly="False"
-                        Text="{Binding ColumnsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        TextAlignment="Left"
-                        AcceptsReturn="True"
-                        TextWrapping="Wrap"
-                        VerticalScrollBarVisibility="Visible"
-                        MouseDoubleClick="TextColumns_MouseDoubleClick" />
+                         Grid.Row="1"
+                         Grid.Column="1"
+                         Margin="0,0,0,0"
+                         IsEnabled="True"
+                         IsReadOnly="False"
+                         Text="{Binding ColumnsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         TextAlignment="Left"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Visible"
+                         ToolTip="{Binding ColumnsTooltip}"
+                         MouseDoubleClick="TextColumns_MouseDoubleClick" />
             </Grid>
 
-            <Grid Name="GridTables" Grid.Row="1" Margin="0,0,0,4">
+            <Grid Name="GridTables" Grid.Row="1" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="55" />
                 </Grid.ColumnDefinitions>
 
+                <Label Name="AsterixTables"
+                       Content="*"
+                       Grid.Row="0"
+                       Grid.Column="0"
+                       Margin="0,0,0,0"
+                       Padding="0"
+                       Foreground="Red"
+                       VerticalAlignment="Center" />
                 <Label Name="LabelTables"
                     Content="From:"
                     Grid.Row="0"
-                    Grid.Column="0"
+                    Grid.Column="1"
                     Margin="0,0,0,2"
                     Padding="0"
                     VerticalAlignment="Center" />
                 <ComboBox Name="ComboBoxTables"
                         Grid.Row="1"
-                        Grid.Column="0"
+                        Grid.Column="1"
                         Margin="0,0,0,0"
                         IsEditable="False"
                         IsReadOnly="True"
+                        ToolTip="Select a source table"
                         IsEnabled="{Binding Path=TablesListEnabled}"
                         ItemsSource="{Binding Path=TablesList,
                                             Mode=OneWay,
@@ -79,6 +106,7 @@
                         SelectedValue="{Binding Path=SelectedTable}" />
                 <Button Name="ButtonLoadColumns"
                     Grid.Row="1"
+                    Grid.Column="1"
                     Margin="0,0,0,0"
                     IsEnabled="{Binding Path=CanLoadColumns}"
                     Command="{Binding Path=LoadColumnsCommand}"
@@ -87,7 +115,7 @@
                 </Button>
                 <Button Name="ButtonTablesListRefresh"
                         Grid.Row="1"
-                        Grid.Column="1"
+                        Grid.Column="2"
                         Margin="4,0,0,0"
                         MinWidth="0"
                         MinHeight="0"
@@ -102,100 +130,141 @@
                         ToolTip="Refresh tables list" />
             </Grid>
 
-            <Grid Name="GridWhere" Grid.Row="2" Margin="0,0,0,4">
+            <Grid Name="GridWhere" Grid.Row="2" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
+                <Label Name="AsterixWhere"
+                       Content="*"
+                       Grid.Row="0"
+                       Grid.Column="0"
+                       Margin="0,0,0,0"
+                       Padding="0"
+                       Foreground="Red"
+                       VerticalAlignment="Center" />
                 <Label Name="LabelWhere"
-                    Content="Where:"
-                    Grid.Row="0"
-                    Margin="0,0,0,2"
-                    Padding="0"
-                    VerticalAlignment="Center" />
+                       Content="Where:"
+                       Grid.Row="0"
+                       Grid.Column="1"
+                       Margin="0,0,0,2"
+                       Padding="0"
+                       VerticalAlignment="Center" />
                 <TextBox Name="TextWhere"
-                        Grid.Row="1"
-                        Margin="0,0,0,0"
-                        IsEnabled="True"
-                        IsReadOnly="False"
-                        Text="{Binding WhereText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        TextAlignment="Left"
-                        AcceptsReturn="True"
-                        TextWrapping="Wrap"
-                        VerticalScrollBarVisibility="Visible" />
+                         Grid.Row="1"
+                         Grid.Column="1"
+                         Margin="0,0,0,0"
+                         IsEnabled="True"
+                         IsReadOnly="False"
+                         Text="{Binding WhereText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         TextAlignment="Left"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Visible" />
             </Grid>
 
-            <Grid Name="GridGroupBy" Grid.Row="3" Margin="0,0,0,4">
+            <Grid Name="GridGroupBy" Grid.Row="3" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
                 <Label Name="LabelGroupBy"
-                    Content="Group By:"
-                    Grid.Row="0"
-                    Margin="0,0,0,2"
-                    Padding="0"
-                    VerticalAlignment="Center" />
+                       Content="Group By:"
+                       Grid.Row="0"
+                       Grid.Column="1"
+                       Margin="0,0,0,2"
+                       Padding="0"
+                       VerticalAlignment="Center" />
                 <TextBox Name="TextGroupBy"
-                        Grid.Row="1"
-                        Margin="0,0,0,0"
-                        IsEnabled="True"
-                        IsReadOnly="False"
-                        Text="{Binding GroupByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        TextAlignment="Left"
-                        AcceptsReturn="True"
-                        TextWrapping="Wrap"
-                        VerticalScrollBarVisibility="Visible" />
+                         Grid.Row="1"
+                         Grid.Column="1"
+                         Margin="0,0,0,0"
+                         IsEnabled="True"
+                         IsReadOnly="False"
+                         Text="{Binding GroupByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         TextAlignment="Left"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Visible" />
             </Grid>
 
-            <Grid Name="GridOrderBy" Grid.Row="4" Margin="0,0,0,4">
+            <Grid Name="GridOrderBy" Grid.Row="4" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
                 <Label Name="LabelOrderBy"
-                    Content="Order By:"
-                    Grid.Row="0"
-                    Margin="0,0,0,2"
-                    Padding="0"
-                    VerticalAlignment="Center" />
+                       Content="Order By:"
+                       Grid.Row="0"
+                       Grid.Column="1"
+                       Margin="0,0,0,2"
+                       Padding="0"
+                       VerticalAlignment="Center" />
                 <TextBox Name="TextOrderBy"
-                        Grid.Row="1"
-                        Margin="0,0,0,0"
-                        IsEnabled="True"
-                        IsReadOnly="False"
-                        Text="{Binding OrderByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        TextAlignment="Left"
-                        AcceptsReturn="True"
-                        TextWrapping="Wrap"
-                        VerticalScrollBarVisibility="Visible" />
+                         Grid.Row="1"
+                         Grid.Column="1"
+                         Margin="0,0,0,0"
+                         IsEnabled="True"
+                         IsReadOnly="False"
+                         Text="{Binding OrderByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         TextAlignment="Left"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Visible" />
             </Grid>
 
-            <Grid Name="GridOutputFormat" Grid.Row="5" Margin="0,0,0,4">
+            <Grid Name="GridOutputFormat" Grid.Row="5" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="28" />
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
+                <Label Name="AsterixOutputFormat"
+                       Content="*"
+                       Grid.Row="0"
+                       Grid.Column="0"
+                       Margin="0,0,0,0"
+                       Padding="0"
+                       Foreground="Red"
+                       VerticalAlignment="Center" />
                 <Label Name="LabelOutputFormat"
-                    Content="Output File Format:"
-                    Grid.Row="0"
-                    Margin="0,0,0,0"
-                    Padding="0"
-                    VerticalAlignment="Center" />
+                       Content="Output File Format:"
+                       Grid.Row="0"
+                       Grid.Column="1"
+                       Margin="0,0,0,0"
+                       Padding="0"
+                       VerticalAlignment="Center" />
                 <ComboBox Name="ComboBoxOutputFormat"
-                        Grid.Row="1"
-                        Margin="0,0,0,2"
-                        VerticalAlignment="Center"
-                        IsEditable="False"
-                        IsReadOnly="True"
-                        ItemsSource="{Binding Path=OutputFormats,
-                                            Mode=OneWay,
-                                            UpdateSourceTrigger=PropertyChanged}"
-                        SelectedValue="{Binding Path=SelectedOutputFormat}" />
+                          Grid.Row="1"
+                          Grid.Column="1"
+                          Margin="0,0,0,2"
+                          VerticalAlignment="Center"
+                          IsEditable="False"
+                          IsReadOnly="True"
+                          ToolTip="Select an output format"
+                          ItemsSource="{Binding Path=OutputFormats,
+                                                Mode=OneWay,
+                                                UpdateSourceTrigger=PropertyChanged}"
+                          SelectedValue="{Binding Path=SelectedOutputFormat}" />
             </Grid>
 
             <Grid Name="GridOptions" Grid.Row="6" Margin="0,4,0,0">
@@ -205,10 +274,14 @@
                 </Grid.RowDefinitions>
 
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="20" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <!--
@@ -230,63 +303,86 @@
                 -->
 
                 <CheckBox Name="CheckBoxClearLogFile"
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        Margin="0,2,2,0"
-                        Padding="0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        IsChecked="{Binding ClearLogFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                          Grid.Row="0"
+                          Grid.Column="1"
+                          Margin="0,2,4,0"
+                          Padding="0"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Center"
+                          ToolTip="Clear the log file before the process starts?"
+                          IsChecked="{Binding ClearLogFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <Label Name="LabelClearLogFile"
-                    Content="Clear log file?"
-                    Grid.Row="1"
-                    Grid.Column="1"
-                    Margin="2,2,0,0"
-                    Padding="0"
-                    VerticalAlignment="Center" />
-
+                       Content="Clear log file?"
+                       Grid.Row="0"
+                       Grid.Column="2"
+                       Margin="2,2,0,0"
+                       Padding="0"
+                       VerticalAlignment="Center" />
+                <!--
+                <controls:InfoButton
+                        Grid.Row="0"
+                        Grid.Column="3"
+                        Margin="2,0,0,0"
+				        Header="Clear log file"
+				        Description="Clear the log file before the process starts?"/>
+                -->
                 <CheckBox Name="CheckBoxOpenLogFile"
-                        Grid.Row="3"
-                        Grid.Column="2"
-                        Margin="0,2,2,0"
-                        Padding="0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        IsChecked="{Binding OpenLogFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                          Grid.Row="0"
+                          Grid.Column="5"
+                          Margin="0,2,4,0"
+                          Padding="0"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Center"
+                          ToolTip="Open the log file when the process has complete?"
+                          IsChecked="{Binding OpenLogFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <Label Name="LabelOpenLogFile"
-                    Content="Open log file when run?"
-                    Grid.Row="1"
-                    Grid.Column="3"
-                    Margin="2,2,0,0"
-                    Padding="0"
-                    VerticalAlignment="Center" />
+                       Content="Open log file when run?"
+                       Grid.Row="0"
+                       Grid.Column="6"
+                       Margin="2,2,0,0"
+                       Padding="0"
+                       VerticalAlignment="Center" />
+                <!--
+                <controls:InfoButton
+                        Grid.Row="0"
+                        Grid.Column="7"
+                        Margin="2,0,0,0"
+				        Header="Open log file"
+				        Description="Open the log file when the process has complete?"/>
+                -->
             </Grid>
 
             <Grid Name="GridButtons" Grid.Row="7" Margin="0,18,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="22" />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="60" />
-                    <ColumnDefinition Width="60" />
-                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition Width="55" />
+                    <ColumnDefinition Width="55" />
+                    <ColumnDefinition Width="55" />
+                    <ColumnDefinition Width="55" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition Width="55" />
                 </Grid.ColumnDefinitions>
 
-                <Button Name="ButtonClear"
+                <Button Name="ButtonLoad"
                         Grid.Column="0"
-                        Margin="0,0,2,0"
+                        Margin="2,0,0,0"
                         MinWidth="0"
-                        Command="{Binding Path=ClearCommand}"
+                        MinHeight="0"
+                        Command="{Binding Path=LoadCommand}"
                         IsCancel="False"
                         IsDefault="False"
-                        IsEnabled="{Binding Path=ClearButtonEnabled}"
+                        IsEnabled="{Binding Path=LoadButtonEnabled}"
                         Style="{DynamicResource Esri_SimpleButton}"
                         TabIndex="1"
-                        Content="Clear"
-                        ToolTip="Clear query" />
+                        Content="Load"
+                        ToolTip="Load an existing query" />
                 <Button Name="ButtonSave"
                         Grid.Column="1"
                         Margin="0,0,2,0"
                         MinWidth="0"
+                        MinHeight="0"
                         Command="{Binding Path=SaveCommand}"
                         IsCancel="False"
                         IsDefault="False"
@@ -294,38 +390,60 @@
                         Style="{DynamicResource Esri_SimpleButton}"
                         TabIndex="2"
                         Content="Save"
-                        ToolTip="Save query" />
-                <Button Name="ButtonLoad"
+                        ToolTip="Save the query" />
+                <Button Name="ButtonClear"
                         Grid.Column="2"
-                        Margin="2,0,0,0"
+                        Margin="0,0,2,0"
                         MinWidth="0"
-                        Command="{Binding Path=LoadCommand}"
+                        MinHeight="0"
+                        Command="{Binding Path=ClearCommand}"
                         IsCancel="False"
                         IsDefault="False"
-                        IsEnabled="{Binding Path=LoadButtonEnabled}"
+                        IsEnabled="{Binding Path=ClearButtonEnabled}"
                         Style="{DynamicResource Esri_SimpleButton}"
                         TabIndex="3"
-                        Content="Load"
-                        ToolTip="Load query" />
-                <Button Name="ButtonRun"
-                        Grid.Column="4"
+                        Content="Clear"
+                        ToolTip="Clear the query form" />
+                <Button Name="ButtonVerify"
+                        Grid.Column="3"
                         Margin="2,0,0,0"
                         MinWidth="0"
+                        MinHeight="0"
+                        Command="{Binding Path=VerifyCommand}"
+                        IsCancel="False"
+                        IsDefault="False"
+                        IsEnabled="{Binding Path=VerifyButtonEnabled}"
+                        Style="{DynamicResource Esri_SimpleButton}"
+                        TabIndex="4"
+                        Content="Verify"
+                        ToolTip="Verify the query is valid" />
+                <Button Name="ButtonRun"
+                        Grid.Column="5"
+                        Margin="2,0,0,0"
+                        MinWidth="0"
+                        MinHeight="0"
                         Command="{Binding Path=RunCommand}"
                         IsCancel="False"
                         IsDefault="True"
                         IsEnabled="{Binding Path=RunButtonEnabled}"
                         Style="{DynamicResource Esri_SimpleButton}"
-                        TabIndex="4"
+                        TabIndex="5"
                         Content="Run"
                         FontWeight="Bold">
                         <Button.ToolTip>
                             <ToolTip>
-                                <TextBlock Text="Run query" FontWeight="Normal"></TextBlock>
+                                <TextBlock Text="Run the query" FontWeight="Normal"></TextBlock>
                             </ToolTip>
                         </Button.ToolTip>
                 </Button>
             </Grid>
+
+            <Label Name="LabelProcessing"
+                   Grid.Row="8"
+                   Margin="0,16,0,0"
+                   Padding="0"
+                   BorderThickness="0"
+                   Content="{Binding Path=ProcessingLabel}" />
         </Grid>
     </DockPanel>
 </UserControl>

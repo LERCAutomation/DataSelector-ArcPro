@@ -96,7 +96,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'LogFilePath' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not locate item 'LogFilePath' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -107,7 +107,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'SDEFile' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not locate item 'SDEFile' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -118,7 +118,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'SelectStoredProcedure' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not locate item 'SelectStoredProcedure' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -129,7 +129,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'ClearStoredProcedure' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not locate item 'ClearStoredProcedure' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -140,7 +140,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DatabaseSchema' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not locate item 'DatabaseSchema' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -152,7 +152,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'IncludeWildcard' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not locate item 'IncludeWildcard' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -165,7 +165,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'ExcludeWildcard' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not locate item 'ExcludeWildcard' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -184,7 +184,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultExtractPath' in the XML file", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Could not locate item 'DefaultExtractPath' in the XML file.", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -195,7 +195,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultQueryPath' in the XML file", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Could not locate item 'DefaultQueryPath' in the XML file.", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -206,7 +206,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultFormat' in the XML file", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Could not locate item 'DefaultFormat' in the XML file.", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -220,7 +220,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultSetSymbology' in the XML file", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Could not locate item 'DefaultSetSymbology' in the XML file.", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -231,7 +231,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'LayerLocation' in the XML file", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Could not locate item 'LayerLocation' in the XML file.", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -245,7 +245,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultClearLogFile' in the XML file", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Could not locate item 'DefaultClearLogFile' in the XML file.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -259,7 +259,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultOpenLogFile' in the XML file", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Could not locate item 'DefaultOpenLogFile' in the XML file.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -273,7 +273,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'ValidateSQL' in the XML file", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Could not locate item 'ValidateSQL' in the XML file.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
         }

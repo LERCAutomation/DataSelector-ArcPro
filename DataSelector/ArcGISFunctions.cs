@@ -34,6 +34,7 @@ using System.Linq;
 using System.Collections.Generic;
 using ArcGIS.Core.CIM;
 using ArcGIS.Desktop.Framework.Contracts;
+using System.Windows;
 
 namespace DataTools
 {
@@ -152,8 +153,45 @@ namespace DataTools
                 {
                     Uri uri = new(url);
 
-                    //var layerParams = new FeatureLayerCreationParams(fc);
-                    var layer = LayerFactory.Instance.CreateLayer(uri, _activeMap);
+                    // Check if the layer is already loaded (unlikely as the map is new)
+                    Layer findLayer = _activeMap.Layers.FirstOrDefault(t => t.Name == uri.Segments.Last());
+
+                    // If ithe layer is not loaded, add it.
+                    if (findLayer == null)
+                    {
+                        Layer layer = LayerFactory.Instance.CreateLayer(uri, _activeMap);
+                    }
+                });
+
+                // Redraw the active map.
+                //_activeMapView.Redraw(false);
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+        /// <summary>
+        /// Add a standalone table to the active map.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public async Task AddTableToMap(string url)
+        {
+            try
+            {
+                await QueuedTask.Run(() =>
+                {
+                    Uri uri = new(url);
+
+                    // Check if the table is already loaded.
+                    StandaloneTable findTable = _activeMap.StandaloneTables.FirstOrDefault(t => t.Name == uri.Segments.Last());
+
+                    // If the table is not loaded, add it.
+                    if (findTable == null)
+                    {
+                        StandaloneTable table = StandaloneTableFactory.Instance.CreateStandaloneTable(uri, _activeMap);
+                    }
                 });
 
                 // Redraw the active map.
@@ -475,8 +513,9 @@ namespace DataTools
             {
                 Title = "Save Output As...",
                 InitialLocation = initialDirectory,
+                AlwaysUseInitialLocation = true,
                 //Filter = ItemFilters.Files_All,
-                OverwritePrompt = true,
+                OverwritePrompt = false,    // This will be done later.
                 BrowseFilter = bf
             };
 
@@ -502,11 +541,6 @@ namespace DataTools
         /// <returns></returns>
         public static async Task<bool> CopyFeaturesAsync(string inFeatureClass, string outFeatureClass, bool Messages = false)
         {
-            //// prepare input parameter values to CopyFeaturesAsync tool
-            //string input_data = @"C:\data\california.gdb\ca_highways";
-            //string out_workspace = ArcGIS.Desktop.Core.Project.Current.DefaultGeodatabasePath;
-            //string out_data = System.IO.Path.Combine(out_workspace, "ca_highways2");
-
             // Make a value array of strings to be passed to the tool.
             var parameters = Geoprocessing.MakeValueArray(inFeatureClass, outFeatureClass);
 
@@ -562,6 +596,10 @@ namespace DataTools
             return await CopyFeaturesAsync(inFeatureClass, outFeatureClass, Messages);
         }
 
+        #endregion
+
+        #region Export Features
+
         /// <summary>
         /// Export the input table to the output table.
         /// </summary>
@@ -599,6 +637,74 @@ namespace DataTools
             }
 
             return true;
+        }
+
+        #endregion
+
+        #region Copy Table
+
+        /// <summary>
+        /// Copy the input table to the output table.
+        /// </summary>
+        /// <param name="inTable"></param>
+        /// <param name="outTable"></param>
+        /// <param name="Messages"></param>
+        /// <returns></returns>
+        public static async Task<bool> CopyTableAsync(string inTable, string outTable, bool Messages = false)
+        {
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(inTable, outTable);
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            // Execute the tool.
+            try
+            {
+                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("management.Copy", parameters, environments);
+
+                if (gp_result.IsFailed)
+                {
+                    var messages = gp_result.Messages;
+                    var errMessages = gp_result.ErrorMessages;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Copy the input dataset name to the output table.
+        /// </summary>
+        /// <param name="InWorkspace"></param>
+        /// <param name="InDatasetName"></param>
+        /// <param name="OutTable"></param>
+        /// <param name="Messages"></param>
+        /// <returns></returns>
+        public static async Task<bool> CopyTableAsync(string InWorkspace, string InDatasetName, string OutTable, bool Messages = false)
+        {
+            string inTable = InWorkspace + @"\" + InDatasetName;
+            return await CopyTableAsync(inTable, OutTable, Messages);
+        }
+
+        /// <summary>
+        /// Copy the input dataset to the output dataset.
+        /// </summary>
+        /// <param name="InWorkspace"></param>
+        /// <param name="InDatasetName"></param>
+        /// <param name="OutWorkspace"></param>
+        /// <param name="OutDatasetName"></param>
+        /// <param name="Messages"></param>
+        /// <returns></returns>
+        public static async Task<bool> CopyTableAsync(string InWorkspace, string InDatasetName, string OutWorkspace, string OutDatasetName, bool Messages = false)
+        {
+            string inTable = InWorkspace + @"\" + InDatasetName;
+            string outTable = OutWorkspace + @"\" + OutDatasetName;
+            return await CopyTableAsync(inTable, outTable, Messages);
         }
 
         #endregion

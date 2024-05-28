@@ -423,7 +423,7 @@ namespace DataSelector.UI
             // If the app config file hasn't been loaded.
             else if (!launchConfig.XMLLoaded)
             {
-                MessageBox.Show("Error loading XML File 'DataSelector.xml.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error loading XML File 'DataSelector.xml'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 

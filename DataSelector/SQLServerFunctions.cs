@@ -76,13 +76,7 @@ namespace DataTools
 
         #region Fields
 
-        private readonly Task _initializeTask;
-
         private readonly string _sdeFileName;
-        private List<String> _tableNames;
-        private List<String> _fieldNames;
-
-        private Geodatabase _geodatabase = null;
 
         #endregion
 
@@ -97,20 +91,28 @@ namespace DataTools
 
         #region Properties
 
+        private readonly Task _initializeTask;
+
         public Task InitializeTask
         {
             get { return _initializeTask; }
         }
+
+        private List<String> _tableNames;
 
         public List<String> TableNames
         {
             get { return _tableNames; }
         }
 
+        private List<String> _fieldNames;
+
         public List<String> FieldNames
         {
             get { return _fieldNames; }
         }
+
+        private Geodatabase _geodatabase = null;
 
         public bool GeodatabaseFound
         {

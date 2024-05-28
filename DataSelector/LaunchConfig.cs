@@ -73,7 +73,7 @@ namespace DataTools
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error in XML file; cannot load. System error message: " + ex.Message, "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error in XML file; cannot load. System error message: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -82,8 +82,15 @@ namespace DataTools
             xmlToolNode = (XmlElement)currNode;
 
             // Get the mandatory variables.
-            if (!GetMandatoryVariables())
-                return;
+            try
+            {
+                if (!GetMandatoryVariables())
+                    return;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error in XML file; cannot load. System error message: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
 
             _xmlLoaded = true;
         }
@@ -126,7 +133,7 @@ namespace DataTools
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "XML Error " + ex.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error opening XML file: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             return true;
@@ -148,7 +155,7 @@ namespace DataTools
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'ChooseXML' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not locate item 'ChooseXML' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -161,7 +168,7 @@ namespace DataTools
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultProfile' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not locate item 'DefaultProfile' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -172,7 +179,7 @@ namespace DataTools
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'HelpURL' in the XML file", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not locate item 'HelpURL' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 

@@ -2,11 +2,13 @@
   <AddInInfo id="{46e995cb-90ef-4d68-9f66-67839c8807e9}" version="1.0" desktopVersion="3.3">
     <Name>DataSelector</Name>
     <Description>DataSelector is an ArcGIS .NET tool and associated SQL scripts to extract information from SQL Server based on any selection criteria. The output files can be created as ESRI Geodatabase (.gdb) files, ESRI Shapefile (.shp) files, Comma Separated Value (.csv) or Tab Delimited (.txt) files.</Description>
-    <Image>Images\DataSelectorAddIn32.png</Image>
-    <Author>Andy Foy</Author>
+    <Image>Images\AddinDesktop32.png</Image>
+<!--	  <Image>"pack://application:,,,/DataSelector;component/Images/DataSelector32.png"></Image> -->
+<!--	    <Image>Images\DataSelector32AddIn.png</Image>   -->
+	  <Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
     <Company>Andy Foy Consulting</Company>
-    <Date>15/05/2024 4:49:25 PM</Date>
-    <Subject>Framework</Subject>
+    <Date>27/05/2024 19:11:25 PM</Date>
+    <Subject>Framework, Geodatabase</Subject>
     <!-- Note subject can be one or more of these topics:
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
   </AddInInfo>
