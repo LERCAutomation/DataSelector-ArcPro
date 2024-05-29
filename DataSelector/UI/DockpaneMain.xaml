@@ -12,25 +12,25 @@
              d:DesignHeight="680" d:DesignWidth="330"
              d:DataContext="{Binding Path=ui.DockpaneMainViewModel}">
 
-  <UserControl.Resources>
-    <ResourceDictionary>
+    <UserControl.Resources>
+        <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
+                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <DataTemplate DataType="{x:Type viewModel:PaneHeader1ViewModel}">
-            <view:PaneHeader1View />
-        </DataTemplate>
+                <view:PaneHeader1View />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type viewModel:PaneHeader2ViewModel}">
-            <view:PaneHeader2View />
-        </DataTemplate>
-    </ResourceDictionary>
-  </UserControl.Resources>
+                <view:PaneHeader2View />
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
             <DockPanel Grid.Row="0" KeyboardNavigation.TabNavigation="Local" Height="26" LastChildFill="False" Margin="5,0,0,0">
@@ -38,19 +38,18 @@
             <controls:BurgerButton DockPanel.Dock="Right"
 				        ToolTip="Options"
 				        PopupMenu="{Binding BurgerButtonPopupMenu}"
-                        HorizontalAlignment="Right"/>
+                        HorizontalAlignment="Right" />
 -->
                 <ListBox x:Name="primaryNavigator" DockPanel.Dock="Left"
                Style="{DynamicResource Esri_ListBoxPanelIndicator}"
                ItemsSource="{Binding PrimaryMenuList}"
                SelectedIndex="{Binding SelectedPanelHeaderIndex, Mode=TwoWay}"
-               IsSynchronizedWithCurrentItem="True"/>
+               IsSynchronizedWithCurrentItem="True" />
             </DockPanel>
 
             <StackPanel Grid.Row="1">
                 <ContentPresenter Content="{Binding CurrentPage}"></ContentPresenter>
             </StackPanel>
-
         </Grid>
     </ScrollViewer>
 </UserControl>

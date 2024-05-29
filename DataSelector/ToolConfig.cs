@@ -34,9 +34,8 @@ namespace DataTools
     /// <summary>
     /// This class reads the tool XML file and stores the results.
     /// </summary>
-    class ToolConfig
+    internal class ToolConfig
     {
-
         #region Fields
 
         private static string _toolName;
@@ -44,9 +43,9 @@ namespace DataTools
         private bool blChooseConfig;
 
         // Initialise components to read XML
-        XmlElement xmlToolNode;
+        private XmlElement xmlToolNode;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
@@ -213,7 +212,7 @@ namespace DataTools
             return true;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Members
 
@@ -280,7 +279,7 @@ namespace DataTools
             }
         }
 
-        #endregion
+        #endregion Members
 
         #region Variables
 
@@ -314,7 +313,7 @@ namespace DataTools
             }
         }
 
-        #endregion
+        #endregion Variables
 
         #region Methods
 
@@ -347,7 +346,6 @@ namespace DataTools
             }
         }
 
-        #endregion
-
+        #endregion Methods
     }
 }

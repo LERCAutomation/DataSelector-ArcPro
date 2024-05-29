@@ -33,7 +33,6 @@ namespace DataTools
     /// </summary>
     public class Wildcard : Regex
     {
-
         #region Constructor
 
         /// <summary>
@@ -101,7 +100,7 @@ namespace DataTools
             //Replace("\\*", ".*").
         }
 
-        #endregion
+        #endregion Constructor
     }
 
     /// <summary>
@@ -110,7 +109,6 @@ namespace DataTools
     /// </summary>
     public class StringFunctions
     {
-
         #region Constructor
 
         public StringFunctions()
@@ -118,7 +116,7 @@ namespace DataTools
             // constructor takes no arguments.
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Characters
 
@@ -165,7 +163,6 @@ namespace DataTools
             if (theIllegals.IndexOf(aReplacementCharacter) == -1)
                 return true;
             return false;
-
         }
 
         /// <summary>
@@ -192,7 +189,7 @@ namespace DataTools
             return strOutputString;
         }
 
-        #endregion
+        #endregion Characters
 
         #region References
 
@@ -232,7 +229,7 @@ namespace DataTools
             return CleanName;
         }
 
-        #endregion
+        #endregion References
 
         #region Separators
 
@@ -253,7 +250,6 @@ namespace DataTools
                 return strFormatted.Substring(0, strFormatted.Length - 1); // Remove the final semicolon.
             else
                 return "";
-
         }
 
         /// <summary>
@@ -275,7 +271,7 @@ namespace DataTools
                 return "";
         }
 
-        #endregion
+        #endregion Separators
 
         #region Columns
 
@@ -314,7 +310,7 @@ namespace DataTools
             return StatsColumns;
         }
 
-        #endregion
+        #endregion Columns
 
         #region Groups
 
@@ -340,7 +336,6 @@ namespace DataTools
                 }
             }
             return liGroups; // Return the list of group names.
-
         }
 
         /// <summary>
@@ -361,7 +356,6 @@ namespace DataTools
                 return ""; // No group name.
         }
 
-        #endregion
-
+        #endregion Groups
     }
 }

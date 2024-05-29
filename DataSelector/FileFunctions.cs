@@ -28,9 +28,8 @@ namespace DataTools
     /// <summary>
     /// This class provides basic file and folder functions.
     /// </summary>
-    static class FileFunctions
+    internal static class FileFunctions
     {
-
         #region Directories
 
         /// <summary>
@@ -65,7 +64,7 @@ namespace DataTools
             return dirName;
         }
 
-        #endregion
+        #endregion Directories
 
         #region Files
 
@@ -222,10 +221,9 @@ namespace DataTools
             }
             else
                 return true;
-
         }
 
-        #endregion
+        #endregion Files
 
         #region Logfile
 
@@ -275,7 +273,6 @@ namespace DataTools
             return true;
         }
 
-        #endregion
-
+        #endregion Logfile
     }
 }

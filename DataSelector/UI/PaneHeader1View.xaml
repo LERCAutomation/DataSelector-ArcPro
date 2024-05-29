@@ -53,12 +53,12 @@
                         Command="{Binding Path=SelectXMLPathCommand}"
                         IsEnabled="{Binding Path=CanSelectXMLPath}"
                         Style="{DynamicResource Esri_SimpleButton}">
-                            <Image Source="{Binding ButtonXMLFilePathImg}" Width="16" Height="16"/>
-                        <Button.ToolTip>
-                            <ToolTip>
-                                <TextBlock Text="Browse to the XML config folder" FontWeight="Normal"></TextBlock>
-                            </ToolTip>
-                        </Button.ToolTip>
+                    <Image Source="{Binding ButtonXMLFilePathImg}" Width="16" Height="16" />
+                    <Button.ToolTip>
+                        <ToolTip>
+                            <TextBlock Text="Browse to the XML config folder" FontWeight="Normal"></TextBlock>
+                        </ToolTip>
+                    </Button.ToolTip>
                 </Button>
             </Grid>
 
@@ -74,8 +74,7 @@
                        Grid.Column="0"
                        Margin="0,0,0,2"
                        VerticalAlignment="Center"
-                       HorizontalAlignment="Left"
-                    />
+                       HorizontalAlignment="Left" />
                 <ComboBox Name="ComboBoxChooseXML"
                           Grid.Column="1"
                           Margin="0,0,0,0"
@@ -103,11 +102,11 @@
                         IsEnabled="{Binding Path=CanLoadProfile}"
                         Style="{DynamicResource Esri_SimpleButton}"
                         Content="Load">
-                        <Button.ToolTip>
-                            <ToolTip>
+                    <Button.ToolTip>
+                        <ToolTip>
                             <TextBlock Text="Load XML profile" FontWeight="Normal"></TextBlock>
-                            </ToolTip>
-                        </Button.ToolTip>
+                        </ToolTip>
+                    </Button.ToolTip>
                 </Button>
             </Grid>
         </Grid>

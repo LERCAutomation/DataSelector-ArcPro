@@ -73,12 +73,11 @@ namespace DataTools
     /// </remarks>
     public class SQLServerFunctions
     {
-
         #region Fields
 
         private readonly string _sdeFileName;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
@@ -90,7 +89,7 @@ namespace DataTools
             OpenGeodatabase();
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Properties
 
@@ -108,7 +107,7 @@ namespace DataTools
             get { return (_geodatabase != null); }
         }
 
-        #endregion
+        #endregion Properties
 
         #region Geodatabase
 
@@ -356,7 +355,7 @@ namespace DataTools
             return await GetFieldNamesAsync(FileFunctions.GetDirectoryName(fullPath), FileFunctions.GetFileName(fullPath));
         }
 
-        #endregion
+        #endregion Geodatabase
 
         #region Execute SQL
 
@@ -388,7 +387,7 @@ namespace DataTools
             });
         }
 
-        #endregion
+        #endregion Execute SQL
 
         #region Text Files
 
@@ -519,7 +518,7 @@ namespace DataTools
                                 if (colValue != null)
                                 {
                                     if ((colValue is string) && (colValue.ToString().Contains(',')))
-                                            colStr = "\"" + colValue.ToString() + "\"";
+                                        colStr = "\"" + colValue.ToString() + "\"";
                                     else
                                         colStr = colValue.ToString();
                                 }
@@ -549,7 +548,8 @@ namespace DataTools
 
             return true;
         }
-        #endregion
+
+        #endregion Text Files
 
         #region FeatureClasses
 
@@ -634,7 +634,7 @@ namespace DataTools
             return rows;
         }
 
-        #endregion
+        #endregion FeatureClasses
 
         #region Tables
 
@@ -718,7 +718,6 @@ namespace DataTools
             return rows;
         }
 
-        #endregion
-
+        #endregion Tables
     }
 }

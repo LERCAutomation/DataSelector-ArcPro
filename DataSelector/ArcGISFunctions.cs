@@ -37,15 +37,14 @@ namespace DataTools
     /// <summary>
     /// This class provides ArcGIS Pro map functions.
     /// </summary>
-    class MapFunctions
+    internal class MapFunctions
     {
-
         #region Fields
 
-        Map _activeMap;
-        MapView _activeMapView;
+        private Map _activeMap;
+        private MapView _activeMapView;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
@@ -64,7 +63,7 @@ namespace DataTools
                 _activeMap = null;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Properties
 
@@ -82,7 +81,7 @@ namespace DataTools
             }
         }
 
-        #endregion
+        #endregion Properties
 
         #region Map
 
@@ -90,7 +89,7 @@ namespace DataTools
         /// Get the active map view.
         /// </summary>
         /// <returns></returns>
-        static internal MapView GetActiveMapView()
+        internal static MapView GetActiveMapView()
         {
             // Get the active map view.
             MapView mapView = MapView.Active;
@@ -115,7 +114,7 @@ namespace DataTools
                 try
                 {
                     // Create a new map without a base map.
-                    _activeMap = MapFactory.Instance.CreateMap(mapName, basemap:Basemap.None);
+                    _activeMap = MapFactory.Instance.CreateMap(mapName, basemap: Basemap.None);
 
                     // Create and activate new map.
                     ProApp.Panes.CreateMapPaneAsync(_activeMap, MapViewingMode.Map);
@@ -197,7 +196,7 @@ namespace DataTools
             }
         }
 
-        #endregion
+        #endregion Map
 
         #region Layers
 
@@ -222,7 +221,7 @@ namespace DataTools
             return null;
         }
 
-        #endregion
+        #endregion Layers
 
         #region Symbology
 
@@ -243,7 +242,6 @@ namespace DataTools
 
             if (layer is FeatureLayer featureLayer)
             {
-
                 // Apply the layer file symbology to the feature layer.
                 try
                 {
@@ -265,20 +263,18 @@ namespace DataTools
                     // Handle Exception.
                     return false;
                 }
-
             }
 
             return true;
         }
 
-        #endregion
-
+        #endregion Symbology
     }
 
     /// <summary>
     /// This helper class provides ArcGIS Pro feature class and table functions.
     /// </summary>
-    static class ArcGISFunctions
+    internal static class ArcGISFunctions
     {
         #region Feature Class
 
@@ -368,7 +364,7 @@ namespace DataTools
             }
         }
 
-        #endregion
+        #endregion Feature Class
 
         #region Geodatabase
 
@@ -405,7 +401,7 @@ namespace DataTools
             return exists;
         }
 
-        #endregion
+        #endregion Geodatabase
 
         #region TableExists
 
@@ -417,7 +413,6 @@ namespace DataTools
         /// <returns></returns>
         public static bool TableExists(string filePath, string fileName)
         {
-
             if (fileName.Substring(fileName.Length - 4, 1) == ".")
             {
                 // It's a file.
@@ -454,7 +449,7 @@ namespace DataTools
             return TableExists(FileFunctions.GetDirectoryName(aFullPath), FileFunctions.GetFileName(aFullPath));
         }
 
-        #endregion
+        #endregion TableExists
 
         #region Outputs
 
@@ -474,18 +469,23 @@ namespace DataTools
                 case "Geodatabase FC":
                     bf = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_geodatabaseItems_featureClasses");
                     break;
+
                 case "Geodatabase Table":
                     bf = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_geodatabaseItems_tables");
                     break;
+
                 case "Shapefile":
                     bf = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_shapefiles");
                     break;
+
                 case "CSV file (comma delimited)":
                     bf = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_textFiles_csv");
                     break;
+
                 case "Text file (tab delimited)":
                     bf = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_textFiles_txt");
                     break;
+
                 default:
                     bf = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_all");
                     break;
@@ -511,7 +511,7 @@ namespace DataTools
             return strOutFile; // Null if user pressed exit
         }
 
-        #endregion
+        #endregion Outputs
 
         #region CopyFeatures
 
@@ -579,7 +579,7 @@ namespace DataTools
             return await CopyFeaturesAsync(inFeatureClass, outFeatureClass, Messages);
         }
 
-        #endregion
+        #endregion CopyFeatures
 
         #region Export Features
 
@@ -617,7 +617,7 @@ namespace DataTools
             return true;
         }
 
-        #endregion
+        #endregion Export Features
 
         #region Copy Table
 
@@ -685,7 +685,6 @@ namespace DataTools
             return await CopyTableAsync(inTable, outTable, Messages);
         }
 
-        #endregion
-
+        #endregion Copy Table
     }
 }

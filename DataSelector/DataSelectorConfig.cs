@@ -32,9 +32,8 @@ namespace DataSelector
     /// <summary>
     /// This class reads the config XML file and stores the results.
     /// </summary>
-    class DataSelectorConfig
+    internal class DataSelectorConfig
     {
-
         #region Fields
 
         private static string _toolName;
@@ -42,7 +41,7 @@ namespace DataSelector
         // Initialise component to read XML
         private XmlElement _xmlDataSelector;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
@@ -112,7 +111,6 @@ namespace DataSelector
                 _xmlLoaded = false;
                 return;
             }
-
         }
 
         /// <summary>
@@ -298,7 +296,7 @@ namespace DataSelector
             }
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Members
 
@@ -328,7 +326,7 @@ namespace DataSelector
             }
         }
 
-        #endregion
+        #endregion Members
 
         #region Variables
 
@@ -482,7 +480,6 @@ namespace DataSelector
             }
         }
 
-        #endregion
-
+        #endregion Variables
     }
 }

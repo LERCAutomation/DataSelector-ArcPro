@@ -37,7 +37,6 @@ namespace DataSelector.UI
     /// </summary>
     internal class DockpaneMainViewModel : DockPane
     {
-
         #region Fields
 
         private DockpaneMainViewModel _dockPane;
@@ -45,7 +44,7 @@ namespace DataSelector.UI
         private PaneHeader1ViewModel _paneH1VM;
         private PaneHeader2ViewModel _paneH2VM;
 
-        #endregion
+        #endregion Fields
 
         #region ViewModelBase Members
 
@@ -131,7 +130,7 @@ namespace DataSelector.UI
             pane.Activate();
         }
 
-        #endregion
+        #endregion ViewModelBase Members
 
         #region Properties
 
@@ -253,7 +252,7 @@ namespace DataSelector.UI
             set { _helpURL = value; }
         }
 
-        #endregion
+        #endregion Properties
 
         #region Methods
 
@@ -329,8 +328,7 @@ namespace DataSelector.UI
             _paneH1VM.RefreshButtons();
         }
 
-        #endregion
-
+        #endregion Methods
     }
 
     /// <summary>
@@ -345,6 +343,5 @@ namespace DataSelector.UI
             // Show the dock pane.
             DockpaneMainViewModel.Show();
         }
-
     }
 }

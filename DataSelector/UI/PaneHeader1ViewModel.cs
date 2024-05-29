@@ -41,14 +41,13 @@ namespace DataSelector.UI
     /// </summary>
     internal class PaneHeader1ViewModel : PanelViewModelBase, INotifyPropertyChanged
     {
-
         #region Fields
 
         private DockpaneMainViewModel _dockPane;
 
         private string _displayName = "DataSelector";
 
-        #endregion
+        #endregion Fields
 
         #region ViewModelBase Members
 
@@ -57,7 +56,7 @@ namespace DataSelector.UI
             get { return _displayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase Members
 
         #region Creator
 
@@ -179,7 +178,7 @@ namespace DataSelector.UI
             }
         }
 
-        #endregion
+        #endregion Creator
 
         #region SelectXMLPath Command
 
@@ -230,7 +229,7 @@ namespace DataSelector.UI
             }
         }
 
-        #endregion
+        #endregion SelectXMLPath Command
 
         #region Select XML Profile
 
@@ -276,7 +275,7 @@ namespace DataSelector.UI
             }
         }
 
-        #endregion
+        #endregion Select XML Profile
 
         #region Load Profile Command
 
@@ -361,7 +360,7 @@ namespace DataSelector.UI
             }
         }
 
-        #endregion
+        #endregion Load Profile Command
 
         #region Properties
 
@@ -415,7 +414,7 @@ namespace DataSelector.UI
             }
         }
 
-        #endregion
+        #endregion Properties
 
         #region Methods
 
@@ -617,7 +616,7 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(CanLoadProfile));
         }
 
-        #endregion
+        #endregion Methods
 
         #region Debugging Aides
 
@@ -651,7 +650,7 @@ namespace DataSelector.UI
         /// </summary>
         protected virtual bool ThrowOnInvalidPropertyName { get; private set; }
 
-        #endregion // Debugging Aides
+        #endregion Debugging Aides
 
         #region INotifyPropertyChanged Members
 
@@ -676,7 +675,6 @@ namespace DataSelector.UI
             }
         }
 
-        #endregion
-
+        #endregion INotifyPropertyChanged Members
     }
 }

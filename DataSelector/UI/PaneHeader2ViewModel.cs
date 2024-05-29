@@ -46,7 +46,6 @@ namespace DataSelector.UI
 {
     internal class PaneHeader2ViewModel : PanelViewModelBase, INotifyPropertyChanged
     {
-
         #region Fields
 
         private DockpaneMainViewModel _dockPane;
@@ -58,23 +57,23 @@ namespace DataSelector.UI
         private string _logFile;
         private bool _validateSQL;
 
-        string _includeWildcard;
-        string _excludeWildcard;
-        string _defaultFormat;
-        string _defaultSchema;
+        private string _includeWildcard;
+        private string _excludeWildcard;
+        private string _defaultFormat;
+        private string _defaultSchema;
 
         private string _queryName;
 
-        long _tableCount = 0;
-        long _polyCount = 0;
-        long _pointCount = 0;
+        private long _tableCount = 0;
+        private long _polyCount = 0;
+        private long _pointCount = 0;
 
         private string _displayName = "DataSelector";
 
         private DataSelectorConfig _toolConfig;
         private SQLServerFunctions _sqlFunctions;
 
-        #endregion
+        #endregion Fields
 
         #region ViewModelBase Members
 
@@ -83,7 +82,7 @@ namespace DataSelector.UI
             get { return _displayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase Members
 
         #region Creator
 
@@ -159,7 +158,7 @@ namespace DataSelector.UI
             _selectedOutputFormat = _defaultFormat;
         }
 
-        #endregion
+        #endregion Creator
 
         #region Controls Enabled
 
@@ -270,7 +269,7 @@ namespace DataSelector.UI
             }
         }
 
-        #endregion
+        #endregion Controls Enabled
 
         #region Clear Command
 
@@ -319,7 +318,7 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(RunButtonEnabled));
         }
 
-        #endregion
+        #endregion Clear Command
 
         #region Save Command
 
@@ -363,7 +362,7 @@ namespace DataSelector.UI
             // Create up Save file dialog.
             SaveFileDialog saveFileDialog = new()
             {
-                Title="Save Query As...",
+                Title = "Save Query As...",
                 Filter = "Query files (*.qsf)|*.qsf",
                 InitialDirectory = _toolConfig.GetDefaultQueryPath,
                 OkRequiresInteraction = true,
@@ -443,7 +442,7 @@ namespace DataSelector.UI
             return true;
         }
 
-        #endregion
+        #endregion Save Command
 
         #region Load Command
 
@@ -467,7 +466,6 @@ namespace DataSelector.UI
                 return _loadCommand;
             }
         }
-
 
         /// <summary>
         /// Handles event when Load button is clicked
@@ -552,7 +550,6 @@ namespace DataSelector.UI
                     }
                 }
 
-
                 // Close the dispose of the stream reader.
                 qryFile.Close();
                 qryFile.Dispose();
@@ -572,7 +569,7 @@ namespace DataSelector.UI
             return true;
         }
 
-        #endregion
+        #endregion Load Command
 
         #region Verify Command
 
@@ -622,7 +619,7 @@ namespace DataSelector.UI
                 MessageBox.Show("SQL is valid.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        #endregion
+        #endregion Verify Command
 
         #region Run Command
 
@@ -743,7 +740,7 @@ namespace DataSelector.UI
             _dockPane.RefreshPanel1Buttons();
         }
 
-        #endregion
+        #endregion Run Command
 
         #region TablesList
 
@@ -788,7 +785,7 @@ namespace DataSelector.UI
             await GetTableNames();
         }
 
-        #endregion
+        #endregion TablesList
 
         #region LoadColumns Command
 
@@ -823,7 +820,7 @@ namespace DataSelector.UI
             await LoadColumnsAsync(_selectedTable);
         }
 
-        #endregion
+        #endregion LoadColumns Command
 
         #region Properties
 
@@ -1000,7 +997,7 @@ namespace DataSelector.UI
             }
         }
 
-        #endregion
+        #endregion Properties
 
         #region Methods
 
@@ -1127,7 +1124,7 @@ namespace DataSelector.UI
             }
         }
 
-        #endregion
+        #endregion Methods
 
         #region SQL
 
@@ -1349,7 +1346,6 @@ namespace DataSelector.UI
                 else
                     blDone = true; // user pressed cancel.
 
-
                 if (isSpatial && blDone != true)
                 {
                     // Check if the outputfile_point or outputfile_poly already exists. For text output the dialog does its own check.
@@ -1360,7 +1356,6 @@ namespace DataSelector.UI
                     {
                         pointFile = outputFile + "_Point";
                         polyFile = outputFile + "_Poly";
-
                     }
                     else if (outputFormat == "Shapefile")
                     {
@@ -1406,7 +1401,6 @@ namespace DataSelector.UI
                         }
                         else
                             blDone = true; // Text file; already checked by dialog.
-
                     }
                 }
                 else if (blDone != true) // non-isSpatial, not done yet.
@@ -1437,7 +1431,6 @@ namespace DataSelector.UI
                     }
                     else
                         blDone = true; // Text file; already checked by dialog.
-
                 }
             }
 
@@ -1686,7 +1679,6 @@ namespace DataSelector.UI
                 }
 
                 return true;
-
             }
             else if (outputFormat == "Shapefile")
             {
@@ -1844,7 +1836,6 @@ namespace DataSelector.UI
                 await mapFunctions.AddTableToMap(outFile);
 
                 return true;
-
             }
 
             return false;
@@ -2200,17 +2191,22 @@ namespace DataSelector.UI
                     outPoints = outputFile + "_Point";
                     outPolys = outputFile + "_Poly";
                     break;
+
                 case "Geodatabase Table":
                     break;
+
                 case "Shapefile":
                     outputFile = FileFunctions.GetFullNameWithoutExtension(outputFile);
                     outPoints = outputFile + "_Point.shp";
                     outPolys = outputFile + "_Poly.shp";
                     break;
+
                 case "CSV file (comma delimited)":
                     break;
+
                 case "Text file (tab delimited)":
                     break;
+
                 default:
                     break;
             }
@@ -2276,7 +2272,6 @@ namespace DataSelector.UI
                     //if (!outputFormat.Contains("Geodatabase"))
                     //    polysLayerName = FileFunctions.GetFileNameWithoutExtension(polysLayerName);
 
-
                     // Set the symbology for the new layer.
                     //await mapFunctions.ApplySymbologyFromLayerFileAsync(polysLayerName, _layerLocation);
                 }
@@ -2304,7 +2299,7 @@ namespace DataSelector.UI
             return true;
         }
 
-        #endregion
+        #endregion SQL
 
         #region Debugging Aides
 
@@ -2338,7 +2333,7 @@ namespace DataSelector.UI
         /// </summary>
         protected virtual bool ThrowOnInvalidPropertyName { get; private set; }
 
-        #endregion // Debugging Aides
+        #endregion Debugging Aides
 
         #region INotifyPropertyChanged Members
 
@@ -2363,7 +2358,6 @@ namespace DataSelector.UI
             }
         }
 
-        #endregion
-
+        #endregion INotifyPropertyChanged Members
     }
 }
