@@ -20,7 +20,6 @@
 // along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Windows.Forms;
 using System.Xml;
 using System.Windows;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
@@ -33,10 +32,12 @@ namespace DataSelector
     /// <summary>
     /// This class reads the config XML file and stores the results.
     /// </summary>
-    class SelectorToolConfig
+    class DataSelectorConfig
     {
 
         #region Fields
+
+        private static string _toolName;
 
         // Initialise component to read XML
         private XmlElement _xmlDataSelector;
@@ -49,8 +50,9 @@ namespace DataSelector
         /// Load the XML profile and read the variables.
         /// </summary>
         /// <param name="xmlFile"></param>
-        public SelectorToolConfig(string xmlFile)
+        public DataSelectorConfig(string xmlFile, string toolName, bool msgErrors)
         {
+            _toolName = toolName;
 
             // The user has specified the xmlFile and we've checked it exists.
             _xmlFound = true;
@@ -64,7 +66,7 @@ namespace DataSelector
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error loading XML file. System error message: " + ex.Message, "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error loading XML file. " + ex.Message, _toolName, MessageBoxButton.OK, MessageBoxImage.Error);
                 _xmlLoaded = false;
                 return;
             }
@@ -75,20 +77,42 @@ namespace DataSelector
 
             if (_xmlDataSelector == null)
             {
-                MessageBox.Show("Error loading XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error loading XML file.", _toolName, MessageBoxButton.OK, MessageBoxImage.Error);
                 _xmlLoaded = false;
                 return;
             }
 
             // Get the mandatory variables.
-            if (!GetMandatoryVariables())
+            try
             {
+                if (!GetMandatoryVariables())
+                    return;
+            }
+            catch (Exception ex)
+            {
+                // Only report message if user was prompted for the XML
+                // file (i.e. the user interface has already loaded).
+                if (msgErrors)
+                    MessageBox.Show("Error loading XML file. " + ex.Message, _toolName, MessageBoxButton.OK, MessageBoxImage.Error);
                 _xmlLoaded = false;
                 return;
             }
 
             // Get the optional variables.
-            GetOptionalVariables();
+            try
+            {
+                GetOptionalVariables();
+            }
+            catch (Exception ex)
+            {
+                // Only report message if user was prompted for the XML
+                // file (i.e. the user interface has already loaded).
+                if (msgErrors)
+                    MessageBox.Show("Warning loading XML file. " + ex.Message, _toolName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                _xmlLoaded = false;
+                return;
+            }
+
         }
 
         /// <summary>
@@ -104,8 +128,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'LogFilePath' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                throw new("Could not locate item 'LogFilePath' in the XML profile.");
             }
 
             // The location of the SDE file that specifies which SQL Server database to connect to.
@@ -115,8 +138,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'SDEFile' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                throw new("Could not locate item 'SDEFile' in the XML profile.");
             }
 
             // Stored procedure to execute selection in SQL Server.
@@ -126,8 +148,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'SelectStoredProcedure' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                throw new("Could not locate item 'SelectStoredProcedure' in the XML profile.");
             }
 
             // Stored procedure to clear selection in SQL Server.
@@ -137,8 +158,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'ClearStoredProcedure' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                throw new("Could not locate item 'ClearStoredProcedure' in the XML profile.");
             }
 
             // The schema used in the SQL Server database.
@@ -148,8 +168,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DatabaseSchema' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                throw new("Could not locate item 'DatabaseSchema' in the XML profile.");
             }
 
             // The Include wildcard for table names to list all the species tables
@@ -160,8 +179,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'IncludeWildcard' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                throw new("Could not locate item 'IncludeWildcard' in the XML profile.");
             }
 
             // The Exclude wildcard for table names that should NOT be used
@@ -173,8 +191,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'ExcludeWildcard' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                throw new("Could not locate item 'ExcludeWildcard' in the XML profile.");
             }
 
             // All mandatory variables were loaded successfully.
@@ -195,8 +212,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultExtractPath' in the XML file.", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                throw new("Could not locate item 'DefaultExtractPath' in the XML profile.");
             }
 
             // The existing file location where queries will be saved and loaded by default.
@@ -206,8 +222,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultQueryPath' in the XML file.", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                throw new("Could not locate item 'DefaultQueryPath' in the XML profile.");
             }
 
             // The default format of the output files to be created.
@@ -217,8 +232,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultFormat' in the XML file.", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                throw new("Could not locate item 'DefaultFormat' in the XML profile.");
             }
 
             // The default for whether the symbology should be set for feature classes or not.
@@ -226,13 +240,12 @@ namespace DataSelector
             {
                 _defaultSetSymbology = false;
                 strRawText = _xmlDataSelector["DefaultSetSymbology"].InnerText;
-                if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
+                if (strRawText.ToLower() is "yes" or "y")
                     _defaultSetSymbology = true;
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultSetSymbology' in the XML file.", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                throw new("Could not locate item 'DefaultSetSymbology' in the XML profile.");
             }
 
             // The location of layer files.
@@ -242,8 +255,7 @@ namespace DataSelector
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'LayerLocation' in the XML file.", "XML Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                throw new("Could not locate item 'LayerLocation' in the XML profile.");
             }
 
             // The default for whether an existing log file should be cleared by default.
@@ -251,13 +263,12 @@ namespace DataSelector
             {
                 _defaultClearLogFile = false;
                 strRawText = _xmlDataSelector["DefaultClearLogFile"].InnerText;
-                if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
+                if (strRawText.ToLower() is "yes" or "y")
                     _defaultClearLogFile = true;
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultClearLogFile' in the XML file.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                throw new("Could not locate item 'DefaultClearLogFile' in the XML profile.");
             }
 
             // The default for whether the log file should be opened by default.
@@ -265,13 +276,12 @@ namespace DataSelector
             {
                 _defaultOpenLogFile = false;
                 strRawText = _xmlDataSelector["DefaultOpenLogFile"].InnerText;
-                if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
+                if (strRawText.ToLower() is "yes" or "y")
                     _defaultOpenLogFile = true;
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultOpenLogFile' in the XML file.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                throw new("Could not locate item 'DefaultOpenLogFile' in the XML profile.");
             }
 
             // Whether to validate the SQL before running.
@@ -279,13 +289,12 @@ namespace DataSelector
             {
                 _validateSQL = false;
                 strRawText = _xmlDataSelector["ValidateSQL"].InnerText;
-                if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
+                if (strRawText.ToLower() is "yes" or "y")
                     _validateSQL = true;
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'ValidateSQL' in the XML file.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                throw new("Could not locate item 'ValidateSQL' in the XML profile.");
             }
         }
 

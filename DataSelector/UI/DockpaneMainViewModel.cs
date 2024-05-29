@@ -23,17 +23,12 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Controls;
-using DataSelector.Properties;
 using DataTools;
 using System.Windows;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 using System.Diagnostics;
-using System.Windows.Media;
-
 
 namespace DataSelector.UI
 {

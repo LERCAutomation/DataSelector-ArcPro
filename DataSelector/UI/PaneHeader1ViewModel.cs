@@ -31,6 +31,7 @@ using DataSelector.Properties;
 using System.Windows;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 using System.Windows.Media;
+using System.Windows.Markup;
 
 namespace DataSelector.UI
 {
@@ -46,8 +47,6 @@ namespace DataSelector.UI
         private DockpaneMainViewModel _dockPane;
 
         private string _displayName = "DataSelector";
-
-        private string _configFile = null;
 
         #endregion
 
@@ -71,6 +70,9 @@ namespace DataSelector.UI
         {
             _dockPane = dockPane;
 
+            // Get the tool XML config file path and name from settings.
+            _xmlFolder = Settings.Default.XMLFolder;
+
             InitializeComponent();
         }
 
@@ -81,32 +83,38 @@ namespace DataSelector.UI
         {
             _xmlError = false;
 
-            // Get the app XML config file path and name from settings.
-            _xmlFolder = Settings.Default.XMLFolder;
+            string xmlConfigPath = null;
 
-            // Open the app XML config file and determine if the user will
+            // Open the tool XML config file and determine if the user will
             // choose which tool XML config file to load or if the default
             // file will be used.
-            LaunchConfig launchConfig;
-            launchConfig = new(_xmlFolder, _displayName, false);
+            ToolConfig toolConfig;
+            toolConfig = new(_xmlFolder, _displayName, false);
 
-            // If the app config file can't be found.
-            if (!launchConfig.XMLFound)
+            // If the tool config file can't be found or hasn't been loaded.
+            if ((!toolConfig.XMLFound) || (!toolConfig.XMLLoaded))
             {
-                //MessageBox.Show("XML file 'DataSelector.xml' not found in folder.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-                //_xmlError = true;
+                // Clear the list and selection.
+                _availableXMLFiles = new();
+                _selectedXMLProfile = null;
+
+                // Update the fields and buttons in the form.
+                OnPropertyChanged(nameof(XMLFolder));
+                OnPropertyChanged(nameof(AvailableXMLFiles));
+                OnPropertyChanged(nameof(SelectedXMLProfile));
+                OnPropertyChanged(nameof(CanSelectXMLPath));
+                OnPropertyChanged(nameof(CanLoadProfile));
+
                 return;
             }
-            // If the app config file hasn't been loaded.
-            else if (!launchConfig.XMLLoaded)
-            {
-                //MessageBox.Show("Error loading XML File 'DataSelector.xml'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-                //_xmlError = true;
-                return;
-            }
+
+            // As the tool config file exists and has loaded ...
 
             // Set the help URL.
-            _dockPane.HelpURL = launchConfig.GetHelpURL;
+            _dockPane.HelpURL = toolConfig.GetHelpURL;
+
+            // Set the default XML profile name.
+            string defaultXML = toolConfig.GetDefaultXML;
 
             List<string> xmlFilesList = new();
             bool blOnlyDefault = false;
@@ -114,46 +122,46 @@ namespace DataSelector.UI
 
             // If the user is allowed to choose the XML profile then
             // check if there are multiple profiles to choose from.
-            if (launchConfig.ChooseConfig)
+            if (toolConfig.ChooseConfig)
             {
                 // Get a list of all of the valid XML profiles in the folder.
-                GetValidXMLFiles(_xmlFolder, launchConfig.GetDefaultXML, ref xmlFilesList, ref blDefaultFound, ref blOnlyDefault);
+                GetValidXMLFiles(_xmlFolder, toolConfig.GetDefaultXML, ref xmlFilesList, ref blDefaultFound, ref blOnlyDefault);
 
+                // If no valid files were found.
                 if (xmlFilesList is null || xmlFilesList.Count() == 0)
-                {
-                    //MessageBox.Show("No valid XML files found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-                    //_xmlError = true;
                     return;
-                }
             }
 
             // If the user is allowed to choose the XML profile and there are
             // more then just the default profile in the folder, load the
             // list of files for the user to choose.
-            if (launchConfig.ChooseConfig && !blOnlyDefault)
+            if (toolConfig.ChooseConfig && !blOnlyDefault)
             {
                 _availableXMLFiles = xmlFilesList;
-                _selectedXMLProfile = launchConfig.GetDefaultXML;
+                _selectedXMLProfile = defaultXML;
             }
             else
             {
                 // If the user isn't allowed to choose, or if there is only the
                 // default XML file in the directory, then use the default.
-                _configFile = _xmlFolder + @"\" + launchConfig.GetDefaultXML;
+                xmlConfigPath = _xmlFolder + @"\" + defaultXML;
 
-                // Check the default XML file exists.
-                if (!FileFunctions.FileExists(_configFile))
+                // If the default XML file exists.
+                if (FileFunctions.FileExists(xmlConfigPath))
                 {
-                    //MessageBox.Show("The default XML file '" + launchConfig.GetDefaultXML + "' was not found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-                    //_xmlError = true;
-                    return;
+                    // Set the list to just the default XML file
+                    // and select it.
+                    xmlFilesList.Add(defaultXML);
+                    _availableXMLFiles = xmlFilesList;
+                    _selectedXMLProfile = defaultXML;
                 }
-
-                // Add the default file to the list and select it.
-                xmlFilesList = new();
-                xmlFilesList.Add(launchConfig.GetDefaultXML);
-                _availableXMLFiles = xmlFilesList;
-                _selectedXMLProfile = launchConfig.GetDefaultXML;
+                else
+                {
+                    // Clear the list and selection.
+                    xmlConfigPath = null;
+                    _availableXMLFiles = new();
+                    _selectedXMLProfile = null;
+                }
             }
 
             // Update the fields and buttons in the form.
@@ -163,16 +171,12 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(CanSelectXMLPath));
             OnPropertyChanged(nameof(CanLoadProfile));
 
-            // Cancel if no XML config file has been selected.
-            if (_configFile == null)
-                return;
-
-            // Load the default profile.
-            LoadConfig(_configFile);
-
-            // Exit if the XML wasn't loaded.
-            if (!XMLLoaded)
-                return;
+            // If the XML config file has been set (and it exists) then load it.
+            if (xmlConfigPath != null)
+            {
+                // Load the default profile.
+                LoadXMLProfile(xmlConfigPath, false);
+            }
         }
 
         #endregion
@@ -208,23 +212,8 @@ namespace DataSelector.UI
         /// <remarks></remarks>
         private void SelectXMLPathCommandClick(object param)
         {
-            // Cancel if unable to get the name of the tool XML
-            // config file to load.
-            if (!GetConfigFileName()) return;
-
-            // Cancel if no XML config file has been selected.
-            if (_configFile == null) return;
-
-            // Update the fields and buttons in the form.
-            OnPropertyChanged(nameof(XMLFolder));
-            OnPropertyChanged(nameof(AvailableXMLFiles));
-            OnPropertyChanged(nameof(SelectedXMLProfile));
-
-            OnPropertyChanged(nameof(CanSelectXMLPath));
-            OnPropertyChanged(nameof(CanLoadProfile));
-
-            //// Load the default profile.
-            //LoadConfig(_configFile);
+            // Load the selected config file.
+            LoadToolConfig();
         }
 
         /// <summary>
@@ -325,17 +314,17 @@ namespace DataSelector.UI
                 return;
 
             // Set the full path for the profile file.
-            string configFile = _xmlFolder + @"\" + SelectedXMLProfile;
+            string xmlConfigFile = _xmlFolder + @"\" + SelectedXMLProfile;
 
             // Check the file (still) exists.
-            if (!FileFunctions.FileExists(configFile))
+            if (!FileFunctions.FileExists(xmlConfigFile))
             {
                 MessageBox.Show("The selected XML file '" + SelectedXMLProfile + "' was not found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             // Load the selected profile.
-            LoadConfig(configFile);
+            LoadXMLProfile(xmlConfigFile, true);
 
             // Clear the query pane if the XML wasn't loaded.
             if (!XMLLoaded)
@@ -376,13 +365,13 @@ namespace DataSelector.UI
 
         #region Properties
 
-        private SelectorToolConfig _toolConfig;
+        private DataSelectorConfig _xmlConfig;
 
-        public SelectorToolConfig ToolConfig
+        public DataSelectorConfig ToolConfig
         {
             get
             {
-                return _toolConfig;
+                return _xmlConfig;
             }
         }
 
@@ -431,40 +420,53 @@ namespace DataSelector.UI
         #region Methods
 
         /// <summary>
-        /// Read the app config file to see if a default XML file is
+        /// Read the tool config file to see if a default XML file is
         /// found or if the user will be prompted to choose one, and
         /// if the user is allowed to choose the XML profile.
         /// </summary>
-        private bool GetConfigFileName()
+        private void LoadToolConfig()
         {
-            // Open the app XML config file and determine if the user will
+            string xmlConfigPath = null;
+
+            // Open the tool XML config file and determine if the user will
             // choose which tool XML config file to load or if the default
             // file will be used.
-            LaunchConfig launchConfig;
-            launchConfig = new(_xmlFolder, _displayName, true);
+            ToolConfig toolConfig;
+            toolConfig = new(_xmlFolder, _displayName, true);
 
             // If the user didn't select a folder when prompted.
-            if (launchConfig.GetSelectCancelled)
-                return false;
+            if (toolConfig.SelectCancelled)
+                return;
 
-            // If the app config file can't be found.
-            if (!launchConfig.XMLFound)
+            // If the tool config file can't be found or hasn't been loaded.
+            if ((!toolConfig.XMLFound) || (!toolConfig.XMLLoaded))
             {
-                MessageBox.Show("XML file 'DataSelector.xml' not found in folder.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-            // If the app config file hasn't been loaded.
-            else if (!launchConfig.XMLLoaded)
-            {
-                MessageBox.Show("Error loading XML File 'DataSelector.xml'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                // Clear the list and selection.
+                _availableXMLFiles = new();
+                _selectedXMLProfile = null;
+
+                // Update the fields and buttons in the form.
+                OnPropertyChanged(nameof(XMLFolder));
+                OnPropertyChanged(nameof(AvailableXMLFiles));
+                OnPropertyChanged(nameof(SelectedXMLProfile));
+                OnPropertyChanged(nameof(CanSelectXMLPath));
+                OnPropertyChanged(nameof(CanLoadProfile));
+
+                return;
             }
 
-            // Set the folder path containing the app config file.
-            _xmlFolder = launchConfig.XMLFolder;
+            // As the tool config file exists and has loaded ...
 
-            // As the app config file exists and has loaded then
-            // save the folder path to settings for the future.
+            // Set the help URL.
+            _dockPane.HelpURL = toolConfig.GetHelpURL;
+
+            // Set the default XML profile name.
+            string defaultXML = toolConfig.GetDefaultXML;
+
+            // Set the folder path containing the tool config file.
+            _xmlFolder = toolConfig.XMLFolder;
+
+            // Save the folder path to settings for the future.
             Settings.Default.XMLFolder = _xmlFolder;
             Settings.Default.Save();
 
@@ -474,47 +476,64 @@ namespace DataSelector.UI
 
             // If the user is allowed to choose the XML profile then
             // check if there are multiple profiles to choose from.
-            if (launchConfig.ChooseConfig)
+            if (toolConfig.ChooseConfig)
             {
                 // Get a list of all of the valid XML profiles in the folder.
-                GetValidXMLFiles(_xmlFolder, launchConfig.GetDefaultXML, ref xmlFilesList, ref blDefaultFound, ref blOnlyDefault);
+                GetValidXMLFiles(_xmlFolder, toolConfig.GetDefaultXML, ref xmlFilesList, ref blDefaultFound, ref blOnlyDefault);
 
+                // If no valid files were found.
                 if (xmlFilesList is null || xmlFilesList.Count() == 0)
                 {
                     MessageBox.Show("No valid XML files found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return false;
+                    return;
                 }
             }
 
             // If the user is allowed to choose the XML profile and there are
             // more then just the default profile in the folder, load the
             // list of files for the user to choose.
-            if (launchConfig.ChooseConfig && !blOnlyDefault)
+            if (toolConfig.ChooseConfig && !blOnlyDefault)
             {
                 _availableXMLFiles = xmlFilesList;
-                _selectedXMLProfile = launchConfig.GetDefaultXML;
+                _selectedXMLProfile = defaultXML;
             }
             else
             {
                 // If the user isn't allowed to choose, or if there is only the
                 // default XML file in the directory, then use the default.
-                _configFile = _xmlFolder + @"\" + launchConfig.GetDefaultXML;
+                xmlConfigPath = _xmlFolder + @"\" + defaultXML;
 
-                // Check the default XML file exists.
-                if (!FileFunctions.FileExists(_configFile))
+                // If the default XML file exists.
+                if (FileFunctions.FileExists(xmlConfigPath))
                 {
-                    MessageBox.Show("The default XML file '" + launchConfig.GetDefaultXML + "' was not found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return false;
+                    // Set the list to just the default XML file
+                    // and select it.
+                    xmlFilesList.Add(defaultXML);
+                    _availableXMLFiles = xmlFilesList;
+                    _selectedXMLProfile = defaultXML;
                 }
-
-                // Add the default file to the list and select it.
-                xmlFilesList = new();
-                xmlFilesList.Add(launchConfig.GetDefaultXML);
-                _availableXMLFiles = xmlFilesList;
-                _selectedXMLProfile = launchConfig.GetDefaultXML;
+                else
+                {
+                    // Clear the list and selection.
+                    xmlConfigPath = null;
+                    _availableXMLFiles = new();
+                    _selectedXMLProfile = null;
+                }
             }
 
-            return true;
+            // Update the fields and buttons in the form.
+            OnPropertyChanged(nameof(XMLFolder));
+            OnPropertyChanged(nameof(AvailableXMLFiles));
+            OnPropertyChanged(nameof(SelectedXMLProfile));
+            OnPropertyChanged(nameof(CanSelectXMLPath));
+            OnPropertyChanged(nameof(CanLoadProfile));
+
+            // If the XML config file has been set (and it exists) then load it.
+            if (xmlConfigPath != null)
+            {
+                // Load the default profile.
+                LoadXMLProfile(xmlConfigPath, false);
+            }
         }
 
         /// <summary>
@@ -538,7 +557,7 @@ namespace DataSelector.UI
             xmlFilesList = new();
             foreach (string strFile in allFilesList)
             {
-                // Add if it's not the app XML file.
+                // Add if it's not the tool XML file.
                 string strFileName = FileFunctions.GetFileName(strFile);
                 if (FileFunctions.GetFileNameWithoutExtension(strFileName).ToLower() != _displayName.ToLower()
                 && FileFunctions.GetExtension(strFile).ToLower() == ".xml")
@@ -559,26 +578,26 @@ namespace DataSelector.UI
         /// <summary>
         /// Load the selected XML profile.
         /// </summary>
-        /// <param name="configFile"></param>
-        public void LoadConfig(string configFile)
+        /// <param name="xmlConfigPath"></param>
+        public void LoadXMLProfile(string xmlConfigPath, bool msgErrors)
         {
-            _configFile = configFile;
+            // Load the selected XML config file.
+            _xmlConfig = new(xmlConfigPath, _displayName, msgErrors);
 
-            // Read the selected XML config file.
-            _toolConfig = new(_configFile);
-
-            // If the XML config file can't be found then close
-            // the app.
-            if (!_toolConfig.XMLFound)
+            // If the XML config file can't be found.
+            if (!_xmlConfig.XMLFound)
             {
-                MessageBox.Show(string.Format("XML file '{0}' not found.", _configFile), "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (msgErrors)
+                    MessageBox.Show(string.Format("XML file '{0}' not found.", xmlConfigPath), "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+
                 _xmlLoaded = false;
                 return;
             }
-            // If the tool XML config file hasn't been loaded.
-            else if (!_toolConfig.XMLLoaded)
+
+            // If the XML config file can't be loaded.
+            if (!_xmlConfig.XMLLoaded)
             {
-                MessageBox.Show(string.Format("Error loading XML File '{0}'.", _configFile), "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show(string.Format("Error loading XML File '{0}'.", _xmlConfigPath), "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                 _xmlLoaded = false;
                 return;
             }

@@ -26,15 +26,15 @@ using System.Windows;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 // This configuration file reader defines how the tool behaves at start up:
-// Does it show a dropdown list to choose a configuration file, or does it launch
-// a default profile straight away?
+// Does it show a dropdown list to choose a configuration file, or does it
+// load a default profile straight away?
 
 namespace DataTools
 {
     /// <summary>
     /// This class reads the tool XML file and stores the results.
     /// </summary>
-    class LaunchConfig
+    class ToolConfig
     {
 
         #region Fields
@@ -56,7 +56,7 @@ namespace DataTools
         /// <param name="xmlFolder"></param>
         /// <param name="toolName"></param>
         /// <param name="promptFilePath"></param>
-        public LaunchConfig(string xmlFolder, string toolName, bool promptFilePath)
+        public ToolConfig(string xmlFolder, string toolName, bool promptFilePath)
         {
             _toolName = toolName;
 
@@ -68,12 +68,12 @@ namespace DataTools
             _xmlFound = XMLFileFound(xmlFolder, toolName, promptFilePath);
 
             // If the user didn't select a folder when prompted.
-            if (GetSelectCancelled)
+            if (SelectCancelled)
                 return;
 
             if (!_xmlFound)
             {
-                MessageBox.Show("Error loading XML file. '" + toolName + ".xml' was not found in the XML directory.", toolName, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("XML file '" + toolName + ".xml' was not found.", toolName, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -85,7 +85,10 @@ namespace DataTools
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error loading XML file. System error message: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
+                // Only report message if user was prompted for the XML
+                // file (i.e. the user interface has already loaded).
+                if (promptFilePath)
+                    MessageBox.Show("Error loading XML file. " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -101,7 +104,11 @@ namespace DataTools
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error loading XML file. System error message: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
+                // Only report message if user was prompted for the XML
+                // file (i.e. the user interface has already loaded).
+                if (promptFilePath)
+                    MessageBox.Show("Error loading XML file. " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
 
             _xmlLoaded = true;
@@ -135,24 +142,24 @@ namespace DataTools
                     xmlFolder = xmlFilePath;
                     xmlFile = xmlFolder + String.Format(@"\{0}.xml", _toolName);
                 }
-                // If the app XML file path is blank or doesn't exist.
+                // If the tool XML file path is blank or doesn't exist.
                 else if (String.IsNullOrEmpty(xmlFile) || !FileFunctions.FileExists(xmlFile))
                 {
                     _xmlLoaded = false;
                     return false;
                 }
 
-                // Check the app XML file path exists.
-                if (!String.IsNullOrEmpty(xmlFile) && (FileFunctions.FileExists(xmlFile)))
-                {
-                    _xmlFolder = xmlFolder;
-                    _xmlFile = xmlFile;
-                }
+                // Check the tool XML file path exists.
+                if (String.IsNullOrEmpty(xmlFile) || (!FileFunctions.FileExists(xmlFile)))
+                    return false;
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error loading XML file: " + ex.Message, toolName, MessageBoxButton.OK, MessageBoxImage.Error);
             }
+
+            _xmlFolder = xmlFolder;
+            _xmlFile = xmlFile;
 
             return true;
         }
@@ -170,15 +177,14 @@ namespace DataTools
             {
                 blChooseConfig = false;
                 strRawText = xmlToolNode["ChooseXML"].InnerText;
-                if (strRawText.ToLower() == "yes" || strRawText.ToLower() == "y")
+                if (strRawText.ToLower() is "yes" or "y")
                 {
                     blChooseConfig = true;
                 }
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'ChooseXML' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                throw new("Could not locate item 'ChooseXML' in the tool XML file.");
             }
 
             // Get the default XML file name.
@@ -190,8 +196,7 @@ namespace DataTools
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'DefaultProfile' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                throw new("Could not locate item 'DefaultProfile' in the tool XML file.");
             }
 
             // Get the URL of the help page.
@@ -201,8 +206,7 @@ namespace DataTools
             }
             catch
             {
-                MessageBox.Show("Could not locate item 'HelpURL' in the XML file.", "XML Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                throw new("Could not locate item 'HelpURL' in the tool ML file.");
             }
 
             // All mandatory variables were loaded successfully.
@@ -292,7 +296,7 @@ namespace DataTools
 
         private bool _selectCancelled = false;
 
-        public bool GetSelectCancelled
+        public bool SelectCancelled
         {
             get
             {
@@ -315,7 +319,7 @@ namespace DataTools
         #region Methods
 
         /// <summary>
-        /// Prompt the user for the file path containing the app XML file.
+        /// Prompt the user for the file path containing the tool XML file.
         /// </summary>
         /// <returns></returns>
         private static string GetConfigFilePath()

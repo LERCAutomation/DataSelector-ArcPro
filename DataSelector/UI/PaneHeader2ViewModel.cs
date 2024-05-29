@@ -70,7 +70,7 @@ namespace DataSelector.UI
 
         private string _displayName = "DataSelector";
 
-        private SelectorToolConfig _toolConfig;
+        private DataSelectorConfig _toolConfig;
         private SQLServerFunctions _sqlFunctions;
 
         #endregion
@@ -91,7 +91,7 @@ namespace DataSelector.UI
         /// </summary>
         /// <param name="xmlFilesList"></param>
         /// <param name="defaultXMLFile"></param>
-        public PaneHeader2ViewModel(DockpaneMainViewModel dockPane, SelectorToolConfig toolConfig)
+        public PaneHeader2ViewModel(DockpaneMainViewModel dockPane, DataSelectorConfig toolConfig)
         {
             _dockPane = dockPane;
 
