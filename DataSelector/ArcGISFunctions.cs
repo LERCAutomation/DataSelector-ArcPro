@@ -90,7 +90,7 @@ namespace DataTools
         /// Get the active map view.
         /// </summary>
         /// <returns></returns>
-        internal MapView GetActiveMapView()
+        static internal MapView GetActiveMapView()
         {
             // Get the active map view.
             MapView mapView = MapView.Active;
@@ -114,7 +114,7 @@ namespace DataTools
             {
                 try
                 {
-                    // Create a new map without a basemap.
+                    // Create a new map without a base map.
                     _activeMap = MapFactory.Instance.CreateMap(mapName, basemap:Basemap.None);
 
                     // Create and activate new map.
@@ -131,7 +131,7 @@ namespace DataTools
                 catch
                 {
                     // CreateMap throws an exception if the map view wasn't created.
-                    // CreateMapPaneAsync throws an excrption if the map isn't created.
+                    // CreateMapPaneAsync throws an exception if the map isn't created.
                 }
             });
 
@@ -157,7 +157,7 @@ namespace DataTools
                     // Check if the layer is already loaded (unlikely as the map is new)
                     Layer findLayer = _activeMap.Layers.FirstOrDefault(t => t.Name == uri.Segments.Last());
 
-                    // If ithe layer is not loaded, add it.
+                    // If the layer is not loaded, add it.
                     if (findLayer == null)
                     {
                         Layer layer = LayerFactory.Instance.CreateLayer(uri, _activeMap);
@@ -213,7 +213,7 @@ namespace DataTools
 
             while (layers.Count > 0)
             {
-                Layer layer = layers.First();
+                Layer layer = layers[0];
 
                 if (layer.Map.Name == _activeMap.Name)
                     return layer;

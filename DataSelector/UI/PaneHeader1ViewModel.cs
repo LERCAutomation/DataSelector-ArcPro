@@ -95,7 +95,7 @@ namespace DataSelector.UI
             if ((!toolConfig.XMLFound) || (!toolConfig.XMLLoaded))
             {
                 // Clear the list and selection.
-                _availableXMLFiles = new();
+                _availableXMLFiles = [];
                 _selectedXMLProfile = null;
 
                 // Update the fields and buttons in the form.
@@ -116,7 +116,7 @@ namespace DataSelector.UI
             // Set the default XML profile name.
             string defaultXML = toolConfig.GetDefaultXML;
 
-            List<string> xmlFilesList = new();
+            List<string> xmlFilesList = [];
             bool blOnlyDefault = false;
             bool blDefaultFound = false;
 
@@ -128,7 +128,7 @@ namespace DataSelector.UI
                 GetValidXMLFiles(_xmlFolder, toolConfig.GetDefaultXML, ref xmlFilesList, ref blDefaultFound, ref blOnlyDefault);
 
                 // If no valid files were found.
-                if (xmlFilesList is null || xmlFilesList.Count() == 0)
+                if (xmlFilesList is null || xmlFilesList.Count == 0)
                     return;
             }
 
@@ -159,7 +159,7 @@ namespace DataSelector.UI
                 {
                     // Clear the list and selection.
                     xmlConfigPath = null;
-                    _availableXMLFiles = new();
+                    _availableXMLFiles = [];
                     _selectedXMLProfile = null;
                 }
             }
@@ -442,7 +442,7 @@ namespace DataSelector.UI
             if ((!toolConfig.XMLFound) || (!toolConfig.XMLLoaded))
             {
                 // Clear the list and selection.
-                _availableXMLFiles = new();
+                _availableXMLFiles = [];
                 _selectedXMLProfile = null;
 
                 // Update the fields and buttons in the form.
@@ -470,7 +470,7 @@ namespace DataSelector.UI
             Settings.Default.XMLFolder = _xmlFolder;
             Settings.Default.Save();
 
-            List<string> xmlFilesList = new();
+            List<string> xmlFilesList = [];
             bool blOnlyDefault = false;
             bool blDefaultFound = false;
 
@@ -482,7 +482,7 @@ namespace DataSelector.UI
                 GetValidXMLFiles(_xmlFolder, toolConfig.GetDefaultXML, ref xmlFilesList, ref blDefaultFound, ref blOnlyDefault);
 
                 // If no valid files were found.
-                if (xmlFilesList is null || xmlFilesList.Count() == 0)
+                if (xmlFilesList is null || xmlFilesList.Count == 0)
                 {
                     MessageBox.Show("No valid XML files found in the XML directory.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
@@ -516,7 +516,7 @@ namespace DataSelector.UI
                 {
                     // Clear the list and selection.
                     xmlConfigPath = null;
-                    _availableXMLFiles = new();
+                    _availableXMLFiles = [];
                     _selectedXMLProfile = null;
                 }
             }
@@ -554,17 +554,17 @@ namespace DataSelector.UI
             List<string> allFilesList = FileFunctions.GetAllFilesInDirectory(strXMLFolder);
 
             // Loop through the list for valid XML files.
-            xmlFilesList = new();
+            xmlFilesList = [];
             foreach (string strFile in allFilesList)
             {
                 // Add if it's not the tool XML file.
                 string strFileName = FileFunctions.GetFileName(strFile);
-                if (FileFunctions.GetFileNameWithoutExtension(strFileName).ToLower() != _displayName.ToLower()
-                && FileFunctions.GetExtension(strFile).ToLower() == ".xml")
+                if (!FileFunctions.GetFileNameWithoutExtension(strFileName).Equals(_displayName, StringComparison.CurrentCultureIgnoreCase)
+                && FileFunctions.GetExtension(strFile).Equals(".xml", StringComparison.CurrentCultureIgnoreCase))
                 {
                     // Add file to list of XML files.
                     xmlFilesList.Add(strFileName);
-                    if (strFileName.ToLower() == strDefaultXMLName.ToLower())
+                    if (strFileName.Equals(strDefaultXMLName, StringComparison.CurrentCultureIgnoreCase))
                         blDefaultFound = true;
                     else
                         blOnlyDefault = false;

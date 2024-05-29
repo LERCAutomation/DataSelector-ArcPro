@@ -161,7 +161,7 @@ namespace DataSelector.UI
             }
         }
 
-        private List<TabControl> _primaryMenuList = new List<TabControl>();
+        private List<TabControl> _primaryMenuList = [];
 
         /// <summary>
         /// Get the list of dock panes.
@@ -338,7 +338,6 @@ namespace DataSelector.UI
     /// </summary>
     internal class DockpaneMain_ShowButton : Button
     {
-
         protected override void OnClick()
         {
             //string uri = System.Reflection.Assembly.GetExecutingAssembly().Location;

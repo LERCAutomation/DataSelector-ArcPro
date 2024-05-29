@@ -130,7 +130,9 @@ namespace DataTools
                 try
                 {
                     // Try and open the geodatabase using the connection file.
-                    Geodatabase geodatabase = new Geodatabase(new DatabaseConnectionFile(new Uri(sdeFileName)));
+                    Uri sdeUri = new(sdeFileName);
+                    DatabaseConnectionFile sdeDBConnFile = new(sdeUri);
+                    Geodatabase geodatabase = new(sdeDBConnFile);
                     _sdeConnectionValid = true;
                 }
                 catch (GeodatabaseNotFoundOrOpenedException)
@@ -184,7 +186,7 @@ namespace DataTools
         /// <returns></returns>
         public async Task GetTableNamesAsync()
         {
-            _tableNames = new();
+            _tableNames = [];
 
             // Open a connection to the geodatabase if not already open.
             if (!GeodatabaseOpen) await OpenGeodatabase();
@@ -242,7 +244,7 @@ namespace DataTools
         /// <returns></returns>
         public async Task<List<string>> GetFieldNamesListAsync(string tableName)
         {
-            List<string> fieldNames = new();
+            List<string> fieldNames = [];
 
             // Open a connection to the geodatabase if not already open.
             if (!GeodatabaseOpen) await OpenGeodatabase();
@@ -393,7 +395,7 @@ namespace DataTools
         public static bool WriteEmptyTextFile(string outFile, string header)
         {
             // Open the output file.
-            using StreamWriter theOutput = new StreamWriter(outFile, false);
+            using StreamWriter theOutput = new(outFile, false);
 
             // Write the headers to the file.
             theOutput.Write(header);
@@ -496,7 +498,7 @@ namespace DataTools
                         rowCursor = table.Search(null);
                     }
 
-                    // Loopt through the feature class/table using the cursor.
+                    // Loop through the feature class/table using the cursor.
                     while (rowCursor.MoveNext())
                     {
                         // Get the current row.
@@ -516,7 +518,7 @@ namespace DataTools
                                 string colStr = null;
                                 if (colValue != null)
                                 {
-                                    if ((colValue is string) && (colValue.ToString().Contains(",")))
+                                    if ((colValue is string) && (colValue.ToString().Contains(',')))
                                             colStr = "\"" + colValue.ToString() + "\"";
                                     else
                                         colStr = colValue.ToString();

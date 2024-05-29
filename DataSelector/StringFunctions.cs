@@ -135,12 +135,12 @@ namespace DataTools
             bool blAddFileDot = false;
             if (isFileName)
             {
-                char chTest = anInputString[anInputString.Length - 4];
+                char chTest = anInputString[^4];
                 if (chTest == '.') blAddFileDot = true;
             }
 
             string strOutputString = anInputString;
-            List<string> theIllegals = new() { @"\", "%", "$", ":", "*", "/", "?", "<", ">", "|", "~", "£", "." };
+            List<string> theIllegals = [@"\", "%", "$", ":", "*", "/", "?", "<", ">", "|", "~", "£", "."];
             foreach (string aSearchString in theIllegals)
             {
                 strOutputString = strOutputString.Replace(aSearchString, aReplaceString);
@@ -160,7 +160,7 @@ namespace DataTools
         /// <returns></returns>
         public static bool IsValid(string aReplacementCharacter)
         {
-            List<string> theIllegals = new() { @"\", "%", "$", ":", "*", "/", "?", "<", ">", "|", "~", "£", "." };
+            List<string> theIllegals = [@"\", "%", "$", ":", "*", "/", "?", "<", ">", "|", "~", "£", "."];
 
             if (theIllegals.IndexOf(aReplacementCharacter) == -1)
                 return true;
@@ -177,11 +177,10 @@ namespace DataTools
         public static string KeepNumbersAndSpaces(string anInputString, string aReplaceCharacter)
         {
             string strOutputString = "";
-            int a;
             int aCount = 0;
             foreach (char strTest in anInputString)
             {
-                if (int.TryParse(strTest.ToString(), out a) == true)
+                if (int.TryParse(strTest.ToString(), out int a) == true)
                 {
                     strOutputString += strTest.ToString();
                     aCount++;
@@ -244,7 +243,7 @@ namespace DataTools
         /// <returns></returns>
         public static string GetGroupColumnsFormatted(string aGroupColumnString)
         {
-            List<string> strColumns = aGroupColumnString.Split(',').ToList();
+            List<string> strColumns = [.. aGroupColumnString.Split(',')];
             string strFormatted = "";
             foreach (string strEntry in strColumns)
             {
@@ -258,13 +257,13 @@ namespace DataTools
         }
 
         /// <summary>
-        /// Replace a dollar separated string with semi-colon seperators.
+        /// Replace a dollar separated string with semi-colon separators.
         /// </summary>
         /// <param name="aStatsColumnString"></param>
         /// <returns></returns>
         public static string GetStatsColumnsFormatted(string aStatsColumnString)
         {
-            List<string> strEntries = aStatsColumnString.Split('$').ToList();
+            List<string> strEntries = [.. aStatsColumnString.Split('$')];
             string strFormatted = "";
             foreach (string strEntry in strEntries)
             {
@@ -291,7 +290,7 @@ namespace DataTools
         {
             if (GroupColumns == "" || AllColumns == "") //GroupColumns == "" ||
                 return StatsColumns;
-            List<string> liAllColumns = AllColumns.Split(',').ToList();
+            List<string> liAllColumns = [.. AllColumns.Split(',')];
             foreach (string strFieldName in liAllColumns)
             {
                 string strFieldNameTr = strFieldName.Trim();
@@ -327,7 +326,7 @@ namespace DataTools
         /// <returns></returns>
         public static List<string> ExtractGroups(List<string> LayerList)
         {
-            List<string> liGroups = new();
+            List<string> liGroups = [];
             foreach (string strLayerName in LayerList)
             {
                 int intHyphenIndex = strLayerName.IndexOf('-');

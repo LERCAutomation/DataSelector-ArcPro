@@ -19,6 +19,8 @@
 // You should have received a copy of the GNU General Public License
 // along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
 
+// Ignore Spelling: Symbology Tooltip Img
+
 using ArcGIS.Desktop.Framework;
 using DataTools;
 using System;
@@ -53,7 +55,6 @@ namespace DataSelector.UI
 
         private bool _tableListLoading;
 
-        private string _layerLocation;
         private string _logFile;
         private bool _validateSQL;
 
@@ -137,11 +138,11 @@ namespace DataSelector.UI
             // Create a new SQL functions object.
             _sqlFunctions = new(_sdeFileName);
 
-            _outputFormats = new() {
+            _outputFormats = [
                             "Geodatabase",
                             "Shapefile",
                             "CSV file (comma delimited)",
-                            "Text file (tab delimited)"};
+                            "Text file (tab delimited)"];
 
             // Get the relevant config file settings.
             _includeWildcard = _toolConfig.GetIncludeWildcard;
@@ -151,7 +152,7 @@ namespace DataSelector.UI
             _clearLogFile = _toolConfig.GetDefaultClearLogFile;
             _openLogFile = _toolConfig.GetDefaultOpenLogFile;
             _setSymbology = _toolConfig.GetDefaultSetSymbology;
-            _layerLocation = _toolConfig.GetLayerLocation;
+            //_layerLocation = _toolConfig.GetLayerLocation;
             _validateSQL = _toolConfig.GetValidateSQL;
 
             // Set the window properties.
@@ -246,7 +247,7 @@ namespace DataSelector.UI
                 return ((_tablesList != null)
                     && (!_tableListLoading)
                     && ((_selectedTable != null)
-                    || ((!String.IsNullOrEmpty(WhereText)) && (WhereText.Length > 5) && (WhereText.Substring(0, 5).ToLower() == "from ")))
+                    || ((!String.IsNullOrEmpty(WhereText)) && (WhereText.Length > 5) && (WhereText.Substring(0, 5).Equals("from ", StringComparison.CurrentCultureIgnoreCase))))
                     && (!String.IsNullOrEmpty(ColumnsText))
                     && (!_dockPane.QueryRunning));
             }
@@ -262,7 +263,7 @@ namespace DataSelector.UI
                 return ((_tablesList != null)
                     && (!_tableListLoading)
                     && ((_selectedTable != null)
-                    || ((!String.IsNullOrEmpty(WhereText)) && (WhereText.Length > 5) && (WhereText.Substring(0, 5).ToLower() == "from ")))
+                    || ((!String.IsNullOrEmpty(WhereText)) && (WhereText.Length > 5) && (WhereText.Substring(0, 5).Equals("from ", StringComparison.CurrentCultureIgnoreCase))))
                     && (!String.IsNullOrEmpty(ColumnsText))
                     && (!String.IsNullOrEmpty(_selectedOutputFormat))
                     && (!_dockPane.QueryRunning));
@@ -350,7 +351,7 @@ namespace DataSelector.UI
         /// <remarks></remarks>
         private async void SaveCommandClick(object param)
         {
-            bool saved = await SaveQueryAsync();
+            await SaveQueryAsync();
         }
 
         /// <summary>
@@ -390,7 +391,7 @@ namespace DataSelector.UI
                     else
                     {
                         // Check the file extension is valid.
-                        if (saveFileNameExtension.ToLower() != "qsf")
+                        if (!saveFileNameExtension.Equals("qsf", StringComparison.CurrentCultureIgnoreCase))
                         {
                             MessageBox.Show("File name has incorrect extension. Save cancelled.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                             saveFileDialog.Dispose();
@@ -422,7 +423,7 @@ namespace DataSelector.UI
                 string groupClause = GroupByText == null ? "" : GroupByText.Replace("\r\n", " ");
                 string orderClause = OrderByText == null ? "" : OrderByText.Replace("\r\n", " ");
 
-                // Replace carriage return and line feeds in the consituent parts.
+                // Replace carriage return and line feeds in the constituent parts.
                 string columns = String.Format("Fields {0}{1}{2}", "{", columnNames, "}");
                 string where = String.Format("Where {0}{1}{2}", "{", whereClause, "}");
                 string groupBy = String.Format("Group By {0}{1}{2}", "{", groupClause, "}");
@@ -434,7 +435,7 @@ namespace DataSelector.UI
                 qryFile.WriteLine(groupBy);
                 qryFile.WriteLine(orderBy);
 
-                // Close the displose of the stream reader.
+                // Close and dispose of the stream reader.
                 qryFile.Close();
                 qryFile.Dispose();
             });
@@ -475,7 +476,7 @@ namespace DataSelector.UI
         /// <remarks></remarks>
         private async void LoadCommandClick(object param)
         {
-            bool loaded = await LoadQueryAsync();
+            await LoadQueryAsync();
         }
 
         /// <summary>
@@ -525,22 +526,26 @@ namespace DataSelector.UI
                 string qryLine = "";
                 while ((qryLine = qryFile.ReadLine()) != null)
                 {
-                    if (qryLine.Length > 7 && qryLine.Substring(0, 8).ToUpper() == "FIELDS {" && qryLine.ToUpper() != "FIELDS {}")
+                    if (qryLine.Length > 7 && qryLine.Substring(0, 8).Equals("FIELDS {", StringComparison.CurrentCultureIgnoreCase)
+                    && !qryLine.Equals("FIELDS {}", StringComparison.CurrentCultureIgnoreCase))
                     {
                         qryLine = qryLine.Substring(8, qryLine.Length - 9);
                         _columnsText = qryLine.Replace("$$", "\r\n");
                     }
-                    else if (qryLine.Length > 6 && qryLine.Substring(0, 7).ToUpper() == "WHERE {" && qryLine.ToUpper() != "WHERE {}")
+                    else if (qryLine.Length > 6 && qryLine.Substring(0, 7).Equals("WHERE {", StringComparison.CurrentCultureIgnoreCase)
+                    && !qryLine.Equals("WHERE {}", StringComparison.CurrentCultureIgnoreCase))
                     {
                         qryLine = qryLine.Substring(7, qryLine.Length - 8);
                         _whereText = qryLine.Replace("$$", "\r\n");
                     }
-                    else if (qryLine.Length > 9 && qryLine.Substring(0, 10).ToUpper() == "GROUP BY {" && qryLine.ToUpper() != "GROUP BY {}")
+                    else if (qryLine.Length > 9 && qryLine.Substring(0, 10).Equals("GROUP BY {", StringComparison.CurrentCultureIgnoreCase)
+                    && !qryLine.Equals("GROUP BY {}", StringComparison.CurrentCultureIgnoreCase))
                     {
                         qryLine = qryLine.Substring(10, qryLine.Length - 11);
                         _groupByText = qryLine.Replace("$$", "\r\n");
                     }
-                    else if (qryLine.Length > 9 && qryLine.Substring(0, 10).ToUpper() == "ORDER BY {" && qryLine.ToUpper() != "ORDER BY {}")
+                    else if (qryLine.Length > 9 && qryLine.Substring(0, 10).Equals("ORDER BY {", StringComparison.CurrentCultureIgnoreCase)
+                    && !qryLine.Equals("ORDER BY {}", StringComparison.CurrentCultureIgnoreCase))
                     {
                         qryLine = qryLine.Substring(10, qryLine.Length - 11);
                         _orderByText = qryLine.Replace("$$", "\r\n");
@@ -548,7 +553,7 @@ namespace DataSelector.UI
                 }
 
 
-                // Close the displose of the stream reader.
+                // Close the dispose of the stream reader.
                 qryFile.Close();
                 qryFile.Dispose();
 
@@ -685,7 +690,7 @@ namespace DataSelector.UI
 
             // Table name should always be selected.
             if ((string.IsNullOrEmpty(SelectedTable))
-                    && (WhereText.Length <= 5 || WhereText.Substring(0, 5).ToLower() != "from "))
+                    && (WhereText.Length <= 5 || !WhereText.Substring(0, 5).Equals("from ", StringComparison.CurrentCultureIgnoreCase)))
             {
                 MessageBox.Show("Please select a table to query from.", "Data Selector.", MessageBoxButton.OK, MessageBoxImage.Information);
                 //this.BringToFront();
@@ -719,7 +724,7 @@ namespace DataSelector.UI
             _dockPane.RefreshPanel1Buttons();
 
             // Perform the selection.
-            bool success = await ExecuteSelectionAsync(userID);
+            bool success = await ExecuteSelectionAsync(userID); // Success not currently checked.
 
             // Indicate execution has finished.
             _dockPane.QueryRunning = false;
@@ -904,7 +909,7 @@ namespace DataSelector.UI
         private string _orderByText;
 
         /// <summary>
-        /// Get/Set the SQL oerder by clause.
+        /// Get/Set the SQL order by clause.
         /// </summary>
         public string OrderByText
         {
@@ -1150,7 +1155,7 @@ namespace DataSelector.UI
             if (_sqlFunctions.TableNames.Count == 0)
             {
                 // Clear the tables list.
-                _tablesList = new();
+                _tablesList = [];
 
                 // Indicate table has finished loading.
                 _tableListLoading = false;
@@ -1179,7 +1184,7 @@ namespace DataSelector.UI
             string excludeWC = _excludeWildcard;
 
             // Filter the SQL table names and add them to a list.
-            ObservableCollection<String> tablesList = new();
+            ObservableCollection<String> tablesList = [];
             List<string> tableList = FilterTableNames(tabList, _defaultSchema, includeWC, excludeWC, false);
 
             foreach (string strItem in tableList)
@@ -1198,7 +1203,7 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(TablesListEnabled));
 
             // Select the first item in the list if there is only one.
-            if (_tablesList.Count() == 1)
+            if (_tablesList.Count == 1)
                 SelectedTable = _tablesList[0];
             else
                 SelectedTable = null;
@@ -1212,13 +1217,13 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(VerifyButtonEnabled));
             OnPropertyChanged(nameof(RunButtonEnabled));
 
-            // Inform the user no fitlered tables found.
+            // Inform the user no filtered tables found.
             if (_tablesList.Count == 0)
                 MessageBox.Show("No tables found matching wildcard criteria.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         /// <summary>
-        /// Filter the list of the table names base on the include and exclude wildcard critera.
+        /// Filter the list of the table names base on the include and exclude wildcard criteria.
         /// </summary>
         /// <param name="includeWildcard"></param>
         /// <param name="excludeWildcard"></param>
@@ -1231,7 +1236,7 @@ namespace DataSelector.UI
             Wildcard theInclude = new(includeWildcard, schema, RegexOptions.IgnoreCase);
             Wildcard theExclude = new(excludeWildcard, schema, RegexOptions.IgnoreCase);
 
-            List<string> theStringList = new();
+            List<string> theStringList = [];
 
             foreach (string inName in inputNames)
             {
@@ -1264,7 +1269,7 @@ namespace DataSelector.UI
         /// <returns></returns>
         internal async Task<bool> IsQuerySpatial(string tableName, string columnsText)
         {
-            string[] geometryFields = { "SP_GEOMETRY", "Shape" }; // Expand as required.
+            string[] geometryFields = ["SP_GEOMETRY", "Shape"]; // Expand as required.
 
             // Get the list of field names in the selected table.
             List<String> fieldsList = await _sqlFunctions.GetFieldNamesListAsync(tableName);
@@ -1273,7 +1278,7 @@ namespace DataSelector.UI
             foreach (string geomField in geometryFields)
             {
                 // If the columns text contains the geometry field.
-                if (columnsText.ToLower().Contains(geomField.ToLower()))
+                if (columnsText.Contains(geomField, StringComparison.CurrentCultureIgnoreCase))
                 {
                     return true;
                 }
@@ -1283,7 +1288,7 @@ namespace DataSelector.UI
                     foreach (string fieldName in fieldsList)
                     {
                         // If the column text contains the geometry field.
-                        if (fieldName.ToLower() == geomField.ToLower())
+                        if (fieldName.Equals(geomField, StringComparison.CurrentCultureIgnoreCase))
                             return true;
                     }
                 }
@@ -1315,7 +1320,7 @@ namespace DataSelector.UI
                     string fileExtensionTest = outputFile.Substring(outputFile.Length - 4, 4).Substring(0, 1);
                     if (fileExtensionTest == ".") blHasExtension = true;
 
-                    // if there isn't, put one one.
+                    // if there isn't, add one.
                     if (outputFormat.Contains("CSV file") && !blHasExtension)
                     {
                         outputFile += ".csv";
@@ -1628,7 +1633,7 @@ namespace DataSelector.UI
                                   string outFile,
                                   bool addToMap)
         {
-            bool result = false;
+            bool result;
 
             // How is the data to be exported?
             if (outputFormat == "Geodatabase FC")
@@ -1861,7 +1866,7 @@ namespace DataSelector.UI
                                   string outFile,
                                   bool addToMap)
         {
-            bool result = false;
+            bool result;
 
             if (outputFormat.Contains("Text file"))
             {
@@ -1984,7 +1989,7 @@ namespace DataSelector.UI
         }
 
         /// <summary>
-        /// Veryify the SQL query by executing it for a single row.
+        /// Verify the SQL query by executing it for a single row.
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="columnNames"></param>
@@ -1997,8 +2002,8 @@ namespace DataSelector.UI
             // Build the sql command.
             StringBuilder sqlCommand = new();
 
-            if (((columnNames.Length > 4) && (columnNames.Substring(0, 4).ToUpper() == "TOP ")) ||
-                ((columnNames.Length > 10) && (columnNames.Substring(0, 7).ToUpper() == "BOTTOM ")))
+            if (((columnNames.Length > 4) && (columnNames.Substring(0, 4).Equals("TOP ", StringComparison.CurrentCultureIgnoreCase))) ||
+                ((columnNames.Length > 10) && (columnNames.Substring(0, 7).Equals("BOTTOM ", StringComparison.CurrentCultureIgnoreCase))))
                 sqlCommand.Append("SELECT ");
             else
                 sqlCommand.Append("SELECT TOP 1 ");
@@ -2011,7 +2016,7 @@ namespace DataSelector.UI
             }
             else
             {
-                if (whereClause.Substring(0, 5).ToLower() == "from ")
+                if (whereClause.Substring(0, 5).Equals("from ", StringComparison.CurrentCultureIgnoreCase))
                 {
                     sqlCommand.Append(" " + whereClause);
                 }
@@ -2222,7 +2227,7 @@ namespace DataSelector.UI
                 await mapFunctions.CreateMapAsync("DataMap");
 
             // Get the map name of the active map.
-            string mapName = mapFunctions.MapName;
+            string mapName = mapFunctions.MapName;  // Not used at the moment.
 
             // Export the results in the required format
             bool exportSuccess;
@@ -2295,9 +2300,6 @@ namespace DataSelector.UI
             // Open the log file (if required).
             if (OpenLogFile)
                 Process.Start("notepad.exe", _logFile);
-
-            // Tidy up.
-            mapFunctions = null;
 
             return true;
         }

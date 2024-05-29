@@ -154,7 +154,7 @@ namespace DataTools
         /// <returns></returns>
         public static List<string> GetAllFilesInDirectory(string filePath)
         {
-            List<string> myFileList = new();
+            List<string> myFileList = [];
             if (DirExists(filePath))
             {
                 string[] fileEntries = Directory.GetFiles(filePath);

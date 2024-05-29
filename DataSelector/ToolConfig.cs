@@ -78,7 +78,7 @@ namespace DataTools
             }
 
             // Load the XML file into memory.
-            XmlDocument xmlConfig = new XmlDocument();
+            XmlDocument xmlConfig = new();
             try
             {
                 xmlConfig.Load(_xmlFile);
@@ -325,12 +325,13 @@ namespace DataTools
         private static string GetConfigFilePath()
         {
             // Create folder dialog.
-            FolderBrowserDialog xmlFolder = new FolderBrowserDialog();
-
-            // Set the folder dialog title.
-            xmlFolder.Description = String.Format("Select folder containing '{0}.xml' file ...", _toolName);
-            xmlFolder.UseDescriptionForTitle = true;
-            xmlFolder.ShowNewFolderButton = false;
+            FolderBrowserDialog xmlFolder = new()
+            {
+                // Set the folder dialog title.
+                Description = String.Format("Select folder containing '{0}.xml' file ...", _toolName),
+                UseDescriptionForTitle = true,
+                ShowNewFolderButton = false
+            };
 
             // Show folder dialog.
             if (xmlFolder.ShowDialog() == DialogResult.OK)

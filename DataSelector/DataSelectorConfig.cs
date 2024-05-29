@@ -59,7 +59,7 @@ namespace DataSelector
             _xmlLoaded = true;
 
             // Load the XML file into memory.
-            XmlDocument xmlConfig = new XmlDocument();
+            XmlDocument xmlConfig = new();
             try
             {
                 xmlConfig.Load(xmlFile);

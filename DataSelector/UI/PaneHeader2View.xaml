@@ -105,7 +105,7 @@
                     Grid.Row="1"
                     Grid.Column="1"
                     Margin="0,0,0,0"
-                    IsEnabled="{Binding Path=CanLoadColumns}"
+                    IsEnabled="{Binding Path=LoadColumnsEnabled}"
                     Command="{Binding Path=LoadColumnsCommand}"
                     IsCancel="False"
                     Visibility="Hidden">
