@@ -3,7 +3,7 @@ DataSelector
 
 DataSelector tool for ArcGIS Pro
 
-Copyright © 2023 Andy Foy Consulting
+Copyright © 2024 Andy Foy Consulting
 
 Overview
 --------
@@ -13,7 +13,7 @@ Requirements
 ------------
 The DataSelector tool requires the following:
 
- - ArcGIS Pro 3.2 or higher
+ - ArcGIS Pro 3.3 or higher
 
  - Microsoft SQL Server 2008 Express Edition or later, OR
  - Microsoft SQL Server 2008 or later
@@ -45,4 +45,4 @@ Funding
 The DataSelector tool was developed with funding from:
 
 * Sussex Biodiversity Records Centre
-* Thames Valley Environmental Records Centre
+* Greenspace Information for Greater London CIC
