@@ -855,7 +855,7 @@ namespace DataSelector.UI
                 && (_selectedTable == null))
                     return null;
                 else
-                    return "Double-click to populate with list of columns from selected table";
+                    return "Double-click to populate with list of columns from the selected table";
             }
         }
 
@@ -1461,24 +1461,20 @@ namespace DataSelector.UI
             string storedProcedureName = _toolConfig.GetSelectStoredProcedure;
 
             // Write the parameters to the log file.
-            FileFunctions.WriteLine(_logFile, "Species table is " + tableName);
-            FileFunctions.WriteLine(_logFile, "Column names are " + columnNames);
+            FileFunctions.WriteLine(_logFile, String.Format("Source table is '{0}'", tableName));
+            FileFunctions.WriteLine(_logFile, String.Format("Column names are '{0}'", columnNames));
             if (whereClause != null && whereClause.Length > 0)
-                FileFunctions.WriteLine(_logFile, "Where clause is " + whereClause);
+                FileFunctions.WriteLine(_logFile, String.Format("Where clause is '{0}'", whereClause));
             else
                 FileFunctions.WriteLine(_logFile, "No where clause was used");
             if (groupClause != null && groupClause.Length > 0)
-                FileFunctions.WriteLine(_logFile, "Group by clause is " + groupClause);
+                FileFunctions.WriteLine(_logFile, String.Format("Group by clause is '{0}'", groupClause));
             else
                 FileFunctions.WriteLine(_logFile, "No group by clause was used");
             if (orderClause != null && orderClause.Length > 0)
-                FileFunctions.WriteLine(_logFile, "Order by clause is " + orderClause);
+                FileFunctions.WriteLine(_logFile, String.Format("Order by clause is '{0}'", orderClause));
             else
                 FileFunctions.WriteLine(_logFile, "No order by clause was used");
-            if (isSplit)
-                FileFunctions.WriteLine(_logFile, "Data is spatial and will be split into a point and a polygon layer");
-            else
-                FileFunctions.WriteLine(_logFile, "Data is not spatial and will not be split");
 
             // Set up the SQL command.
             StringBuilder sqlCmd = new();
@@ -1554,9 +1550,9 @@ namespace DataSelector.UI
             }
             catch (Exception ex)
             {
-                FileFunctions.WriteLine(_logFile, "Error executing the stored procedure. System returned the following message: " +
+                FileFunctions.WriteLine(_logFile, "Error executing the stored procedure: " +
                     ex.Message);
-                MessageBox.Show("Error executing the stored procedure. System returned the following message: " +
+                MessageBox.Show("Error executing the stored procedure: " +
                     ex.Message, "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
@@ -1597,9 +1593,9 @@ namespace DataSelector.UI
             }
             catch (Exception ex)
             {
-                FileFunctions.WriteLine(_logFile, "Error deleting the temporary tables. System returned the following message: " +
+                FileFunctions.WriteLine(_logFile, "Error deleting the temporary tables: " +
                     ex.Message);
-                MessageBox.Show("Error deleting the temporary tables. System returned the following message: " +
+                MessageBox.Show("Error deleting the temporary tables: " +
                     ex.Message, "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
@@ -1631,6 +1627,8 @@ namespace DataSelector.UI
             // How is the data to be exported?
             if (outputFormat == "Geodatabase FC")
             {
+                FileFunctions.WriteLine(_logFile, "Output is spatial and will be split into a point and a polygon layer");
+
                 // Easy, export without further ado.
                 if (_pointCount > 0)
                 {
@@ -1639,8 +1637,8 @@ namespace DataSelector.UI
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, "Error exporting point geodatabase file");
-                        MessageBox.Show("Error exporting point geodatabase file.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                        FileFunctions.WriteLine(_logFile, "Error copying point geodatabase file");
+                        MessageBox.Show("Error copying point geodatabase file.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                         return false;
                     }
@@ -1658,8 +1656,8 @@ namespace DataSelector.UI
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, "Error exporting polygon geodatabase file");
-                        MessageBox.Show("Error exporting polygon geodatabase file.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                        FileFunctions.WriteLine(_logFile, "Error copying polygon geodatabase file");
+                        MessageBox.Show("Error copying polygon geodatabase file.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                         return false;
                     }
@@ -1682,6 +1680,8 @@ namespace DataSelector.UI
             }
             else if (outputFormat == "Shapefile")
             {
+                FileFunctions.WriteLine(_logFile, "Output is spatial and will be split into a point and a polygon layer");
+
                 if (_pointCount > 0)
                 {
                     FileFunctions.WriteLine(_logFile, "Copying point results to point shapefile");
@@ -1689,8 +1689,8 @@ namespace DataSelector.UI
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, "Error exporting point shapefile");
-                        MessageBox.Show("Error exporting point shapefile.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                        FileFunctions.WriteLine(_logFile, "Error copying point shapefile");
+                        MessageBox.Show("Error copying point shapefile.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                         return false;
                     }
@@ -1708,8 +1708,8 @@ namespace DataSelector.UI
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, "Error exporting polygon shapefile");
-                        MessageBox.Show("Error exporting polygon shapefile.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                        FileFunctions.WriteLine(_logFile, "Error copying polygon shapefile");
+                        MessageBox.Show("Error copying polygon shapefile.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                         return false;
                     }
@@ -1733,7 +1733,8 @@ namespace DataSelector.UI
             else if (outputFormat.Contains("Text file"))
             {
                 // Not a spatial export, but it is a spatial layer so there are two files.
-                // CopyToTabAsync function pulls them back together again.
+                // Function CopyToTabAsync pulls them back together again.
+                FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
 
                 // If schema.ini file exists delete it.
                 string strIniFile = FileFunctions.GetDirectoryName(outFile) + "\\schema.ini";
@@ -1745,7 +1746,7 @@ namespace DataSelector.UI
                 bool blAppend = false;
                 if (_pointCount > 0)
                 {
-                    FileFunctions.WriteLine(_logFile, "Copying point results to text file");
+                    FileFunctions.WriteLine(_logFile, "Exporting point results to text file");
                     result = await _sqlFunctions.CopyToTabAsync(inPoints, outFile, true, false, true);
 
                     if (!result)
@@ -1760,13 +1761,13 @@ namespace DataSelector.UI
                 // Also export the second table - append if necessary
                 if (_polyCount > 0)
                 {
-                    FileFunctions.WriteLine(_logFile, "exporting polygon results to text file");
+                    FileFunctions.WriteLine(_logFile, "Exporting polygon results to text file");
                     result = await _sqlFunctions.CopyToTabAsync(inPolys, outFile, true, blAppend, true);
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, "Error appending output table to text file " + outFile);
-                        MessageBox.Show("Error appending output table to text file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                        FileFunctions.WriteLine(_logFile, "Error exporting output table to text file " + outFile);
+                        MessageBox.Show("Error exporting output table to text file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
 
@@ -1787,6 +1788,7 @@ namespace DataSelector.UI
             {
                 // Not a spatial export, but it is a spatial layer so there are two files.
                 // Function pulls them back together again.
+                FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
 
                 // if schema.ini file exists delete it.
                 string strIniFile = FileFunctions.GetDirectoryName(outFile) + "\\schema.ini";
@@ -1798,7 +1800,7 @@ namespace DataSelector.UI
                 bool blAppend = false;
                 if (_pointCount > 0)
                 {
-                    FileFunctions.WriteLine(_logFile, "Copying point results to CSV file");
+                    FileFunctions.WriteLine(_logFile, "Exporting point results to CSV file");
                     result = await _sqlFunctions.CopyToCSVAsync(inPoints, outFile, true, false, true);
 
                     if (!result)
@@ -1814,13 +1816,13 @@ namespace DataSelector.UI
                 // Also export the second table - append if necessary.
                 if (_polyCount > 0)
                 {
-                    FileFunctions.WriteLine(_logFile, "Appending polygon results to CSV file");
-                    result = await _sqlFunctions.CopyToTabAsync(inPolys, outFile, true, blAppend, true);
+                    FileFunctions.WriteLine(_logFile, "Exporting polygon results to CSV file");
+                    result = await _sqlFunctions.CopyToCSVAsync(inPolys, outFile, true, blAppend, true);
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, "Error appending output table to CSV file " + outFile);
-                        MessageBox.Show("Error appending output table to CSV file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                        FileFunctions.WriteLine(_logFile, "Error exporting output table to CSV file " + outFile);
+                        MessageBox.Show("Error exporting output table to CSV file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
 
@@ -1861,6 +1863,8 @@ namespace DataSelector.UI
 
             if (outputFormat.Contains("Text file"))
             {
+                FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
+
                 // We are exporting a non-isSpatial output to text file.
                 FileFunctions.WriteLine(_logFile, "Copying results to text file");
                 result = await ArcGISFunctions.ExportFeaturesAsync(inTable, outFile);
@@ -1889,6 +1893,8 @@ namespace DataSelector.UI
             }
             else if (outputFormat.Contains("CSV file"))
             {
+                FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
+
                 // We are exporting a non-isSpatial output to CSV file.
                 FileFunctions.WriteLine(_logFile, "Copying results to CSV file");
                 result = await ArcGISFunctions.ExportFeaturesAsync(inTable, outFile);
@@ -1917,6 +1923,8 @@ namespace DataSelector.UI
             }
             else
             {
+                FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
+
                 // We are exporting any non-spatial output to a geodatabase.
                 result = await ArcGISFunctions.CopyTableAsync(inTable, outFile);
                 if (!result)
@@ -2111,8 +2119,6 @@ namespace DataSelector.UI
                 isSplit = true;
                 if (outputFormat == "Geodatabase")
                     outputFormat = "Geodatabase FC";
-
-                FileFunctions.WriteLine(_logFile, "Output is spatial. Output (Shapefile, Geodatabase) will be split into _point and _poly components");
             }
             else
             {
@@ -2120,8 +2126,6 @@ namespace DataSelector.UI
                     outputFormat = "Geodatabase Table";
                 else if (outputFormat == "Shapefile")
                     outputFormat = "CSV file (comma delimited)";
-
-                FileFunctions.WriteLine(_logFile, "Output is not spatial. Output file type is " + outputFormat);
             }
 
             // Prompt the user for the output file path and name.
@@ -2134,8 +2138,14 @@ namespace DataSelector.UI
             FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
             FileFunctions.WriteLine(_logFile, "Process started");
             FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
-            FileFunctions.WriteLine(_logFile, "Output format is " + outputFormat);
-            FileFunctions.WriteLine(_logFile, "Output file is " + outputFile);
+
+            if (isSpatial)
+                FileFunctions.WriteLine(_logFile, "Data is spatial. Spatial outputs (Shapefile, Geodatabase) will be split into _point and _poly components");
+            else
+                FileFunctions.WriteLine(_logFile, "Data is not spatial");
+
+            FileFunctions.WriteLine(_logFile, String.Format("Output format is '{0}'", outputFormat));
+            FileFunctions.WriteLine(_logFile, String.Format("Output file is '{0}'", outputFile));
 
             // Run the stored procedure to perform the selection.
             bool success = await PerformSelection(isSpatial, isSplit, _defaultSchema, tableName, columnNames,
@@ -2163,14 +2173,10 @@ namespace DataSelector.UI
 
             // Log the results of the stored procedure.
             if (isSpatial)
-            {
-                FileFunctions.WriteLine(_logFile, "Procedure returned " + _pointCount.ToString() + " point and " + _polyCount.ToString() +
+                FileFunctions.WriteLine(_logFile, "Selection returned " + _pointCount.ToString("N0") + " point and " + _polyCount.ToString("N0") +
                     " polygon records");
-            }
             else
-            {
-                FileFunctions.WriteLine(_logFile, "Procedure returned " + _tableCount.ToString() + " records");
-            }
+                FileFunctions.WriteLine(_logFile, "Selection returned " + _tableCount.ToString("N0") + " records");
 
             // Prepare to export the results.
             string polyFeatureClass = _defaultSchema + "." + tableName + "_poly_" + userID;

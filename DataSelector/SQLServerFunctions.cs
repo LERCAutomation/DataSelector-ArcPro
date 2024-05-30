@@ -397,7 +397,7 @@ namespace DataTools
             using StreamWriter theOutput = new(outFile, false);
 
             // Write the headers to the file.
-            theOutput.Write(header);
+            theOutput.WriteLine(header);
 
             // Close the file.
             theOutput.Close();
