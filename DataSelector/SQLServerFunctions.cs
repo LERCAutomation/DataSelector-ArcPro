@@ -405,19 +405,19 @@ namespace DataTools
             return true;
         }
 
-        public async Task<bool> CopyToCSVAsync(string inTable, string outFile, bool isSpatial, bool append, bool messages = false)
+        public async Task<bool> CopyToCSVAsync(string inTable, string outFile, bool isSpatial, bool append)
         {
             string separator = ",";
-            return await CopyToTextFileAsync(inTable, outFile, separator, isSpatial, false, true);
+            return await CopyToTextFileAsync(inTable, outFile, separator, isSpatial, append);
         }
 
-        public async Task<bool> CopyToTabAsync(string inTable, string outFile, bool isSpatial, bool append, bool messages = false)
+        public async Task<bool> CopyToTabAsync(string inTable, string outFile, bool isSpatial, bool append)
         {
             string separator = "\t";
-            return await CopyToTextFileAsync(inTable, outFile, separator, isSpatial, false, true);
+            return await CopyToTextFileAsync(inTable, outFile, separator, isSpatial, append);
         }
 
-        public async Task<bool> CopyToTextFileAsync(string inTable, string outFile, string separator, bool isSpatial, bool append, bool messages = false)
+        public async Task<bool> CopyToTextFileAsync(string inTable, string outFile, string separator, bool isSpatial, bool append)
         {
             // This sub copies the input table to tab delimited file.
             string filePath = FileFunctions.GetDirectoryName(inTable);

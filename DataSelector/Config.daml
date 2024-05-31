@@ -1,5 +1,5 @@
 ﻿<ArcGIS defaultAssembly="DataSelector.dll" defaultNamespace="DataSelector" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
-	<AddInInfo id="{46e995cb-90ef-4d68-9f66-67839c8807e9}" version="1.0.0" desktopVersion="3.3">
+	<AddInInfo id="{46e995cb-90ef-4d68-9f66-67839c8807e9}" version="1.0.1" desktopVersion="3.3">
 		<Name>DataSelector</Name>
 		<Description>DataSelector is an ArcGIS .NET tool and associated SQL scripts to extract information from SQL Server based on any selection criteria. The output files can be created as ESRI Geodatabase (.gdb) files, ESRI Shapefile (.shp) files, Comma Separated Value (.csv) or Tab Delimited (.txt) files.</Description>
 		<Image>Images\AddinDesktop32.png</Image>
@@ -7,7 +7,7 @@
 		<!--	    <Image>Images\DataSelector32AddIn.png</Image>   -->
 		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
 		<Company>Andy Foy Consulting</Company>
-		<Date>30/05/2024 09:02:25 PM</Date>
+		<Date>31/05/2024 11:34:00 PM</Date>
 		<Subject>Framework, Geodatabase</Subject>
 		<!-- Note subject can be one or more of these topics:
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
@@ -30,7 +30,8 @@
               an empty group-->
 				<group id="DataSelector_Group"
 					   caption="Data Tools"
-					   appearsOnAddInTab="false">
+					   appearsOnAddInTab="false"
+					   keytip="D">
 					<!-- host controls within groups -->
 					<button refID="DataSelector_btnDataSelectorDockPane"
 							size="large" />
@@ -42,6 +43,7 @@
 						caption="Data Selector"
 						className="DataSelector.UI.DockpaneMain_ShowButton"
 						loadOnClick="true"
+						keytip="D"
 						smallImage="pack://application:,,,/DataSelector;component/Images/DataSelector16.png"
 						largeImage="pack://application:,,,/DataSelector;component/Images/DataSelector32.png">
 					<tooltip heading="Data Selector tool">

@@ -522,7 +522,7 @@ namespace DataTools
         /// <param name="outFeatureClass"></param>
         /// <param name="Messages"></param>
         /// <returns></returns>
-        public static async Task<bool> CopyFeaturesAsync(string inFeatureClass, string outFeatureClass, bool Messages = false)
+        public static async Task<bool> CopyFeaturesAsync(string inFeatureClass, string outFeatureClass)
         {
             // Make a value array of strings to be passed to the tool.
             var parameters = Geoprocessing.MakeValueArray(inFeatureClass, outFeatureClass);
@@ -557,10 +557,10 @@ namespace DataTools
         /// <param name="OutFeatureClass"></param>
         /// <param name="Messages"></param>
         /// <returns></returns>
-        public static async Task<bool> CopyFeaturesAsync(string InWorkspace, string InDatasetName, string OutFeatureClass, bool Messages = false)
+        public static async Task<bool> CopyFeaturesAsync(string InWorkspace, string InDatasetName, string OutFeatureClass)
         {
             string inFeatureClass = InWorkspace + @"\" + InDatasetName;
-            return await CopyFeaturesAsync(inFeatureClass, OutFeatureClass, Messages);
+            return await CopyFeaturesAsync(inFeatureClass, OutFeatureClass);
         }
 
         /// <summary>
@@ -572,11 +572,11 @@ namespace DataTools
         /// <param name="OutDatasetName"></param>
         /// <param name="Messages"></param>
         /// <returns></returns>
-        public static async Task<bool> CopyFeaturesAsync(string InWorkspace, string InDatasetName, string OutWorkspace, string OutDatasetName, bool Messages = false)
+        public static async Task<bool> CopyFeaturesAsync(string InWorkspace, string InDatasetName, string OutWorkspace, string OutDatasetName)
         {
             string inFeatureClass = InWorkspace + @"\" + InDatasetName;
             string outFeatureClass = OutWorkspace + @"\" + OutDatasetName;
-            return await CopyFeaturesAsync(inFeatureClass, outFeatureClass, Messages);
+            return await CopyFeaturesAsync(inFeatureClass, outFeatureClass);
         }
 
         #endregion CopyFeatures
@@ -590,7 +590,7 @@ namespace DataTools
         /// <param name="OutFile"></param>
         /// <param name="Messages"></param>
         /// <returns></returns>
-        public static async Task<bool> ExportFeaturesAsync(string inTable, string outTable, bool Messages = false)
+        public static async Task<bool> ExportFeaturesAsync(string inTable, string outTable)
         {
             // Make a value array of strings to be passed to the tool.
             var parameters = Geoprocessing.MakeValueArray(inTable, outTable);
@@ -628,7 +628,7 @@ namespace DataTools
         /// <param name="outTable"></param>
         /// <param name="Messages"></param>
         /// <returns></returns>
-        public static async Task<bool> CopyTableAsync(string inTable, string outTable, bool Messages = false)
+        public static async Task<bool> CopyTableAsync(string inTable, string outTable)
         {
             // Make a value array of strings to be passed to the tool.
             var parameters = Geoprocessing.MakeValueArray(inTable, outTable);
@@ -663,10 +663,10 @@ namespace DataTools
         /// <param name="OutTable"></param>
         /// <param name="Messages"></param>
         /// <returns></returns>
-        public static async Task<bool> CopyTableAsync(string InWorkspace, string InDatasetName, string OutTable, bool Messages = false)
+        public static async Task<bool> CopyTableAsync(string InWorkspace, string InDatasetName, string OutTable)
         {
             string inTable = InWorkspace + @"\" + InDatasetName;
-            return await CopyTableAsync(inTable, OutTable, Messages);
+            return await CopyTableAsync(inTable, OutTable);
         }
 
         /// <summary>
@@ -678,11 +678,11 @@ namespace DataTools
         /// <param name="OutDatasetName"></param>
         /// <param name="Messages"></param>
         /// <returns></returns>
-        public static async Task<bool> CopyTableAsync(string InWorkspace, string InDatasetName, string OutWorkspace, string OutDatasetName, bool Messages = false)
+        public static async Task<bool> CopyTableAsync(string InWorkspace, string InDatasetName, string OutWorkspace, string OutDatasetName)
         {
             string inTable = InWorkspace + @"\" + InDatasetName;
             string outTable = OutWorkspace + @"\" + OutDatasetName;
-            return await CopyTableAsync(inTable, outTable, Messages);
+            return await CopyTableAsync(inTable, outTable);
         }
 
         #endregion Copy Table

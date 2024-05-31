@@ -8,16 +8,16 @@ can also be commented out as below.
 
 <!--
 This config file contains all the variables used by the DataSelector
-ArcObjects add-in.
+ArcGIS Pro add-in.
 
 The 'configuration' node is the 'root' node and signifies the start of the
 contents of the configuration file.
 
 The 'DataSelector' node contains all of the entries relating to the
-ArcObjects add-in variables.
+ArcGIS Pro add-in variables.
 
 Each entry relates to a file, folder, table name, column name or SQL statement
-used by the ArcObjects add-in to select and export species data for use in GIS or
+used by the ArcGIS Pro add-in to select and export SQL data for use in GIS or
 as a spreadsheet.
 -->
 
@@ -26,12 +26,12 @@ as a spreadsheet.
 
   <!-- The existing file location where log files will be saved with output messages. -->
   <LogFilePath>
-	<value>D:\GitHub\DataSelector-ArcPro\Logfiles</value>
+	<value>D:\DataSelector\Logfiles</value>
   </LogFilePath>
 
   <!-- The location of the SDE file that specifies which SQL Server database to connect to. -->
   <SDEFile>
-	<value>D:\GitHub\DataSelector-ArcPro\Config\NBNExtract.sde</value>
+	<value>D:\DataSelector\Config\NBNExtract.sde</value>
   </SDEFile>
 
   <!-- The stored procedure to execute selection in SQL Server. -->
@@ -46,12 +46,12 @@ as a spreadsheet.
 
   <!-- The existing file location where extracts will be saved by default. -->
   <DefaultExtractPath>
-	<value>D:\Data Tools\DataSelector\</value>
+	<value>D:\DataSelector\Extracts</value>
   </DefaultExtractPath>
 
   <!-- The existing file location where queries will be saved and loaded by default. -->
   <DefaultQueryPath>
-	<value>D:\GitHub\DataSelector-ArcPro\Queries\</value>
+	<value>D:\DataSelector\Queries\</value>
   </DefaultQueryPath>
 
   <!-- The default format of the output files to be created. -->
@@ -83,7 +83,7 @@ as a spreadsheet.
 
   <!-- The location of layer files. -->
   <LayerLocation>
-	<value>D:\GitHub\DataSelector-ArcPro\LayerFiles\Test.lyrx</value>
+	<value>D:\DataSelector\LayerFiles\Test.lyrx</value>
   </LayerLocation>
 
   <!-- The default for whether an existing log file should be cleared by default. -->

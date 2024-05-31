@@ -8,100 +8,98 @@ can also be commented out as below.
 
 <!--
 This config file contains all the variables used by the DataSelector
-ArcObjects add-in.
+ArcGIS Pro add-in.
 
 The 'configuration' node is the 'root' node and signifies the start of the
 contents of the configuration file.
 
 The 'DataSelector' node contains all of the entries relating to the
-ArcObjects add-in variables.
+ArcGIS Pro add-in variables.
 
 Each entry relates to a file, folder, table name, column name or SQL statement
-used by the ArcObjects add-in to select and export species data for use in GIS or
+used by the ArcGIS Pro add-in to select and export SQL data for use in GIS or
 as a spreadsheet.
 -->
 
 <configuration>
 <DataSelector>
 
-  <!-- The existing file location where log files will be saved with output messages -->
+  <!-- The existing file location where log files will be saved with output messages. -->
   <LogFilePath>
 	<value>D:\GitHub\DataSelector-ArcPro\Logfiles</value>
   </LogFilePath>
 
-  <!-- The location of the SDE file that specifies which SQL Server database to connect to -->
-  <FileDSN>
+  <!-- The location of the SDE file that specifies which SQL Server database to connect to. -->
+  <SDEFile>
 	<value>D:\GitHub\DataSelector-ArcPro\Config\NBNExtract.sde</value>
-  </FileDSN>
+  </SDEFile>
 
-  <!-- Connection string for ADO connection (to allow stored procedures to be run with parameters) -->
-  <ConnectionString>
-	<value>Server=SONY-VAIO\SQLEXPRESS; Database=NBNData_TVERC; Integrated Security=True;</value>
-  </ConnectionString>
+  <!-- The stored procedure to execute selection in SQL Server. -->
+  <SelectStoredProcedure>
+	<value>AFSelectSppSubset</value>
+  </SelectStoredProcedure>
 
-  <!-- Timeout (seconds) is the maximum number of seconds that the stored procedure is allowed to run . -->
-  <!-- If you are experiencing timeout errors while running the tool, increase this number -->
-  <!-- Default is 4,000 seconds -->
-  <TimeoutSeconds>
-  	<value></value>
-  </TimeoutSeconds>
+  <!-- The stored procedure to clear selection in SQL Server. -->
+  <ClearStoredProcedure>
+	<value>AFClearSppSubset</value>
+  </ClearStoredProcedure>
 
-  <!-- The existing file location where extracts will be saved by default -->
+  <!-- The existing file location where extracts will be saved by default. -->
   <DefaultExtractPath>
-	<value>H:\Dev\LERCAutomation\DataSelector---ArcObjects\Extracts</value>
+	<value>D:\Data Tools\DataSelector\</value>
   </DefaultExtractPath>
 
-  <!-- The existing file location where queries will be saved and loaded by default -->
+  <!-- The existing file location where queries will be saved and loaded by default. -->
   <DefaultQueryPath>
-	<value>H:\Dev\LERCAutomation\DataSelector---ArcObjects\Queries</value>
+	<value>D:\GitHub\DataSelector-ArcPro\Queries\</value>
   </DefaultQueryPath>
 
-  <!-- The default format of the output files to be created -->
+  <!-- The default format of the output files to be created. -->
   <DefaultFormat>
-	<value>Geodatabase</value>
+	<value></value>
   </DefaultFormat>
 
-  <!-- The schema used in the SQL Server database -->
+  <!-- The schema used in the SQL Server database. -->
   <DatabaseSchema>
 	<value>dbo</value>
   </DatabaseSchema>
 
-  <!-- the Include wildcard for table names to list all the species tables in SQL Server that can be selected
-         by the user to extract from -->
+  <!-- The Include wildcard for table names to list all the species tables in SQL Server that can be selected
+         by the user to extract from. -->
   <IncludeWildcard>
-	<value>*TVERC_Spp_*</value><!--*TVERC_Spp_* -->
+	<value>Spp_PointPoly_*Names|Spp_Poly_*Names</value>
   </IncludeWildcard>
 
-  <!-- the Exclude wildcard for table names that should NOT be used for species tables in SQL Server that can be selected
-       by the user to extract from -->
+  <!-- The Exclude wildcard for table names that should NOT be used for species tables in SQL Server that can be selected
+       by the user to extract from. -->
   <ExcludeWildcard>
-	<value>*TVERC_Spp_*_*</value>
+	<value>Spp_*_*_*</value>
   </ExcludeWildcard>
 
-  <!-- The maximum number of records what will be extracted in any one extract -->
-  <RecMax>
-	<value>10000000</value>
-  </RecMax>
-
-  <!-- The default for whether the symbology should be set for feature classes or not -->
+  <!-- The default for whether the symbology should be set for feature classes or not. -->
   <DefaultSetSymbology>
 	<value>Yes</value>
   </DefaultSetSymbology>
 
-  <!-- Location of layer files -->
+  <!-- The location of layer files. -->
   <LayerLocation>
-	<value>H:\Dev\PythonToolsForMessing\Layers</value>
+	<value>D:\GitHub\DataSelector-ArcPro\LayerFiles\Test.lyrx</value>
   </LayerLocation>
 
-  <!-- Whether the SQL database tables are spatially enabled -->
-  <EnableSpatialPlotting>
-	<value>Yes</value>
-  </EnableSpatialPlotting>
-
-  <!-- By default, should an existing log file be cleared? -->
+  <!-- The default for whether an existing log file should be cleared by default. -->
   <DefaultClearLogFile>
 	<value>Yes</value>
   </DefaultClearLogFile>
+  
+  <!-- The default for whether log file should be opened by default. -->
+  <DefaultOpenLogFile>
+	<value>No</value>
+  </DefaultOpenLogFile>
+  
+  <!-- Whether to validate the SQL before running. -->
+  <ValidateSQL>
+	<value>Yes</value>
+  </ValidateSQL>
   
 </DataSelector>
 </configuration>

@@ -48,7 +48,7 @@ namespace DataSelector.UI
     {
         #region Fields
 
-        private DockpaneMainViewModel _dockPane;
+        private readonly DockpaneMainViewModel _dockPane;
 
         private string _sdeFileName;
 
@@ -68,10 +68,10 @@ namespace DataSelector.UI
         private long _polyCount = 0;
         private long _pointCount = 0;
 
-        private string _displayName = "DataSelector";
+        private const string _displayName = "DataSelector";
 
-        private DataSelectorConfig _toolConfig;
-        private SQLServerFunctions _sqlFunctions;
+        private readonly DataSelectorConfig _toolConfig;
+        private readonly SQLServerFunctions _sqlFunctions;
 
         #endregion Fields
 
@@ -95,9 +95,14 @@ namespace DataSelector.UI
         {
             _dockPane = dockPane;
 
+            // Return if no config object passed.
             if (toolConfig == null) return;
 
+            // Set the config object.
             _toolConfig = toolConfig;
+
+            // Create a new SQL functions object.
+            _sqlFunctions = new(_sdeFileName);
 
             InitializeComponent();
         }
@@ -133,9 +138,6 @@ namespace DataSelector.UI
 
             // Set the SDE file name.
             _sdeFileName = _toolConfig.GetSDEName;
-
-            // Create a new SQL functions object.
-            _sqlFunctions = new(_sdeFileName);
 
             _outputFormats = [
                             "Geodatabase",
@@ -307,6 +309,9 @@ namespace DataSelector.UI
             WhereText = null;
             GroupByText = null;
             OrderByText = null;
+
+            // Clear the saved/loaded query name.
+            _queryName = null;
 
             // Update the fields and buttons in the form.
             OnPropertyChanged(nameof(ColumnsText));
@@ -680,8 +685,6 @@ namespace DataSelector.UI
             if (string.IsNullOrEmpty(ColumnsText))
             {
                 MessageBox.Show("Please specify which columns you wish to select.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Information);
-                //this.BringToFront();
-                //this.Cursor = Cursors.Default;
                 return;
             }
 
@@ -690,8 +693,6 @@ namespace DataSelector.UI
                     && (WhereText.Length <= 5 || !WhereText.Substring(0, 5).Equals("from ", StringComparison.CurrentCultureIgnoreCase)))
             {
                 MessageBox.Show("Please select a table to query from.", "Data Selector.", MessageBoxButton.OK, MessageBoxImage.Information);
-                //this.BringToFront();
-                //this.Cursor = Cursors.Default;
                 return;
             }
 
@@ -699,15 +700,9 @@ namespace DataSelector.UI
             if (string.IsNullOrEmpty(SelectedOutputFormat))
             {
                 MessageBox.Show("Please select an output format.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Information);
-                //this.BringToFront();
-                //this.Cursor = Cursors.Default;
                 return;
             }
 
-            // Indicate execution has started.
-            _dockPane.QueryRunning = true;
-            _processingLabel = "Processing ...";
-
             // Update the fields and buttons in the form.
             OnPropertyChanged(nameof(TablesList));
             OnPropertyChanged(nameof(TablesListEnabled));
@@ -717,15 +712,10 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(LoadButtonEnabled));
             OnPropertyChanged(nameof(VerifyButtonEnabled));
             OnPropertyChanged(nameof(RunButtonEnabled));
-            OnPropertyChanged(nameof(ProcessingLabel));
             _dockPane.RefreshPanel1Buttons();
 
             // Perform the selection.
-            bool success = await ExecuteSelectionAsync(userID); // Success not currently checked.
-
-            // Indicate execution has finished.
-            _dockPane.QueryRunning = false;
-            _processingLabel = null;
+            await ExecuteSelectionAsync(userID); // Success not currently checked.
 
             // Update the fields and buttons in the form.
             OnPropertyChanged(nameof(TablesList));
@@ -736,7 +726,6 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(LoadButtonEnabled));
             OnPropertyChanged(nameof(VerifyButtonEnabled));
             OnPropertyChanged(nameof(RunButtonEnabled));
-            OnPropertyChanged(nameof(ProcessingLabel));
             _dockPane.RefreshPanel1Buttons();
         }
 
@@ -769,8 +758,16 @@ namespace DataSelector.UI
         /// <remarks></remarks>
         private async void RefreshTablesListCommandClick(object param)
         {
-            // Clear the tables list.
-            _tablesList = null;
+            // Indicate table is loading.
+            _tableListLoading = true;
+            _processingLabel = "Refreshing tables list ...";
+            OnPropertyChanged(nameof(ProcessingLabel));
+
+            // Preset the tables list.
+            _tablesList = ["Loading tables ..."];
+            SelectedTable = "Loading tables ...";
+            OnPropertyChanged(nameof(TablesList));
+            OnPropertyChanged(nameof(SelectedTable));
 
             // Update the fields and buttons in the form.
             OnPropertyChanged(nameof(TablesList));
@@ -780,9 +777,42 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(ClearButtonEnabled));
             OnPropertyChanged(nameof(LoadButtonEnabled));
             OnPropertyChanged(nameof(RunButtonEnabled));
+            _dockPane.RefreshPanel1Buttons();
 
             // Get the table names from SQL Server (and wait).
             await GetTableNames();
+
+            // Select the first item in the list if there is only one.
+            if (_tablesList.Count == 1)
+                SelectedTable = _tablesList[0];
+            else
+                SelectedTable = null;
+
+            // Indicate the refresh has finished.
+            _tableListLoading = false;
+            _processingLabel = null;
+            OnPropertyChanged(nameof(ProcessingLabel));
+
+            // Update the fields and buttons in the form.
+            OnPropertyChanged(nameof(TablesList));
+            OnPropertyChanged(nameof(TablesListEnabled));
+
+            OnPropertyChanged(nameof(SelectedTable));
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
+            OnPropertyChanged(nameof(ClearButtonEnabled));
+            OnPropertyChanged(nameof(SaveButtonEnabled));
+            OnPropertyChanged(nameof(LoadButtonEnabled));
+            OnPropertyChanged(nameof(VerifyButtonEnabled));
+            OnPropertyChanged(nameof(RunButtonEnabled));
+            _dockPane.RefreshPanel1Buttons();
+
+            // Inform the user no tables found in SQL Server.
+            if (_sqlFunctions.TableNames.Count == 0)
+                MessageBox.Show("No tables found in SQL Server.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+            // Inform the user no filtered tables found.
+            if (_tablesList.Count == 0)
+                MessageBox.Show("No tables found matching wildcard criteria.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         #endregion TablesList
@@ -976,7 +1006,7 @@ namespace DataSelector.UI
         /// <summary>
         /// Get the image for the TablesListRefresh button.
         /// </summary>
-        public ImageSource ButtonTablesListRefreshImg
+        public static ImageSource ButtonTablesListRefreshImg
         {
             get
             {
@@ -988,7 +1018,7 @@ namespace DataSelector.UI
         /// <summary>
         /// Get the image for the Run button.
         /// </summary>
-        public ImageSource ButtonRunImg
+        public static ImageSource ButtonRunImg
         {
             get
             {
@@ -1133,48 +1163,18 @@ namespace DataSelector.UI
         /// </summary>
         public async Task GetTableNames()
         {
-            // Indicate table is loading.
-            _tableListLoading = true;
-
             // Clear the tables list.
-            _tablesList = ["Loading tables ..."];
-            SelectedTable = "Loading tables ...";
-            OnPropertyChanged(nameof(TablesList));
-            OnPropertyChanged(nameof(SelectedTable));
+            _tablesList = [];
 
             // Get the full list of feature classess and tables from SQL Server.
             await _sqlFunctions.GetTableNamesAsync();
 
-            // Save the list of tables returned from SQL Server.
+            // Get the list of tables returned from SQL Server.
             List<String> tabList = _sqlFunctions.TableNames;
 
-            // Inform user if no tables found.
+            // If no tables were found.
             if (_sqlFunctions.TableNames.Count == 0)
-            {
-                // Clear the tables list.
-                _tablesList = [];
-
-                // Indicate table has finished loading.
-                _tableListLoading = false;
-
-                // Update the fields and buttons in the form.
-                OnPropertyChanged(nameof(TablesList));
-                OnPropertyChanged(nameof(TablesListEnabled));
-
-                // Update the fields and buttons in the form.
-                OnPropertyChanged(nameof(SelectedTable));
-                OnPropertyChanged(nameof(LoadColumnsEnabled));
-                OnPropertyChanged(nameof(ClearButtonEnabled));
-                OnPropertyChanged(nameof(SaveButtonEnabled));
-                OnPropertyChanged(nameof(LoadButtonEnabled));
-                OnPropertyChanged(nameof(VerifyButtonEnabled));
-                OnPropertyChanged(nameof(RunButtonEnabled));
-
-                // Inform the user no tables found in SQL Server.
-                MessageBox.Show("No tables found in SQL Server.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
-
                 return;
-            }
 
             // Get the include and exclude wildcard settings.
             string includeWC = _includeWildcard;
@@ -1184,39 +1184,12 @@ namespace DataSelector.UI
             ObservableCollection<String> tablesList = [];
             List<string> tableList = FilterTableNames(tabList, _defaultSchema, includeWC, excludeWC, false);
 
-            foreach (string strItem in tableList)
-            {
-                tablesList.Add(strItem);
-            }
+            //foreach (string strItem in tableList)
+            //    tablesList.Add(strItem);
 
             // Set the tables list in sort order.
-            _tablesList = new(tablesList.OrderBy(t => t));
-
-            // Indicate table has finished loading.
-            _tableListLoading = false;
-
-            // Update the fields and buttons in the form.
-            OnPropertyChanged(nameof(TablesList));
-            OnPropertyChanged(nameof(TablesListEnabled));
-
-            // Select the first item in the list if there is only one.
-            if (_tablesList.Count == 1)
-                SelectedTable = _tablesList[0];
-            else
-                SelectedTable = null;
-
-            // Update the fields and buttons in the form.
-            OnPropertyChanged(nameof(SelectedTable));
-            OnPropertyChanged(nameof(LoadColumnsEnabled));
-            OnPropertyChanged(nameof(ClearButtonEnabled));
-            OnPropertyChanged(nameof(SaveButtonEnabled));
-            OnPropertyChanged(nameof(LoadButtonEnabled));
-            OnPropertyChanged(nameof(VerifyButtonEnabled));
-            OnPropertyChanged(nameof(RunButtonEnabled));
-
-            // Inform the user no filtered tables found.
-            if (_tablesList.Count == 0)
-                MessageBox.Show("No tables found matching wildcard criteria.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
+            //_tablesList = new(tablesList.OrderBy(t => t));
+            _tablesList = new(tableList.OrderBy(t => t));
         }
 
         /// <summary>
@@ -1226,7 +1199,7 @@ namespace DataSelector.UI
         /// <param name="excludeWildcard"></param>
         /// <param name="includeFullName"></param>
         /// <returns></returns>
-        internal List<string> FilterTableNames(List<String> inputNames, string schema, string includeWildcard, string excludeWildcard,
+        internal static List<string> FilterTableNames(List<String> inputNames, string schema, string includeWildcard, string excludeWildcard,
                               bool includeFullName = false)
         {
             // Define the wildcards as case insensitive
@@ -1624,135 +1597,108 @@ namespace DataSelector.UI
         {
             bool result;
 
-            // How is the data to be exported?
-            if (outputFormat == "Geodatabase FC")
-            {
-                FileFunctions.WriteLine(_logFile, "Output is spatial and will be split into a point and a polygon layer");
-
-                // Easy, export without further ado.
-                if (_pointCount > 0)
-                {
-                    FileFunctions.WriteLine(_logFile, "Copying point results to point geodatabase file");
-                    result = await ArcGISFunctions.CopyFeaturesAsync(inPoints, outPoints);
-
-                    if (!result)
-                    {
-                        FileFunctions.WriteLine(_logFile, "Error copying point geodatabase file");
-                        MessageBox.Show("Error copying point geodatabase file.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                        return false;
-                    }
-
-                    // If a map was created then add the output to it
-                    // otherwise it will be added to an existing map
-                    // automatically.
-                    if (addToMap)
-                        await mapFunctions.AddLayerToMap(outPoints);
-                }
-                if (_polyCount > 0)
-                {
-                    result = await ArcGISFunctions.CopyFeaturesAsync(inPolys, outPolys);
-                    FileFunctions.WriteLine(_logFile, "Copying polygon results to polygon geodatabase file");
-
-                    if (!result)
-                    {
-                        FileFunctions.WriteLine(_logFile, "Error copying polygon geodatabase file");
-                        MessageBox.Show("Error copying polygon geodatabase file.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                        return false;
-                    }
-
-                    // If a map was created then add the output to it
-                    // otherwise it will be added to an existing map
-                    // automatically.
-                    if (addToMap)
-                        await mapFunctions.AddLayerToMap(outPolys);
-                }
-
-                if (_pointCount == 0 && _polyCount == 0)
-                {
-                    FileFunctions.WriteLine(_logFile, "No output geodatabase file(s) generated");
-                    MessageBox.Show("No results returned. No output file(s) generated.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return false;
-                }
-
-                return true;
-            }
-            else if (outputFormat == "Shapefile")
+            // If the data is to be exported to a spatial dataset
+            if ((outputFormat == "Geodatabase FC") || (outputFormat == "Shapefile"))
             {
                 FileFunctions.WriteLine(_logFile, "Output is spatial and will be split into a point and a polygon layer");
 
                 if (_pointCount > 0)
                 {
-                    FileFunctions.WriteLine(_logFile, "Copying point results to point shapefile");
+                    // Indicate the export has started.
+                    _processingLabel = "Saving point results ...";
+                    OnPropertyChanged(nameof(ProcessingLabel));
+
+                    FileFunctions.WriteLine(_logFile, String.Format("Copying point results to {0}", outputFormat));
                     result = await ArcGISFunctions.CopyFeaturesAsync(inPoints, outPoints);
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, "Error copying point shapefile");
-                        MessageBox.Show("Error copying point shapefile.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                        FileFunctions.WriteLine(_logFile, String.Format("Error copying point results to {0}", outputFormat));
+                        MessageBox.Show(String.Format("Error copying point data to {0}.", outputFormat), "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                         return false;
                     }
-
-                    // If a map was created then add the output to it
-                    // otherwise it will be added to an existing map
-                    // automatically.
-                    if (addToMap)
-                        await mapFunctions.AddLayerToMap(outPoints);
                 }
                 if (_polyCount > 0)
                 {
-                    FileFunctions.WriteLine(_logFile, "Copying polygon results to polygon shapefile");
+                    // Indicate the export has started.
+                    _processingLabel = "Saving polygon results ...";
+                    OnPropertyChanged(nameof(ProcessingLabel));
+
+                    FileFunctions.WriteLine(_logFile, String.Format("Copying polygon results to {0}", outputFormat));
                     result = await ArcGISFunctions.CopyFeaturesAsync(inPolys, outPolys);
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, "Error copying polygon shapefile");
-                        MessageBox.Show("Error copying polygon shapefile.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                        FileFunctions.WriteLine(_logFile, String.Format("Error copying polygon results to {0}", outputFormat));
+                        MessageBox.Show(String.Format("Error copying polygon data to {0}.", outputFormat), "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                         return false;
                     }
-
-                    // If a map was created then add the output to it
-                    // otherwise it will be added to an existing map
-                    // automatically.
-                    if (addToMap)
-                        await mapFunctions.AddLayerToMap(outPolys);
                 }
 
                 if (_pointCount == 0 && _polyCount == 0)
-                {
-                    FileFunctions.WriteLine(_logFile, "No output shapefile(s) generated");
-                    MessageBox.Show("No results returned. No output file(s) generated.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
+
+                // If there is no active map create one, ready to add the results to.
+                // Otherwise the data will have been added to an existing map
+                // automatically.
+                if (addToMap)
+                {
+                    // Indicate the map is being created.
+                    _processingLabel = "Creating map ...";
+                    OnPropertyChanged(nameof(ProcessingLabel));
+
+                    await mapFunctions.CreateMapAsync("DataMap");
+
+                    // Indicate the data is being added to the map.
+                    _processingLabel = "Adding results to map ...";
+                    OnPropertyChanged(nameof(ProcessingLabel));
+
+                    if (_pointCount > 0)
+                        await mapFunctions.AddLayerToMap(outPoints);
+
+                    if (_polyCount > 0)
+                        await mapFunctions.AddLayerToMap(outPolys);
                 }
 
                 return true;
             }
-            else if (outputFormat.Contains("Text file"))
+            else if ((outputFormat.Contains("Text file")) || (outputFormat.Contains("CSV file")))
             {
+                string fileType;
+                if (outputFormat.Contains("Text file"))
+                    fileType = "TXT";
+                else
+                    fileType = "CSV";
+
                 // Not a spatial export, but it is a spatial layer so there are two files.
-                // Function CopyToTabAsync pulls them back together again.
+                // which are appended back together again.
                 FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
 
                 // If schema.ini file exists delete it.
                 string strIniFile = FileFunctions.GetDirectoryName(outFile) + "\\schema.ini";
                 if (FileFunctions.FileExists(strIniFile))
-                {
-                    bool blDeleted = FileFunctions.DeleteFile(strIniFile); // Not checking for success at the moment.
-                }
+                    FileFunctions.DeleteFile(strIniFile); // Not checking for success at the moment.
 
                 bool blAppend = false;
                 if (_pointCount > 0)
                 {
-                    FileFunctions.WriteLine(_logFile, "Exporting point results to text file");
-                    result = await _sqlFunctions.CopyToTabAsync(inPoints, outFile, true, false, true);
+                    // Indicate the export has started.
+                    _processingLabel = "Saving point results ...";
+                    OnPropertyChanged(nameof(ProcessingLabel));
+
+                    FileFunctions.WriteLine(_logFile, String.Format("Exporting point results to {0} file", fileType));
+
+                    if (outputFormat.Contains("Text file"))
+                        result = await _sqlFunctions.CopyToTabAsync(inPoints, outFile, true, false);
+                    else
+                        result = await _sqlFunctions.CopyToCSVAsync(inPoints, outFile, true, false);
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, "Error exporting output table to text file " + outFile);
-                        MessageBox.Show("Error exporting output table to text file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                        FileFunctions.WriteLine(_logFile, String.Format("Error exporting point results to {0} file {1}", fileType, outFile));
+                        MessageBox.Show(String.Format("Error exporting point results to {0} file '{1}'.", fileType, outFile), "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                         return false;
                     }
@@ -1761,77 +1707,40 @@ namespace DataSelector.UI
                 // Also export the second table - append if necessary
                 if (_polyCount > 0)
                 {
-                    FileFunctions.WriteLine(_logFile, "Exporting polygon results to text file");
-                    result = await _sqlFunctions.CopyToTabAsync(inPolys, outFile, true, blAppend, true);
+                    // Indicate the export has started.
+                    _processingLabel = "Saving polygon results ...";
+                    OnPropertyChanged(nameof(ProcessingLabel));
+
+                    FileFunctions.WriteLine(_logFile, String.Format("Exporting polygon results to {0} file", fileType));
+
+                    if (outputFormat.Contains("Text file"))
+                        result = await _sqlFunctions.CopyToTabAsync(inPolys, outFile, true, blAppend);
+                    else
+                        result = await _sqlFunctions.CopyToCSVAsync(inPolys, outFile, true, blAppend);
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, "Error exporting output table to text file " + outFile);
-                        MessageBox.Show("Error exporting output table to text file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                        FileFunctions.WriteLine(_logFile, String.Format("Error exporting polygon results to {0} file {1}", fileType, outFile));
+                        MessageBox.Show(String.Format("Error exporting polygon results to {0} file '{1}'.", fileType, outFile), "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
 
                 if (_pointCount == 0 && _polyCount == 0)
-                {
-                    FileFunctions.WriteLine(_logFile, "No output text file generated");
-                    MessageBox.Show("No results returned. No output file generated.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
-                }
 
-                // Add the output to the map as it won't be added
-                // automatically.
-                await mapFunctions.AddTableToMap(outFile);
-
-                return true;
-            }
-            else if (outputFormat.Contains("CSV file"))
-            {
-                // Not a spatial export, but it is a spatial layer so there are two files.
-                // Function pulls them back together again.
-                FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
-
-                // if schema.ini file exists delete it.
-                string strIniFile = FileFunctions.GetDirectoryName(outFile) + "\\schema.ini";
-                if (FileFunctions.FileExists(strIniFile))
+                // If there is no active map then create one, ready to add the results to.
+                if (addToMap)
                 {
-                    bool blDeleted = FileFunctions.DeleteFile(strIniFile); // Not checking for success at the moment.
+                    // Indicate the map is being created.
+                    _processingLabel = "Creating map ...";
+                    OnPropertyChanged(nameof(ProcessingLabel));
+
+                    await mapFunctions.CreateMapAsync("DataMap");
                 }
 
-                bool blAppend = false;
-                if (_pointCount > 0)
-                {
-                    FileFunctions.WriteLine(_logFile, "Exporting point results to CSV file");
-                    result = await _sqlFunctions.CopyToCSVAsync(inPoints, outFile, true, false, true);
-
-                    if (!result)
-                    {
-                        FileFunctions.WriteLine(_logFile, "Error exporting output table to CSV file " + outFile);
-                        MessageBox.Show("Error exporting output table to CSV file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                        return false;
-                    }
-                    blAppend = true;
-                }
-
-                // Also export the second table - append if necessary.
-                if (_polyCount > 0)
-                {
-                    FileFunctions.WriteLine(_logFile, "Exporting polygon results to CSV file");
-                    result = await _sqlFunctions.CopyToCSVAsync(inPolys, outFile, true, blAppend, true);
-
-                    if (!result)
-                    {
-                        FileFunctions.WriteLine(_logFile, "Error exporting output table to CSV file " + outFile);
-                        MessageBox.Show("Error exporting output table to CSV file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-
-                if (_pointCount == 0 && _polyCount == 0)
-                {
-                    FileFunctions.WriteLine(_logFile, "No output CSV file generated");
-                    MessageBox.Show("No results returned. No output file generated.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return false;
-                }
+                // Indicate the data is being added to the map.
+                _processingLabel = "Adding results to map ...";
+                OnPropertyChanged(nameof(ProcessingLabel));
 
                 // Add the output to the map as it won't be added
                 // automatically.
@@ -1856,96 +1765,69 @@ namespace DataSelector.UI
         internal async Task<bool> ExportNonSpatialResults(MapFunctions mapFunctions,
                                   string outputFormat,
                                   string inTable,
-                                  string outFile,
-                                  bool addToMap)
+                                  string outFile)
         {
             bool result;
 
+            FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
+
+            // Indicate the export has started.
+            _processingLabel = "Saving results ...";
+            OnPropertyChanged(nameof(ProcessingLabel));
+
             if (outputFormat.Contains("Text file"))
             {
-                FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
-
                 // We are exporting a non-isSpatial output to text file.
                 FileFunctions.WriteLine(_logFile, "Copying results to text file");
                 result = await ArcGISFunctions.ExportFeaturesAsync(inTable, outFile);
 
                 if (!result)
                 {
-                    FileFunctions.WriteLine(_logFile, "Error exporting output table to text file " + outFile);
-                    MessageBox.Show("Error exporting output table to text file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                    FileFunctions.WriteLine(_logFile, "Error exporting results to text file " + outFile);
+                    MessageBox.Show("Error exporting results to text file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                     return false;
                 }
-
-                //FileFunctions.WriteLine(_logFile, "Adding output to ArcMap view");
-                //_gisFunctions.AddTableLayerFromString(outFile, layerName);
-
-                if (_tableCount == 0)
-                {
-                    FileFunctions.WriteLine(_logFile, "No output text file generated");
-                    MessageBox.Show("No results returned. No output file generated.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return false;
-                }
-
-                // Add the output to the map as it won't be added
-                // automatically.
-                await mapFunctions.AddTableToMap(outFile);
             }
             else if (outputFormat.Contains("CSV file"))
             {
-                FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
-
                 // We are exporting a non-isSpatial output to CSV file.
                 FileFunctions.WriteLine(_logFile, "Copying results to CSV file");
                 result = await ArcGISFunctions.ExportFeaturesAsync(inTable, outFile);
 
                 if (!result)
                 {
-                    FileFunctions.WriteLine(_logFile, "Error exporting output table to CSV file " + outFile);
-                    MessageBox.Show("Error exporting output table to CSV file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                    FileFunctions.WriteLine(_logFile, "Error exporting results to CSV file " + outFile);
+                    MessageBox.Show("Error exporting results to CSV file '" + outFile + "'.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                     return false;
                 }
-
-                //FileFunctions.WriteLine(_logFile, "Adding output to ArcMap view");
-                //_gisFunctions.AddTableLayerFromString(outFile, layerName);
-
-                if (_tableCount == 0)
-                {
-                    FileFunctions.WriteLine(_logFile, "No output CSV file generated");
-                    MessageBox.Show("No results returned. No output file generated.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return false;
-                }
-
-                // Add the output to the map as it won't be added
-                // automatically.
-                await mapFunctions.AddTableToMap(outFile);
             }
             else
             {
-                FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
-
                 // We are exporting any non-spatial output to a geodatabase.
+                FileFunctions.WriteLine(_logFile, "Copying results to geodatabase table");
                 result = await ArcGISFunctions.CopyTableAsync(inTable, outFile);
+
                 if (!result)
                 {
-                    FileFunctions.WriteLine(_logFile, "Error exporting output table");
-                    MessageBox.Show("Error exporting output table.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                    FileFunctions.WriteLine(_logFile, "Error exporting results to geodatabase table");
+                    MessageBox.Show("Error exporting results.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                     return false;
                 }
-
-                if (_tableCount == 0)
-                {
-                    FileFunctions.WriteLine(_logFile, "No output geodatabase file generated");
-                    MessageBox.Show("No results returned. No output file generated.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return false;
-                }
-
-                // Add the output to the map as it won't be added
-                // automatically.
-                await mapFunctions.AddTableToMap(outFile);
             }
+
+            if (_tableCount == 0)
+                return false;
+
+            // Indicate the data is being added to the map.
+            _processingLabel = "Adding results to map ...";
+            OnPropertyChanged(nameof(ProcessingLabel));
+
+            // Add the output to the map as it won't be added
+            // automatically.
+            await mapFunctions.AddTableToMap(outFile);
 
             return true;
         }
@@ -1955,7 +1837,7 @@ namespace DataSelector.UI
         /// results are empty.
         /// </summary>
         /// <returns></returns>
-        internal bool CreateEmptyOutput()
+        internal static bool CreateEmptyOutput()
         {
             //if (outputFormat == "CSV file")
             //{
@@ -2082,7 +1964,7 @@ namespace DataSelector.UI
         /// </summary>
         /// <param name="userID"></param>
         /// <returns></returns>
-        private async Task<bool> ExecuteSelectionAsync(string userID)
+        private async Task ExecuteSelectionAsync(string userID)
         {
             // Save the parameters.
             string tableName = SelectedTable;
@@ -2103,7 +1985,7 @@ namespace DataSelector.UI
             {
                 // Validate the sql command.
                 if (!VerifyQuery(tableName, columnNames, whereClause, groupClause, orderClause))
-                    return false;
+                    return;
             }
 
             // Check if there is a geometry field in the returned data
@@ -2133,7 +2015,7 @@ namespace DataSelector.UI
 
             // Exit if no output file path was entered/selected.
             if (outputFile == null)
-                return false;
+                return;
 
             FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
             FileFunctions.WriteLine(_logFile, "Process started");
@@ -2146,6 +2028,11 @@ namespace DataSelector.UI
 
             FileFunctions.WriteLine(_logFile, String.Format("Output format is '{0}'", outputFormat));
             FileFunctions.WriteLine(_logFile, String.Format("Output file is '{0}'", outputFile));
+
+            // Indicate the selection has started.
+            _dockPane.QueryRunning = true;
+            _processingLabel = "Performing selection ...";
+            OnPropertyChanged(nameof(ProcessingLabel));
 
             // Run the stored procedure to perform the selection.
             bool success = await PerformSelection(isSpatial, isSplit, _defaultSchema, tableName, columnNames,
@@ -2162,13 +2049,18 @@ namespace DataSelector.UI
                 FileFunctions.WriteLine(_logFile, "Process complete");
                 FileFunctions.WriteLine(_logFile, "---------------------------------------------------------------------------");
 
+                // Indicate processing has finished.
+                _dockPane.QueryRunning = false;
+                _processingLabel = null;
+                OnPropertyChanged(nameof(ProcessingLabel));
+
                 MessageBox.Show("Process complete. No output returned.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
 
                 // Open the log file (if required).
                 if (OpenLogFile)
                     Process.Start("notepad.exe", _logFile);
 
-                return false;
+                return;
             }
 
             // Log the results of the stored procedure.
@@ -2223,20 +2115,15 @@ namespace DataSelector.UI
             // Check if there is an active map.
             bool addToMap = (mapFunctions.MapName == null);
 
-            // If there is no active map then create one, ready to add the results to.
-            //if ((addToMap) && (isSpatial || outputFormat == "Geodatabase Table"))
-            if (addToMap)
-                await mapFunctions.CreateMapAsync("DataMap");
-
             // Get the map name of the active map.
-            string mapName = mapFunctions.MapName;  // Not used at the moment.
+            //string mapName = mapFunctions.MapName;  // Not used at the moment.
 
             // Export the results in the required format
             bool exportSuccess;
             if (isSpatial)
                 exportSuccess = await ExportSpatialResults(mapFunctions, outputFormat, inPoints, inPolys, outPoints, outPolys, outputFile, addToMap);
             else
-                exportSuccess = await ExportNonSpatialResults(mapFunctions, outputFormat, flatInTable, outputFile, addToMap);
+                exportSuccess = await ExportNonSpatialResults(mapFunctions, outputFormat, flatInTable, outputFile);
 
             if (!exportSuccess)
             {
@@ -2247,11 +2134,36 @@ namespace DataSelector.UI
                 FileFunctions.WriteLine(_logFile, "Process complete");
                 FileFunctions.WriteLine(_logFile, "---------------------------------------------------------------------------");
 
+                // Indicate processing has finished.
+                _dockPane.QueryRunning = false;
+                _processingLabel = null;
+                OnPropertyChanged(nameof(ProcessingLabel));
+
                 // Open the log file (if required).
                 if (OpenLogFile)
                     Process.Start("notepad.exe", _logFile);
 
-                return false;
+                return;
+            }
+
+            // Inform the user if no results generated.
+            if (isSpatial)
+            {
+                if (_pointCount == 0 && _polyCount == 0)
+                {
+                    FileFunctions.WriteLine(_logFile, "No output file(s) generated");
+                    MessageBox.Show("No results returned. No output file(s) generated.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            else
+            {
+                if (_tableCount == 0)
+                {
+                    FileFunctions.WriteLine(_logFile, "No output file generated");
+                    MessageBox.Show("No results returned. No output file generated.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
             }
 
             //// Set the layer name(s) for use later.
@@ -2290,6 +2202,11 @@ namespace DataSelector.UI
             FileFunctions.WriteLine(_logFile, "Process complete");
             FileFunctions.WriteLine(_logFile, "---------------------------------------------------------------------------");
 
+            // Indicate processing has finished.
+            _dockPane.QueryRunning = false;
+            _processingLabel = null;
+            OnPropertyChanged(nameof(ProcessingLabel));
+
             // Inform user of success.
             if ((outputFormat == "Geodatabase FC")
                 || (outputFormat == "Geodatabase Table")
@@ -2302,7 +2219,7 @@ namespace DataSelector.UI
             if (OpenLogFile)
                 Process.Start("notepad.exe", _logFile);
 
-            return true;
+            return;
         }
 
         #endregion SQL

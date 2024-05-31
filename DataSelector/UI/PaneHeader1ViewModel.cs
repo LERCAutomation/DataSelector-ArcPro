@@ -43,9 +43,9 @@ namespace DataSelector.UI
     {
         #region Fields
 
-        private DockpaneMainViewModel _dockPane;
+        private readonly DockpaneMainViewModel _dockPane;
 
-        private string _displayName = "DataSelector";
+        private const string _displayName = "DataSelector";
 
         #endregion Fields
 
@@ -67,6 +67,7 @@ namespace DataSelector.UI
         /// <param name="defaultXMLFile"></param>
         public PaneHeader1ViewModel(DockpaneMainViewModel dockPane)
         {
+            // Set the dockpane view model object.
             _dockPane = dockPane;
 
             // Get the tool XML config file path and name from settings.
@@ -87,8 +88,7 @@ namespace DataSelector.UI
             // Open the tool XML config file and determine if the user will
             // choose which tool XML config file to load or if the default
             // file will be used.
-            ToolConfig toolConfig;
-            toolConfig = new(_xmlFolder, _displayName, false);
+            ToolConfig toolConfig = new(_xmlFolder, _displayName, false);
 
             // If the tool config file can't be found or hasn't been loaded.
             if ((!toolConfig.XMLFound) || (!toolConfig.XMLLoaded))
@@ -150,6 +150,7 @@ namespace DataSelector.UI
                 {
                     // Set the list to just the default XML file
                     // and select it.
+                    xmlFilesList = [];
                     xmlFilesList.Add(defaultXML);
                     _availableXMLFiles = xmlFilesList;
                     _selectedXMLProfile = defaultXML;
@@ -196,7 +197,7 @@ namespace DataSelector.UI
             {
                 if (_selectXMLPathCommand == null)
                 {
-                    Action<object> selectXMLAction = new Action<object>(this.SelectXMLPathCommandClick);
+                    Action<object> selectXMLAction = new(this.SelectXMLPathCommandClick);
                     _selectXMLPathCommand = new RelayCommand(selectXMLAction, param => this.CanSelectXMLPath);
                 }
 
@@ -293,7 +294,7 @@ namespace DataSelector.UI
             {
                 if (_loadProfileCommand == null)
                 {
-                    Action<object> openXMLAction = new Action<object>(this.LoadProfileCommandClick);
+                    Action<object> openXMLAction = new(this.LoadProfileCommandClick);
                     _loadProfileCommand = new RelayCommand(openXMLAction, param => this.CanLoadProfile);
                 }
 
@@ -405,7 +406,7 @@ namespace DataSelector.UI
             set => SetProperty(ref _xmlFolder, value);
         }
 
-        public ImageSource ButtonXMLFilePathImg
+        public static ImageSource ButtonXMLFilePathImg
         {
             get
             {
@@ -544,7 +545,7 @@ namespace DataSelector.UI
         /// <param name="xmlFilesList"></param>
         /// <param name="blDefaultFound"></param>
         /// <param name="blOnlyDefault"></param>
-        private void GetValidXMLFiles(string strXMLFolder, string strDefaultXMLName, ref List<string> xmlFilesList, ref bool blDefaultFound, ref bool blOnlyDefault)
+        private static void GetValidXMLFiles(string strXMLFolder, string strDefaultXMLName, ref List<string> xmlFilesList, ref bool blDefaultFound, ref bool blOnlyDefault)
         {
             blDefaultFound = false;
             blOnlyDefault = true;
