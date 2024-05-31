@@ -20,18 +20,16 @@
 // along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Framework;
+using DataSelector.Properties;
 using DataTools;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Windows.Input;
-using DataSelector.Properties;
 using System.Windows;
-using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Markup;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace DataSelector.UI
 {
@@ -226,7 +224,8 @@ namespace DataSelector.UI
         {
             get
             {
-                return (!_dockPane.QueryRunning);
+                return (!_dockPane.QueryRunning)
+                    && (!_dockPane.TableListLoading);
             }
         }
 
@@ -335,15 +334,12 @@ namespace DataSelector.UI
             }
 
             // Initialise the query pane.
-            bool initialised = await _dockPane.InitialiseQueryPaneAsync();
-            if (!initialised)
+            bool initialised = await _dockPane.InitialiseQueryPaneAsync(true);
+            if (initialised)
             {
-                MessageBox.Show("SDE connection file not valid.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                // Select the query pane.
+                _dockPane.SelectedPanelHeaderIndex = 1;
             }
-
-            // Select the query pane.
-            _dockPane.SelectedPanelHeaderIndex = 1;
         }
 
         /// <summary>
@@ -357,7 +353,8 @@ namespace DataSelector.UI
             get
             {
                 return (!string.IsNullOrEmpty(SelectedXMLProfile)
-                    && !_dockPane.QueryRunning);
+                    && (!_dockPane.QueryRunning)
+                    && (!_dockPane.TableListLoading));
             }
         }
 

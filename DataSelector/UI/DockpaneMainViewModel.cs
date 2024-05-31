@@ -21,14 +21,14 @@
 
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Controls;
 using DataTools;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
-using System.Diagnostics;
 
 namespace DataSelector.UI
 {
@@ -85,7 +85,7 @@ namespace DataSelector.UI
             if (_paneH1VM.XMLLoaded)
             {
                 // Initialise the query pane.
-                bool initialised = await InitialiseQueryPaneAsync();
+                bool initialised = await InitialiseQueryPaneAsync(false);
                 if (!initialised)
                     return;
 
@@ -230,6 +230,17 @@ namespace DataSelector.UI
             }
         }
 
+        private bool _tableListLoading;
+
+        /// <summary>
+        /// Is the SQL table list loading?
+        /// </summary>
+        public bool TableListLoading
+        {
+            get { return _tableListLoading; }
+            set { _tableListLoading = value; }
+        }
+
         private bool _queryRunning;
 
         /// <summary>
@@ -260,7 +271,7 @@ namespace DataSelector.UI
         /// Initialise the query pane.
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> InitialiseQueryPaneAsync()
+        public async Task<bool> InitialiseQueryPaneAsync(bool messages)
         {
             _paneH2VM = new PaneHeader2ViewModel(_dockPane, _paneH1VM.ToolConfig);
 
@@ -269,7 +280,9 @@ namespace DataSelector.UI
             // Check if the SDE file exists.
             if (!FileFunctions.FileExists(sdeFileName))
             {
-                MessageBox.Show("SDE connection file '" + sdeFileName + "' not found.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (messages)
+                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not found.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+
                 return false;
             }
 
@@ -281,6 +294,9 @@ namespace DataSelector.UI
             }
             catch (Exception)
             {
+                if (messages)
+                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+
                 _paneH2VM = null;
                 return false;
             }
@@ -288,12 +304,15 @@ namespace DataSelector.UI
             // In the SDE connection is not valid.
             if (!sdeConnectionValid)
             {
+                if (messages)
+                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+
                 _paneH2VM = null;
                 return false;
             }
 
             // Trigger getting the SQL Server table names (don't wait for the response).
-            _paneH2VM.GetTableNames();
+            _paneH2VM.GetTableNames(false);
 
             return true;
         }

@@ -21,26 +21,26 @@
 
 // Ignore Spelling: Symbology Tooltip Img
 
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework;
 using DataTools;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Text.RegularExpressions;
 using System.Windows.Media;
-using ArcGIS.Core.Data;
-using System.Windows;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
-using System.Data;
-using Microsoft.Data.SqlClient;
 
 namespace DataSelector.UI
 {
@@ -51,8 +51,6 @@ namespace DataSelector.UI
         private readonly DockpaneMainViewModel _dockPane;
 
         private string _sdeFileName;
-
-        private bool _tableListLoading;
 
         private string _logFile;
         private bool _validateSQL;
@@ -71,7 +69,7 @@ namespace DataSelector.UI
         private const string _displayName = "DataSelector";
 
         private readonly DataSelectorConfig _toolConfig;
-        private readonly SQLServerFunctions _sqlFunctions;
+        private SQLServerFunctions _sqlFunctions;
 
         #endregion Fields
 
@@ -101,9 +99,6 @@ namespace DataSelector.UI
             // Set the config object.
             _toolConfig = toolConfig;
 
-            // Create a new SQL functions object.
-            _sqlFunctions = new(_sdeFileName);
-
             InitializeComponent();
         }
 
@@ -112,32 +107,11 @@ namespace DataSelector.UI
         /// </summary>
         private void InitializeComponent()
         {
-            //var addin_infos = FrameworkApplication.GetAddInInfos();
-            //StringBuilder sb = new StringBuilder();
-            //foreach (var info in addin_infos)
-            //{
-            //    if (info == null)
-            //        break;//no addins probed
-
-            //    sb.AppendLine($"Addin: {info.Name}");
-            //    sb.AppendLine($"Description {info.Description}");
-            //    sb.AppendLine($"ImagePath {info.ImagePath}");
-            //    sb.AppendLine($"Author {info.Author}");
-            //    sb.AppendLine($"Company {info.Company}");
-            //    sb.AppendLine($"Date {info.Date}");
-            //    sb.AppendLine($"Version {info.Version}");
-            //    sb.AppendLine($"FullPath {info.FullPath}");
-            //    sb.AppendLine($"DigitalSignature {info.DigitalSignature}");
-            //    sb.AppendLine($"IsCompatible {info.IsCompatible}");
-            //    sb.AppendLine($"IsDeleted {info.IsDeleted}");
-            //    sb.AppendLine($"TargetVersion {info.TargetVersion}");
-            //    sb.AppendLine($"ErrorMsg {info.ErrorMsg}");
-            //    sb.AppendLine($"ID {info.ID}");
-            //    sb.AppendLine("");
-            //}
-
             // Set the SDE file name.
             _sdeFileName = _toolConfig.GetSDEName;
+
+            // Create a new SQL functions object.
+            _sqlFunctions = new(_sdeFileName);
 
             _outputFormats = [
                             "Geodatabase",
@@ -171,7 +145,7 @@ namespace DataSelector.UI
         {
             get
             {
-                return ((!_tableListLoading)
+                return ((!_dockPane.TableListLoading)
                     && (_tablesList != null)
                     && (!_dockPane.QueryRunning));
             }
@@ -184,7 +158,7 @@ namespace DataSelector.UI
         {
             get
             {
-                return ((!_tableListLoading)
+                return ((!_dockPane.TableListLoading)
                     && (!_dockPane.QueryRunning));
             }
         }
@@ -199,13 +173,13 @@ namespace DataSelector.UI
         {
             get
             {
-                return (!_dockPane.QueryRunning)
-                    && (!_tableListLoading)
+                return ((!_dockPane.QueryRunning)
+                    && (!_dockPane.TableListLoading)
                     && ((_selectedTable != null)
                     || (!String.IsNullOrEmpty(ColumnsText))
                     || (!String.IsNullOrEmpty(WhereText))
                     || (!String.IsNullOrEmpty(GroupByText))
-                    || (!String.IsNullOrEmpty(OrderByText)));
+                    || (!String.IsNullOrEmpty(OrderByText))));
             }
         }
 
@@ -230,11 +204,11 @@ namespace DataSelector.UI
         {
             get
             {
-                return (!_dockPane.QueryRunning)
+                return ((!_dockPane.QueryRunning)
                     && ((!String.IsNullOrEmpty(ColumnsText))
                     || (!String.IsNullOrEmpty(WhereText))
                     || (!String.IsNullOrEmpty(GroupByText))
-                    || (!String.IsNullOrEmpty(OrderByText)));
+                    || (!String.IsNullOrEmpty(OrderByText))));
             }
         }
 
@@ -246,11 +220,11 @@ namespace DataSelector.UI
             get
             {
                 return ((_tablesList != null)
-                    && (!_tableListLoading)
+                    && (!_dockPane.TableListLoading)
+                    && (!_dockPane.QueryRunning)
                     && ((_selectedTable != null)
                     || ((!String.IsNullOrEmpty(WhereText)) && (WhereText.Length > 5) && (WhereText.Substring(0, 5).Equals("from ", StringComparison.CurrentCultureIgnoreCase))))
-                    && (!String.IsNullOrEmpty(ColumnsText))
-                    && (!_dockPane.QueryRunning));
+                    && (!String.IsNullOrEmpty(ColumnsText)));
             }
         }
 
@@ -262,12 +236,12 @@ namespace DataSelector.UI
             get
             {
                 return ((_tablesList != null)
-                    && (!_tableListLoading)
+                    && (!_dockPane.TableListLoading)
+                    && (!_dockPane.QueryRunning)
                     && ((_selectedTable != null)
                     || ((!String.IsNullOrEmpty(WhereText)) && (WhereText.Length > 5) && (WhereText.Substring(0, 5).Equals("from ", StringComparison.CurrentCultureIgnoreCase))))
                     && (!String.IsNullOrEmpty(ColumnsText))
-                    && (!String.IsNullOrEmpty(_selectedOutputFormat))
-                    && (!_dockPane.QueryRunning));
+                    && (!String.IsNullOrEmpty(_selectedOutputFormat)));
             }
         }
 
@@ -758,60 +732,14 @@ namespace DataSelector.UI
         /// <remarks></remarks>
         private async void RefreshTablesListCommandClick(object param)
         {
-            // Indicate table is loading.
-            _tableListLoading = true;
-            _processingLabel = "Refreshing tables list ...";
-            OnPropertyChanged(nameof(ProcessingLabel));
-
-            // Preset the tables list.
-            _tablesList = ["Loading tables ..."];
-            SelectedTable = "Loading tables ...";
-            OnPropertyChanged(nameof(TablesList));
-            OnPropertyChanged(nameof(SelectedTable));
-
-            // Update the fields and buttons in the form.
-            OnPropertyChanged(nameof(TablesList));
-            OnPropertyChanged(nameof(TablesListEnabled));
-            OnPropertyChanged(nameof(LoadColumnsEnabled));
-            OnPropertyChanged(nameof(SaveButtonEnabled));
-            OnPropertyChanged(nameof(ClearButtonEnabled));
-            OnPropertyChanged(nameof(LoadButtonEnabled));
-            OnPropertyChanged(nameof(RunButtonEnabled));
-            _dockPane.RefreshPanel1Buttons();
-
             // Get the table names from SQL Server (and wait).
-            await GetTableNames();
-
-            // Select the first item in the list if there is only one.
-            if (_tablesList.Count == 1)
-                SelectedTable = _tablesList[0];
-            else
-                SelectedTable = null;
-
-            // Indicate the refresh has finished.
-            _tableListLoading = false;
-            _processingLabel = null;
-            OnPropertyChanged(nameof(ProcessingLabel));
-
-            // Update the fields and buttons in the form.
-            OnPropertyChanged(nameof(TablesList));
-            OnPropertyChanged(nameof(TablesListEnabled));
-
-            OnPropertyChanged(nameof(SelectedTable));
-            OnPropertyChanged(nameof(LoadColumnsEnabled));
-            OnPropertyChanged(nameof(ClearButtonEnabled));
-            OnPropertyChanged(nameof(SaveButtonEnabled));
-            OnPropertyChanged(nameof(LoadButtonEnabled));
-            OnPropertyChanged(nameof(VerifyButtonEnabled));
-            OnPropertyChanged(nameof(RunButtonEnabled));
-            _dockPane.RefreshPanel1Buttons();
+            await GetTableNames(true);
 
             // Inform the user no tables found in SQL Server.
             if (_sqlFunctions.TableNames.Count == 0)
                 MessageBox.Show("No tables found in SQL Server.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
-
             // Inform the user no filtered tables found.
-            if (_tablesList.Count == 0)
+            else if (_tablesList.Count == 0)
                 MessageBox.Show("No tables found matching wildcard criteria.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
@@ -881,8 +809,8 @@ namespace DataSelector.UI
         {
             get
             {
-                if ((!_tableListLoading)
-                && (_selectedTable == null))
+                if ((_dockPane.TableListLoading)
+                || (_selectedTable == null))
                     return null;
                 else
                     return "Double-click to populate with list of columns from the selected table";
@@ -1161,10 +1089,31 @@ namespace DataSelector.UI
         /// <summary>
         /// Get a list of the table names from the SQL Server.
         /// </summary>
-        public async Task GetTableNames()
+        public async Task GetTableNames(bool refresh)
         {
-            // Clear the tables list.
-            _tablesList = [];
+            // Indicate table is loading.
+            _dockPane.TableListLoading = true;
+            if (refresh)
+                _processingLabel = "Refreshing tables list ...";
+            else
+                _processingLabel = "Loading tables list ...";
+            OnPropertyChanged(nameof(ProcessingLabel));
+
+            // Preset the tables list.
+            _tablesList = ["Loading tables ..."];
+            SelectedTable = "Loading tables ...";
+            OnPropertyChanged(nameof(TablesList));
+            OnPropertyChanged(nameof(SelectedTable));
+
+            // Update the fields and buttons in the form.
+            OnPropertyChanged(nameof(TablesList));
+            OnPropertyChanged(nameof(TablesListEnabled));
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
+            OnPropertyChanged(nameof(SaveButtonEnabled));
+            OnPropertyChanged(nameof(ClearButtonEnabled));
+            OnPropertyChanged(nameof(LoadButtonEnabled));
+            OnPropertyChanged(nameof(RunButtonEnabled));
+            _dockPane.RefreshPanel1Buttons();
 
             // Get the full list of feature classess and tables from SQL Server.
             await _sqlFunctions.GetTableNamesAsync();
@@ -1174,22 +1123,62 @@ namespace DataSelector.UI
 
             // If no tables were found.
             if (_sqlFunctions.TableNames.Count == 0)
-                return;
+            {
+                // Clear the tables list.
+                _tablesList = [];
+
+                // Indicate the refresh has finished.
+                _dockPane.TableListLoading = false;
+                _processingLabel = null;
+                OnPropertyChanged(nameof(ProcessingLabel));
+
+                // Update the fields and buttons in the form.
+                OnPropertyChanged(nameof(TablesList));
+                OnPropertyChanged(nameof(TablesListEnabled));
+
+                OnPropertyChanged(nameof(SelectedTable));
+                OnPropertyChanged(nameof(LoadColumnsEnabled));
+                OnPropertyChanged(nameof(ClearButtonEnabled));
+                OnPropertyChanged(nameof(SaveButtonEnabled));
+                OnPropertyChanged(nameof(LoadButtonEnabled));
+                OnPropertyChanged(nameof(VerifyButtonEnabled));
+                OnPropertyChanged(nameof(RunButtonEnabled));
+                _dockPane.RefreshPanel1Buttons();
+            }
 
             // Get the include and exclude wildcard settings.
             string includeWC = _includeWildcard;
             string excludeWC = _excludeWildcard;
 
             // Filter the SQL table names and add them to a list.
-            ObservableCollection<String> tablesList = [];
-            List<string> tableList = FilterTableNames(tabList, _defaultSchema, includeWC, excludeWC, false);
-
-            //foreach (string strItem in tableList)
-            //    tablesList.Add(strItem);
+            List<string> filteredTableList = FilterTableNames(tabList, _defaultSchema, includeWC, excludeWC, false);
 
             // Set the tables list in sort order.
-            //_tablesList = new(tablesList.OrderBy(t => t));
-            _tablesList = new(tableList.OrderBy(t => t));
+            _tablesList = new(filteredTableList.OrderBy(t => t));
+
+            // Select the first item in the list if there is only one.
+            if (_tablesList.Count == 1)
+                SelectedTable = _tablesList[0];
+            else
+                SelectedTable = null;
+
+            // Indicate the refresh has finished.
+            _dockPane.TableListLoading = false;
+            _processingLabel = null;
+            OnPropertyChanged(nameof(ProcessingLabel));
+
+            // Update the fields and buttons in the form.
+            OnPropertyChanged(nameof(TablesList));
+            OnPropertyChanged(nameof(TablesListEnabled));
+
+            OnPropertyChanged(nameof(SelectedTable));
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
+            OnPropertyChanged(nameof(ClearButtonEnabled));
+            OnPropertyChanged(nameof(SaveButtonEnabled));
+            OnPropertyChanged(nameof(LoadButtonEnabled));
+            OnPropertyChanged(nameof(VerifyButtonEnabled));
+            OnPropertyChanged(nameof(RunButtonEnabled));
+            _dockPane.RefreshPanel1Buttons();
         }
 
         /// <summary>

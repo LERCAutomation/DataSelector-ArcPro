@@ -20,9 +20,9 @@
 // along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Windows;
 using System.Windows.Forms;
 using System.Xml;
-using System.Windows;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 // This configuration file reader defines how the tool behaves at start up:

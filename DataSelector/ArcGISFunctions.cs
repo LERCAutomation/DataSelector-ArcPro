@@ -19,18 +19,18 @@
 // You should have received a copy of the GNU General Public License
 // along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using System;
-using System.Threading.Tasks;
-using ArcGIS.Core.Data.Exceptions;
-using System.Linq;
 using System.Collections.Generic;
-using ArcGIS.Core.CIM;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataTools
 {

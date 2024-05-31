@@ -20,8 +20,8 @@
 // along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Xml;
 using System.Windows;
+using System.Xml;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 //This configuration file reader loads all of the variables to
