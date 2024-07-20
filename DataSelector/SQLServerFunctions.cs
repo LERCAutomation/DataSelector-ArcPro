@@ -169,6 +169,7 @@ namespace DataTools
                 catch (GeodatabaseNotFoundOrOpenedException)
                 {
                     // Geodatabase throws an exception.
+                    throw;
                 }
                 catch (Exception)
                 {
@@ -269,6 +270,7 @@ namespace DataTools
                 catch
                 {
                     // GetDefinition throws an exception if the definition doesn't exist.
+                    throw;
                 }
             });
 
@@ -306,6 +308,7 @@ namespace DataTools
                 catch
                 {
                     // GetDefinition throws an exception if the definition doesn't exist.
+                    throw;
                 }
             });
 
@@ -340,6 +343,7 @@ namespace DataTools
             catch
             {
                 // GetDefinition throws an exception if the definition doesn't exist.
+                throw;
             }
 
             return fields;
@@ -419,7 +423,7 @@ namespace DataTools
 
         public async Task<bool> CopyToTextFileAsync(string inTable, string outFile, string separator, bool isSpatial, bool append)
         {
-            // This sub copies the input table to tab delimited file.
+            // This sub copies the input table to a text file.
             string filePath = FileFunctions.GetDirectoryName(inTable);
             string fileName = FileFunctions.GetFileName(inTable);
 
@@ -540,6 +544,7 @@ namespace DataTools
             catch (Exception)
             {
                 // logger.Error(exception.Message);
+                throw;
             }
 
             // Close the output file and dispose of the object.

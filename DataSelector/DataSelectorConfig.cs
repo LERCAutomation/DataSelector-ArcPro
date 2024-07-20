@@ -39,7 +39,7 @@ namespace DataSelector
         private static string _toolName;
 
         // Initialise component to read XML
-        private XmlElement _xmlDataSelector;
+        private readonly XmlElement _xmlDataSelector;
 
         #endregion Fields
 
@@ -238,7 +238,7 @@ namespace DataSelector
             {
                 _defaultSetSymbology = false;
                 strRawText = _xmlDataSelector["DefaultSetSymbology"].InnerText;
-                if (strRawText.ToLower() is "yes" or "y")
+                if (strRawText.ToLower(System.Globalization.CultureInfo.CurrentCulture) is "yes" or "y")
                     _defaultSetSymbology = true;
             }
             catch
@@ -261,7 +261,7 @@ namespace DataSelector
             {
                 _defaultClearLogFile = false;
                 strRawText = _xmlDataSelector["DefaultClearLogFile"].InnerText;
-                if (strRawText.ToLower() is "yes" or "y")
+                if (strRawText.ToLower(System.Globalization.CultureInfo.CurrentCulture) is "yes" or "y")
                     _defaultClearLogFile = true;
             }
             catch
@@ -274,7 +274,7 @@ namespace DataSelector
             {
                 _defaultOpenLogFile = false;
                 strRawText = _xmlDataSelector["DefaultOpenLogFile"].InnerText;
-                if (strRawText.ToLower() is "yes" or "y")
+                if (strRawText.ToLower(System.Globalization.CultureInfo.CurrentCulture) is "yes" or "y")
                     _defaultOpenLogFile = true;
             }
             catch
@@ -287,7 +287,7 @@ namespace DataSelector
             {
                 _validateSQL = false;
                 strRawText = _xmlDataSelector["ValidateSQL"].InnerText;
-                if (strRawText.ToLower() is "yes" or "y")
+                if (strRawText.ToLower(System.Globalization.CultureInfo.CurrentCulture) is "yes" or "y")
                     _validateSQL = true;
             }
             catch
@@ -300,7 +300,7 @@ namespace DataSelector
 
         #region Members
 
-        private bool _xmlFound;
+        private readonly bool _xmlFound;
 
         /// <summary>
         /// Has the XML file been found.
@@ -313,7 +313,7 @@ namespace DataSelector
             }
         }
 
-        private bool _xmlLoaded;
+        private readonly bool _xmlLoaded;
 
         /// <summary>
         ///  Has the XML file been loaded.
@@ -332,7 +332,7 @@ namespace DataSelector
 
         private string _sdeName;
 
-        public string GetSDEName
+        public string SDEName
         {
             get
             {
@@ -342,7 +342,7 @@ namespace DataSelector
 
         private string _selectStoredProcedure;
 
-        public string GetSelectStoredProcedure
+        public string SelectStoredProcedure
         {
             get
             {
@@ -352,7 +352,7 @@ namespace DataSelector
 
         private string _clearStoredProcedure;
 
-        public string GetClearStoredProcedure
+        public string ClearStoredProcedure
         {
             get
             {
@@ -362,7 +362,7 @@ namespace DataSelector
 
         private string _logFilePath;
 
-        public string GetLogFilePath
+        public string LogFilePath
         {
             get
             {
@@ -372,7 +372,7 @@ namespace DataSelector
 
         private string _defaultExtractPath;
 
-        public string GetDefaultExtractPath
+        public string DefaultExtractPath
         {
             get
             {
@@ -382,7 +382,7 @@ namespace DataSelector
 
         private string _defaultQueryPath;
 
-        public string GetDefaultQueryPath
+        public string DefaultQueryPath
         {
             get
             {
@@ -392,7 +392,7 @@ namespace DataSelector
 
         private string _defaultFormat;
 
-        public string GetDefaultFormat
+        public string DefaultFormat
         {
             get
             {
@@ -402,7 +402,7 @@ namespace DataSelector
 
         private string _databaseSchema;
 
-        public string GetDatabaseSchema
+        public string DatabaseSchema
         {
             get
             {
@@ -412,7 +412,7 @@ namespace DataSelector
 
         private string _includeWildcard;
 
-        public string GetIncludeWildcard
+        public string IncludeWildcard
         {
             get
             {
@@ -422,7 +422,7 @@ namespace DataSelector
 
         private string _excludeWildcard;
 
-        public string GetExcludeWildcard
+        public string ExcludeWildcard
         {
             get
             {
@@ -432,7 +432,7 @@ namespace DataSelector
 
         private bool _defaultSetSymbology;
 
-        public bool GetDefaultSetSymbology
+        public bool DefaultSetSymbology
         {
             get
             {
@@ -442,7 +442,7 @@ namespace DataSelector
 
         private string _layerLocation;
 
-        public string GetLayerLocation
+        public string LayerLocation
         {
             get
             {
@@ -452,7 +452,7 @@ namespace DataSelector
 
         private bool _defaultClearLogFile;
 
-        public bool GetDefaultClearLogFile
+        public bool DefaultClearLogFile
         {
             get
             {
@@ -462,7 +462,7 @@ namespace DataSelector
 
         private bool _defaultOpenLogFile;
 
-        public bool GetDefaultOpenLogFile
+        public bool DefaultOpenLogFile
         {
             get
             {
@@ -472,7 +472,7 @@ namespace DataSelector
 
         private bool _validateSQL;
 
-        public bool GetValidateSQL
+        public bool ValidateSQL
         {
             get
             {

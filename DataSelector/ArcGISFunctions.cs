@@ -4,20 +4,20 @@
 //
 // Copyright © 2024 Andy Foy Consulting.
 //
-// This file is part of DataSelector.
+// This file is part of DataTools suite of programs..
 //
-// DataSelector is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
+// DataTools are free software: you can redistribute it and/or modify
+// them under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// DataSelector is distributed in the hope that it will be useful,
+// DataTools are distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
+// along with with program.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -118,19 +118,11 @@ namespace DataTools
 
                     // Create and activate new map.
                     ProApp.Panes.CreateMapPaneAsync(_activeMap, MapViewingMode.Map);
-                    //var paneTask = ProApp.Panes.CreateMapPaneAsync(_activeMap, MapViewingMode.Map);
-                    //paneTask.Wait();
-
-                    // Get the active map view;
-                    //_activeMapView = GetActiveMapView();
-
-                    //Pane pane = ProApp.Panes.ActivePane;
-                    //pane.Activate();
                 }
                 catch
                 {
-                    // CreateMap throws an exception if the map view wasn't created.
                     // CreateMapPaneAsync throws an exception if the map isn't created.
+                    throw;
                 }
             });
 
@@ -165,6 +157,8 @@ namespace DataTools
             }
             catch
             {
+                // Handle Exception.
+                throw;
             }
         }
 
@@ -193,6 +187,8 @@ namespace DataTools
             }
             catch
             {
+                // Handle Exception.
+                throw;
             }
         }
 
@@ -543,6 +539,7 @@ namespace DataTools
             }
             catch (Exception)
             {
+                // Handle Exception.
                 throw;
             }
 
@@ -611,6 +608,7 @@ namespace DataTools
             }
             catch (Exception)
             {
+                // Handle Exception.
                 throw;
             }
 
@@ -649,6 +647,7 @@ namespace DataTools
             }
             catch (Exception)
             {
+                // Handle Exception.
                 throw;
             }
 

@@ -55,10 +55,15 @@ namespace DataSelector.UI
         private string _logFile;
         private bool _validateSQL;
 
+	private string _logFilePath;
         private string _includeWildcard;
         private string _excludeWildcard;
         private string _defaultFormat;
         private string _defaultSchema;
+	private string _defaultQueryPath;
+	private string _defaultExtractPath;
+	private string _selectStoredProcedure;
+	private string _clearStoredProcedure;
 
         private string _queryName;
 
@@ -69,6 +74,7 @@ namespace DataSelector.UI
         private const string _displayName = "DataSelector";
 
         private readonly DataSelectorConfig _toolConfig;
+        private MapFunctions _mapFunctions;
         private SQLServerFunctions _sqlFunctions;
 
         #endregion Fields
@@ -108,7 +114,10 @@ namespace DataSelector.UI
         private void InitializeComponent()
         {
             // Set the SDE file name.
-            _sdeFileName = _toolConfig.GetSDEName;
+            _sdeFileName = _toolConfig.SDEName;
+
+			// Create a new map functions object.
+			_mapFunctions = new();
 
             // Create a new SQL functions object.
             _sqlFunctions = new(_sdeFileName);
@@ -120,15 +129,20 @@ namespace DataSelector.UI
                             "Text file (tab delimited)"];
 
             // Get the relevant config file settings.
-            _includeWildcard = _toolConfig.GetIncludeWildcard;
-            _excludeWildcard = _toolConfig.GetExcludeWildcard;
-            _defaultFormat = _toolConfig.GetDefaultFormat;
-            _defaultSchema = _toolConfig.GetDatabaseSchema;
-            _clearLogFile = _toolConfig.GetDefaultClearLogFile;
-            _openLogFile = _toolConfig.GetDefaultOpenLogFile;
-            _setSymbology = _toolConfig.GetDefaultSetSymbology;
-            //_layerLocation = _toolConfig.GetLayerLocation;
-            _validateSQL = _toolConfig.GetValidateSQL;
+            _logFilePath = _toolConfig.LogFilePath;
+            _includeWildcard = _toolConfig.IncludeWildcard;
+            _excludeWildcard = _toolConfig.ExcludeWildcard;
+            _defaultFormat = _toolConfig.DefaultFormat;
+            _defaultSchema = _toolConfig.DatabaseSchema;
+            _defaultQueryPath = _toolConfig.DefaultQueryPath;
+            _defaultExtractPath = _toolConfig.DefaultExtractPath;
+            _clearLogFile = _toolConfig.DefaultClearLogFile;
+            _openLogFile = _toolConfig.DefaultOpenLogFile;
+            _setSymbology = _toolConfig.DefaultSetSymbology;
+            //_layerLocation = _toolConfig.LayerLocation;
+            _validateSQL = _toolConfig.ValidateSQL;
+            _selectStoredProcedure = _toolConfig.SelectStoredProcedure;
+            _clearStoredProcedure = _toolConfig.ClearStoredProcedure;
 
             // Set the window properties.
             _selectedOutputFormat = _defaultFormat;
@@ -288,13 +302,7 @@ namespace DataSelector.UI
             _queryName = null;
 
             // Update the fields and buttons in the form.
-            OnPropertyChanged(nameof(ColumnsText));
-            OnPropertyChanged(nameof(SelectedTable));
-            OnPropertyChanged(nameof(WhereText));
-            OnPropertyChanged(nameof(GroupByText));
-            OnPropertyChanged(nameof(OrderByText));
-            OnPropertyChanged(nameof(VerifyButtonEnabled));
-            OnPropertyChanged(nameof(RunButtonEnabled));
+            UpdateFormControls();
         }
 
         #endregion Clear Command
@@ -343,7 +351,7 @@ namespace DataSelector.UI
             {
                 Title = "Save Query As...",
                 Filter = "Query files (*.qsf)|*.qsf",
-                InitialDirectory = _toolConfig.GetDefaultQueryPath,
+                InitialDirectory = _defaultQueryPath,
                 OkRequiresInteraction = true,
                 FileName = _queryName
             };
@@ -468,7 +476,7 @@ namespace DataSelector.UI
                 Title = "Load Query...",
                 Filter = "Query files (*.qsf)|*.qsf",
                 OkRequiresInteraction = true,
-                InitialDirectory = _toolConfig.GetDefaultQueryPath
+                InitialDirectory = _defaultQueryPath
             };
 
             string saveFileName;
@@ -534,14 +542,7 @@ namespace DataSelector.UI
                 qryFile.Dispose();
 
                 // Update the fields and buttons in the form.
-                OnPropertyChanged(nameof(ColumnsText));
-                OnPropertyChanged(nameof(WhereText));
-                OnPropertyChanged(nameof(GroupByText));
-                OnPropertyChanged(nameof(OrderByText));
-                OnPropertyChanged(nameof(SaveButtonEnabled));
-                OnPropertyChanged(nameof(ClearButtonEnabled));
-                OnPropertyChanged(nameof(VerifyButtonEnabled));
-                OnPropertyChanged(nameof(RunButtonEnabled));
+                UpdateFormControls();
             });
 
             openFileDialog.Dispose();
@@ -642,7 +643,7 @@ namespace DataSelector.UI
             }
 
             // Set the destination log file path.
-            _logFile = _toolConfig.GetLogFilePath + @"\DataSelector_" + userID + ".log";
+            _logFile = _logFilePath + @"\DataSelector_" + userID + ".log";
 
             // Clear the log file if required.
             if (ClearLogFile)
@@ -678,34 +679,20 @@ namespace DataSelector.UI
             }
 
             // Update the fields and buttons in the form.
-            OnPropertyChanged(nameof(TablesList));
-            OnPropertyChanged(nameof(TablesListEnabled));
-            OnPropertyChanged(nameof(LoadColumnsEnabled));
-            OnPropertyChanged(nameof(ClearButtonEnabled));
-            OnPropertyChanged(nameof(SaveButtonEnabled));
-            OnPropertyChanged(nameof(LoadButtonEnabled));
-            OnPropertyChanged(nameof(VerifyButtonEnabled));
-            OnPropertyChanged(nameof(RunButtonEnabled));
+            UpdateFormControls();
             _dockPane.RefreshPanel1Buttons();
 
             // Perform the selection.
             await ExecuteSelectionAsync(userID); // Success not currently checked.
 
             // Update the fields and buttons in the form.
-            OnPropertyChanged(nameof(TablesList));
-            OnPropertyChanged(nameof(TablesListEnabled));
-            OnPropertyChanged(nameof(LoadColumnsEnabled));
-            OnPropertyChanged(nameof(ClearButtonEnabled));
-            OnPropertyChanged(nameof(SaveButtonEnabled));
-            OnPropertyChanged(nameof(LoadButtonEnabled));
-            OnPropertyChanged(nameof(VerifyButtonEnabled));
-            OnPropertyChanged(nameof(RunButtonEnabled));
+            UpdateFormControls();
             _dockPane.RefreshPanel1Buttons();
         }
 
         #endregion Run Command
 
-        #region TablesList
+        #region Tables List
 
         private ICommand _refreshCommand;
 
@@ -797,11 +784,8 @@ namespace DataSelector.UI
             {
                 _columnsText = value;
 
-                // Update the fields and buttons in the form.
-                OnPropertyChanged(nameof(SaveButtonEnabled));
-                OnPropertyChanged(nameof(ClearButtonEnabled));
-                OnPropertyChanged(nameof(VerifyButtonEnabled));
-                OnPropertyChanged(nameof(RunButtonEnabled));
+                // Update the buttons in the form.
+                UpdateFormButtons();
             }
         }
 
@@ -832,11 +816,8 @@ namespace DataSelector.UI
             {
                 _whereText = value;
 
-                // Update the fields and buttons in the form.
-                OnPropertyChanged(nameof(SaveButtonEnabled));
-                OnPropertyChanged(nameof(ClearButtonEnabled));
-                OnPropertyChanged(nameof(VerifyButtonEnabled));
-                OnPropertyChanged(nameof(RunButtonEnabled));
+                // Update the buttons in the form.
+                UpdateFormButtons();
             }
         }
 
@@ -855,9 +836,8 @@ namespace DataSelector.UI
             {
                 _groupByText = value;
 
-                // Update the fields and buttons in the form.
-                OnPropertyChanged(nameof(SaveButtonEnabled));
-                OnPropertyChanged(nameof(ClearButtonEnabled));
+                // Update the buttons in the form.
+                UpdateFormButtons();
             }
         }
 
@@ -876,9 +856,8 @@ namespace DataSelector.UI
             {
                 _orderByText = value;
 
-                // Update the fields and buttons in the form.
-                OnPropertyChanged(nameof(SaveButtonEnabled));
-                OnPropertyChanged(nameof(ClearButtonEnabled));
+                // Update the buttons in the form.
+                UpdateFormButtons();
             }
         }
 
@@ -912,16 +891,25 @@ namespace DataSelector.UI
 
                 // Update the fields and buttons in the form.
                 OnPropertyChanged(nameof(ColumnsTooltip));
-                OnPropertyChanged(nameof(ClearButtonEnabled));
-                OnPropertyChanged(nameof(VerifyButtonEnabled));
-                OnPropertyChanged(nameof(RunButtonEnabled));
+                UpdateFormButtons();
+            }
+        }
+
+        public Visibility ProcessingAnimation
+        {
+            get
+            {
+                if (_processingLabel != null)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Hidden;
             }
         }
 
         private string _processingLabel;
 
         /// <summary>
-        /// Get the query processing label.
+        /// Get the processing label.
         /// </summary>
         public string ProcessingLabel
         {
@@ -960,6 +948,42 @@ namespace DataSelector.UI
         #region Methods
 
         /// <summary>
+        /// Update the fields and buttons in the form.
+        /// </summary>
+        private void UpdateFormControls()
+        {
+            UpdateFormFields();
+            UpdateFormButtons();
+        }
+
+        /// <summary>
+        /// Update the fields in the form.
+        /// </summary>
+        private void UpdateFormFields()
+        {
+            OnPropertyChanged(nameof(ColumnsText));
+            OnPropertyChanged(nameof(ColumnsTooltip));
+            OnPropertyChanged(nameof(WhereText));
+            OnPropertyChanged(nameof(GroupByText));
+            OnPropertyChanged(nameof(OrderByText));
+            OnPropertyChanged(nameof(TablesList));
+            OnPropertyChanged(nameof(TablesListEnabled));
+            OnPropertyChanged(nameof(LoadColumnsEnabled));
+        }
+
+        /// <summary>
+        /// Update the buttons in the form.
+        /// </summary>
+        private void UpdateFormButtons()
+        {
+            OnPropertyChanged(nameof(ClearButtonEnabled));
+            OnPropertyChanged(nameof(SaveButtonEnabled));
+            OnPropertyChanged(nameof(LoadButtonEnabled));
+            OnPropertyChanged(nameof(VerifyButtonEnabled));
+            OnPropertyChanged(nameof(RunButtonEnabled));
+        }
+
+        /// <summary>
         /// Called on double-click of the Columns textbox. The columns belonging
         /// to the selected table name are filled in to the Columns textbox.
         /// </summary>
@@ -993,10 +1017,7 @@ namespace DataSelector.UI
 
                 // Update the fields and buttons in the form.
                 OnPropertyChanged(nameof(ColumnsText));
-                OnPropertyChanged(nameof(SaveButtonEnabled));
-                OnPropertyChanged(nameof(ClearButtonEnabled));
-                OnPropertyChanged(nameof(VerifyButtonEnabled));
-                OnPropertyChanged(nameof(RunButtonEnabled));
+                UpdateFormButtons();
             }
         }
 
@@ -1034,7 +1055,7 @@ namespace DataSelector.UI
         private bool _clearLogFile;
 
         /// <summary>
-        /// Is the log file to be cleared before running the SQL query?
+        /// Is the log file to be cleared before running the query?
         /// </summary>
         public bool ClearLogFile
         {
@@ -1051,7 +1072,7 @@ namespace DataSelector.UI
         private bool _openLogFile;
 
         /// <summary>
-        /// Is the log file to be opened after running the SQL query?
+        /// Is the log file to be opened after running the query?
         /// </summary>
         public bool OpenLogFile
         {
@@ -1098,6 +1119,7 @@ namespace DataSelector.UI
             else
                 _processingLabel = "Loading tables list ...";
             OnPropertyChanged(nameof(ProcessingLabel));
+            OnPropertyChanged(nameof(ProcessingAnimation));
 
             // Preset the tables list.
             _tablesList = ["Loading tables ..."];
@@ -1109,10 +1131,7 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(TablesList));
             OnPropertyChanged(nameof(TablesListEnabled));
             OnPropertyChanged(nameof(LoadColumnsEnabled));
-            OnPropertyChanged(nameof(SaveButtonEnabled));
-            OnPropertyChanged(nameof(ClearButtonEnabled));
-            OnPropertyChanged(nameof(LoadButtonEnabled));
-            OnPropertyChanged(nameof(RunButtonEnabled));
+            UpdateFormButtons();
             _dockPane.RefreshPanel1Buttons();
 
             // Get the full list of feature classess and tables from SQL Server.
@@ -1131,18 +1150,14 @@ namespace DataSelector.UI
                 _dockPane.TableListLoading = false;
                 _processingLabel = null;
                 OnPropertyChanged(nameof(ProcessingLabel));
+                OnPropertyChanged(nameof(ProcessingAnimation));
 
                 // Update the fields and buttons in the form.
                 OnPropertyChanged(nameof(TablesList));
                 OnPropertyChanged(nameof(TablesListEnabled));
-
                 OnPropertyChanged(nameof(SelectedTable));
                 OnPropertyChanged(nameof(LoadColumnsEnabled));
-                OnPropertyChanged(nameof(ClearButtonEnabled));
-                OnPropertyChanged(nameof(SaveButtonEnabled));
-                OnPropertyChanged(nameof(LoadButtonEnabled));
-                OnPropertyChanged(nameof(VerifyButtonEnabled));
-                OnPropertyChanged(nameof(RunButtonEnabled));
+                UpdateFormButtons();
                 _dockPane.RefreshPanel1Buttons();
             }
 
@@ -1166,18 +1181,14 @@ namespace DataSelector.UI
             _dockPane.TableListLoading = false;
             _processingLabel = null;
             OnPropertyChanged(nameof(ProcessingLabel));
+            OnPropertyChanged(nameof(ProcessingAnimation));
 
             // Update the fields and buttons in the form.
             OnPropertyChanged(nameof(TablesList));
             OnPropertyChanged(nameof(TablesListEnabled));
-
             OnPropertyChanged(nameof(SelectedTable));
             OnPropertyChanged(nameof(LoadColumnsEnabled));
-            OnPropertyChanged(nameof(ClearButtonEnabled));
-            OnPropertyChanged(nameof(SaveButtonEnabled));
-            OnPropertyChanged(nameof(LoadButtonEnabled));
-            OnPropertyChanged(nameof(VerifyButtonEnabled));
-            OnPropertyChanged(nameof(RunButtonEnabled));
+            UpdateFormButtons();
             _dockPane.RefreshPanel1Buttons();
         }
 
@@ -1272,7 +1283,7 @@ namespace DataSelector.UI
             while (!blDone)
             {
                 // Prompt the user to specify an output file in the required format.
-                outputFile = ArcGISFunctions.GetOutputFileName(outputFormat, _toolConfig.GetDefaultExtractPath);
+                outputFile = ArcGISFunctions.GetOutputFileName(outputFormat, _defaultExtractPath);
                 if (outputFile != null)
                 {
                     // firstly check extensions are as should be.
@@ -1400,7 +1411,7 @@ namespace DataSelector.UI
         }
 
         /// <summary>
-        /// Perform the selection by running the SQL query via a
+        /// Perform the selection by running the query via a
         /// stored procedure.
         /// </summary>
         /// <param name="isSpatial"></param>
@@ -1420,7 +1431,7 @@ namespace DataSelector.UI
             bool success;
 
             // Get the name of the stored procedure to execute selection in SQL Server.
-            string storedProcedureName = _toolConfig.GetSelectStoredProcedure;
+            string storedProcedureName = _selectStoredProcedure;
 
             // Write the parameters to the log file.
             FileFunctions.WriteLine(_logFile, String.Format("Source table is '{0}'", tableName));
@@ -1536,7 +1547,7 @@ namespace DataSelector.UI
             StringBuilder sqlCmd = new();
 
             // Get the name of the stored procedure to clear selection in SQL Server.
-            string storedProcedureName = _toolConfig.GetClearStoredProcedure;
+            string storedProcedureName = _clearStoredProcedure;
 
             // Build the SQL command to execute the stored procedure.
             sqlCmd = sqlCmd.Append(String.Format("EXECUTE {0}", storedProcedureName));
@@ -1568,7 +1579,6 @@ namespace DataSelector.UI
         /// Export the spatial results to a feature class, shapefile,
         /// test file or CSV file.
         /// </summary>
-        /// <param name="mapFunctions"></param>
         /// <param name="outputFormat"></param>
         /// <param name="inPoints"></param>
         /// <param name="inPolys"></param>
@@ -1577,8 +1587,7 @@ namespace DataSelector.UI
         /// <param name="outFile"></param>
         /// <param name="addToMap"></param>
         /// <returns></returns>
-        internal async Task<bool> ExportSpatialResults(MapFunctions mapFunctions,
-                                  string outputFormat,
+        internal async Task<bool> ExportSpatialResults(string outputFormat,
                                   string inPoints, string inPolys,
                                   string outPoints, string outPolys,
                                   string outFile,
@@ -1596,6 +1605,7 @@ namespace DataSelector.UI
                     // Indicate the export has started.
                     _processingLabel = "Saving point results ...";
                     OnPropertyChanged(nameof(ProcessingLabel));
+                    OnPropertyChanged(nameof(ProcessingAnimation));
 
                     FileFunctions.WriteLine(_logFile, String.Format("Copying point results to {0}", outputFormat));
                     result = await ArcGISFunctions.CopyFeaturesAsync(inPoints, outPoints);
@@ -1613,6 +1623,7 @@ namespace DataSelector.UI
                     // Indicate the export has started.
                     _processingLabel = "Saving polygon results ...";
                     OnPropertyChanged(nameof(ProcessingLabel));
+                    OnPropertyChanged(nameof(ProcessingAnimation));
 
                     FileFunctions.WriteLine(_logFile, String.Format("Copying polygon results to {0}", outputFormat));
                     result = await ArcGISFunctions.CopyFeaturesAsync(inPolys, outPolys);
@@ -1637,18 +1648,20 @@ namespace DataSelector.UI
                     // Indicate the map is being created.
                     _processingLabel = "Creating map ...";
                     OnPropertyChanged(nameof(ProcessingLabel));
+                    OnPropertyChanged(nameof(ProcessingAnimation));
 
-                    await mapFunctions.CreateMapAsync("DataMap");
+                    await _mapFunctions.CreateMapAsync("DataMap");
 
                     // Indicate the data is being added to the map.
                     _processingLabel = "Adding results to map ...";
                     OnPropertyChanged(nameof(ProcessingLabel));
+                    OnPropertyChanged(nameof(ProcessingAnimation));
 
                     if (_pointCount > 0)
-                        await mapFunctions.AddLayerToMap(outPoints);
+                        await _mapFunctions.AddLayerToMap(outPoints);
 
                     if (_polyCount > 0)
-                        await mapFunctions.AddLayerToMap(outPolys);
+                        await _mapFunctions.AddLayerToMap(outPolys);
                 }
 
                 return true;
@@ -1699,6 +1712,7 @@ namespace DataSelector.UI
                     // Indicate the export has started.
                     _processingLabel = "Saving polygon results ...";
                     OnPropertyChanged(nameof(ProcessingLabel));
+                    OnPropertyChanged(nameof(ProcessingAnimation));
 
                     FileFunctions.WriteLine(_logFile, String.Format("Exporting polygon results to {0} file", fileType));
 
@@ -1723,17 +1737,19 @@ namespace DataSelector.UI
                     // Indicate the map is being created.
                     _processingLabel = "Creating map ...";
                     OnPropertyChanged(nameof(ProcessingLabel));
+                    OnPropertyChanged(nameof(ProcessingAnimation));
 
-                    await mapFunctions.CreateMapAsync("DataMap");
+                    await _mapFunctions.CreateMapAsync("DataMap");
                 }
 
                 // Indicate the data is being added to the map.
                 _processingLabel = "Adding results to map ...";
                 OnPropertyChanged(nameof(ProcessingLabel));
+                OnPropertyChanged(nameof(ProcessingAnimation));
 
                 // Add the output to the map as it won't be added
                 // automatically.
-                await mapFunctions.AddTableToMap(outFile);
+                await _mapFunctions.AddTableToMap(outFile);
 
                 return true;
             }
@@ -1745,14 +1761,12 @@ namespace DataSelector.UI
         /// Export the non-spatial results to a geodatabase table,
         /// test file or CSV file.
         /// </summary>
-        /// <param name="mapFunctions"></param>
         /// <param name="outputFormat"></param>
         /// <param name="inTable"></param>
         /// <param name="outFile"></param>
         /// <param name="addToMap"></param>
         /// <returns></returns>
-        internal async Task<bool> ExportNonSpatialResults(MapFunctions mapFunctions,
-                                  string outputFormat,
+        internal async Task<bool> ExportNonSpatialResults(string outputFormat,
                                   string inTable,
                                   string outFile)
         {
@@ -1763,6 +1777,7 @@ namespace DataSelector.UI
             // Indicate the export has started.
             _processingLabel = "Saving results ...";
             OnPropertyChanged(nameof(ProcessingLabel));
+            OnPropertyChanged(nameof(ProcessingAnimation));
 
             if (outputFormat.Contains("Text file"))
             {
@@ -1813,10 +1828,11 @@ namespace DataSelector.UI
             // Indicate the data is being added to the map.
             _processingLabel = "Adding results to map ...";
             OnPropertyChanged(nameof(ProcessingLabel));
+            OnPropertyChanged(nameof(ProcessingAnimation));
 
             // Add the output to the map as it won't be added
             // automatically.
-            await mapFunctions.AddTableToMap(outFile);
+            await _mapFunctions.AddTableToMap(outFile);
 
             return true;
         }
@@ -2022,6 +2038,7 @@ namespace DataSelector.UI
             _dockPane.QueryRunning = true;
             _processingLabel = "Performing selection ...";
             OnPropertyChanged(nameof(ProcessingLabel));
+            OnPropertyChanged(nameof(ProcessingAnimation));
 
             // Run the stored procedure to perform the selection.
             bool success = await PerformSelection(isSpatial, isSplit, _defaultSchema, tableName, columnNames,
@@ -2042,6 +2059,7 @@ namespace DataSelector.UI
                 _dockPane.QueryRunning = false;
                 _processingLabel = null;
                 OnPropertyChanged(nameof(ProcessingLabel));
+                OnPropertyChanged(nameof(ProcessingAnimation));
 
                 MessageBox.Show("Process complete. No output returned.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Warning);
 
@@ -2064,9 +2082,9 @@ namespace DataSelector.UI
             string pointFeatureClass = _defaultSchema + "." + tableName + "_point_" + userID;
             string flatTable = _defaultSchema + "." + tableName + "_" + userID;
 
-            string inPoints = _toolConfig.GetSDEName + @"\" + pointFeatureClass;
-            string inPolys = _toolConfig.GetSDEName + @"\" + polyFeatureClass;
-            string flatInTable = _toolConfig.GetSDEName + @"\" + flatTable;
+            string inPoints = _sdeFileName + @"\" + pointFeatureClass;
+            string inPolys = _sdeFileName  + @"\" + polyFeatureClass;
+            string flatInTable = _sdeFileName  + @"\" + flatTable;
 
             string outPoints = null;
             string outPolys = null;
@@ -2098,21 +2116,18 @@ namespace DataSelector.UI
                     break;
             }
 
-            // Create a new map functions object.
-            MapFunctions mapFunctions = new();
-
             // Check if there is an active map.
-            bool addToMap = (mapFunctions.MapName == null);
+            bool addToMap = (_mapFunctions.MapName == null);
 
             // Get the map name of the active map.
-            //string mapName = mapFunctions.MapName;  // Not used at the moment.
+            //string mapName = _mapFunctions.MapName;  // Not used at the moment.
 
             // Export the results in the required format
             bool exportSuccess;
             if (isSpatial)
-                exportSuccess = await ExportSpatialResults(mapFunctions, outputFormat, inPoints, inPolys, outPoints, outPolys, outputFile, addToMap);
+                exportSuccess = await ExportSpatialResults(outputFormat, inPoints, inPolys, outPoints, outPolys, outputFile, addToMap);
             else
-                exportSuccess = await ExportNonSpatialResults(mapFunctions, outputFormat, flatInTable, outputFile);
+                exportSuccess = await ExportNonSpatialResults(outputFormat, flatInTable, outputFile);
 
             if (!exportSuccess)
             {
@@ -2127,6 +2142,7 @@ namespace DataSelector.UI
                 _dockPane.QueryRunning = false;
                 _processingLabel = null;
                 OnPropertyChanged(nameof(ProcessingLabel));
+                OnPropertyChanged(nameof(ProcessingAnimation));
 
                 // Open the log file (if required).
                 if (OpenLogFile)
@@ -2170,7 +2186,7 @@ namespace DataSelector.UI
                     //    pointsLayerName = FileFunctions.GetFileNameWithoutExtension(pointsLayerName);
 
                     // Set the symbology for the new layer.
-                    //await mapFunctions.ApplySymbologyFromLayerFileAsync(pointsLayerName, _layerLocation);
+                    //await _mapFunctions.ApplySymbologyFromLayerFileAsync(pointsLayerName, _layerLocation);
                 }
 
                 if (_polyCount > 0)
@@ -2180,7 +2196,7 @@ namespace DataSelector.UI
                     //    polysLayerName = FileFunctions.GetFileNameWithoutExtension(polysLayerName);
 
                     // Set the symbology for the new layer.
-                    //await mapFunctions.ApplySymbologyFromLayerFileAsync(polysLayerName, _layerLocation);
+                    //await _mapFunctions.ApplySymbologyFromLayerFileAsync(polysLayerName, _layerLocation);
                 }
             }
 
@@ -2195,6 +2211,7 @@ namespace DataSelector.UI
             _dockPane.QueryRunning = false;
             _processingLabel = null;
             OnPropertyChanged(nameof(ProcessingLabel));
+            OnPropertyChanged(nameof(ProcessingAnimation));
 
             // Inform user of success.
             if ((outputFormat == "Geodatabase FC")
@@ -2207,8 +2224,6 @@ namespace DataSelector.UI
             // Open the log file (if required).
             if (OpenLogFile)
                 Process.Start("notepad.exe", _logFile);
-
-            return;
         }
 
         #endregion SQL

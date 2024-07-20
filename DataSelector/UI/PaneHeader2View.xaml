@@ -4,6 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:DataSelector.UI"
+             xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
              d:DataContext="{d:DesignInstance Type=local:PaneHeader2ViewModel}"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="300">
@@ -269,7 +270,7 @@
                           SelectedValue="{Binding Path=SelectedOutputFormat}" />
             </Grid>
 
-            <Grid Name="GridOptions" Grid.Row="6" Margin="0,4,0,0">
+            <Grid Name="GridOptions" Grid.Row="6" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -354,7 +355,7 @@
                 -->
             </Grid>
 
-            <Grid Name="GridButtons" Grid.Row="7" Margin="0,18,0,0">
+            <Grid Name="GridButtons" Grid.Row="7" Margin="0,12,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="24" />
                 </Grid.RowDefinitions>
@@ -408,7 +409,7 @@
                         Style="{DynamicResource Esri_SimpleButton}"
                         TabIndex="3"
                         Content="Clear"
-                        ToolTip="Clear the query form" />
+                        ToolTip="Clear the form" />
                 <Button Name="ButtonVerify"
                         Grid.Column="3"
                         Margin="0,0,2,0"
@@ -447,13 +448,27 @@
                 </Button>
             </Grid>
 
-            <Label Name="LabelProcessing"
-                   Grid.Row="8"
-                   Margin="0,16,0,0"
-                   Height="22"
-                   Padding="0"
-                   BorderThickness="0"
-                   Content="{Binding Path=ProcessingLabel}" />
+            <Grid Name="GridProcessing" Grid.Row="8" Margin="0,16,0,0" Height="Auto">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="22" />
+                    <ColumnDefinition Width="6" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <controls:CircularAnimationControl Name="ProcessingAnimation"
+                    Grid.Column="0"
+                    Foreground="{DynamicResource Esri_BorderSelectedBrush }"
+                    SpeedRatio="0.5"
+                    Width="22"
+                    Height="22"
+                    Visibility="{Binding ProcessingAnimation}" />
+                <Label Name="LabelProcessing"
+                       Grid.Column="2"
+                       VerticalAlignment="Center"
+                       Padding="0"
+                       BorderThickness="0"
+                       Content="{Binding Path=ProcessingLabel}" />
+            </Grid>
         </Grid>
     </DockPanel>
 </UserControl>
