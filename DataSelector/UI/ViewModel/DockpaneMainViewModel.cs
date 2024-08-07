@@ -25,6 +25,7 @@ using ArcGIS.Desktop.Framework.Controls;
 using DataTools;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
@@ -35,7 +36,7 @@ namespace DataSelector.UI
     /// <summary>
     /// Build the DockPane.
     /// </summary>
-    internal class DockpaneMainViewModel : DockPane
+    internal class DockpaneMainViewModel : DockPane, INotifyPropertyChanged
     {
         #region Fields
 
@@ -69,7 +70,7 @@ namespace DataSelector.UI
             PrimaryMenuList.Clear();
 
             PrimaryMenuList.Add(new TabControl() { Text = "Profile", Tooltip = "Select XML profile" });
-            PrimaryMenuList.Add(new TabControl() { Text = "Query", Tooltip = "Build SQL query" });
+            PrimaryMenuList.Add(new TabControl() { Text = "Query", Tooltip = "Run SQL query" });
 
             // Load the default XML profile (or let the user choose a profile.
             _paneH1VM = new PaneHeader1ViewModel(_dockPane);
@@ -85,8 +86,7 @@ namespace DataSelector.UI
             if (_paneH1VM.XMLLoaded)
             {
                 // Initialise the query pane.
-                bool initialised = await InitialiseQueryPaneAsync(false);
-                if (!initialised)
+                if (!await InitialiseQueryPaneAsync(false))
                     return;
 
                 // Select the profile tab.
@@ -152,7 +152,7 @@ namespace DataSelector.UI
         {
             if (_helpURL != null)
             {
-                System.Diagnostics.Process.Start(new ProcessStartInfo
+                Process.Start(new ProcessStartInfo
                 {
                     FileName = _helpURL,
                     UseShellExecute = true
@@ -180,7 +180,9 @@ namespace DataSelector.UI
             get { return _selectedPanelHeaderIndex; }
             set
             {
-                SetProperty(ref _selectedPanelHeaderIndex, value, () => SelectedPanelHeaderIndex);
+                _selectedPanelHeaderIndex = value;
+                OnPropertyChanged(nameof(SelectedPanelHeaderIndex));
+
                 if (_selectedPanelHeaderIndex == 0)
                     CurrentPage = _paneH1VM;
                 if (_selectedPanelHeaderIndex == 1)
@@ -198,7 +200,8 @@ namespace DataSelector.UI
             get { return _currentPage; }
             set
             {
-                SetProperty(ref _currentPage, value, () => CurrentPage);
+                _currentPage = value;
+                OnPropertyChanged(nameof(CurrentPage));
             }
         }
 
@@ -280,6 +283,7 @@ namespace DataSelector.UI
             // Check if the SDE file exists.
             if (!FileFunctions.FileExists(sdeFileName))
             {
+                //TODO
                 if (messages)
                     MessageBox.Show("SDE connection file '" + sdeFileName + "' not found.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
@@ -294,6 +298,7 @@ namespace DataSelector.UI
             }
             catch (Exception)
             {
+                //TODO
                 if (messages)
                     MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
@@ -304,6 +309,7 @@ namespace DataSelector.UI
             // In the SDE connection is not valid.
             if (!sdeConnectionValid)
             {
+                //TODO
                 if (messages)
                     MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
 
@@ -318,7 +324,7 @@ namespace DataSelector.UI
         }
 
         /// <summary>
-        /// Clear the query pane.
+        /// Reset the query pane.
         /// </summary>
         public void ClearQueryPane()
         {
@@ -348,6 +354,65 @@ namespace DataSelector.UI
         }
 
         #endregion Methods
+
+        #region Debugging Aides
+
+        /// <summary>
+        /// Warns the developer if this object does not have
+        /// a public property with the specified name. This
+        /// method does not exist in a Release build.
+        /// </summary>
+        [Conditional("DEBUG")]
+        [DebuggerStepThrough]
+        public void VerifyPropertyName(string propertyName)
+        {
+            // Verify that the property name matches a real,
+            // public, instance property on this object.
+            if (TypeDescriptor.GetProperties(this)[propertyName] == null)
+            {
+                string msg = "Invalid property name: " + propertyName;
+
+                if (ThrowOnInvalidPropertyName)
+                    throw new(msg);
+                else
+                    Debug.Fail(msg);
+            }
+        }
+
+        /// <summary>
+        /// Returns whether an exception is thrown, or if a Debug.Fail() is used
+        /// when an invalid property name is passed to the VerifyPropertyName method.
+        /// The default value is false, but subclasses used by unit tests might
+        /// override this property's getter to return true.
+        /// </summary>
+        protected virtual bool ThrowOnInvalidPropertyName { get; private set; }
+
+        #endregion Debugging Aides
+
+        #region INotifyPropertyChanged Members
+
+        /// <summary>
+        /// Raised when a property on this object has a new value.
+        /// </summary>
+        public new event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Raises this object's PropertyChanged event.
+        /// </summary>
+        /// <param name="propertyName">The property that has a new value.</param>
+        internal virtual void OnPropertyChanged(string propertyName)
+        {
+            VerifyPropertyName(propertyName);
+
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+            {
+                PropertyChangedEventArgs e = new(propertyName);
+                handler(this, e);
+            }
+        }
+
+        #endregion INotifyPropertyChanged Members
     }
 
     /// <summary>

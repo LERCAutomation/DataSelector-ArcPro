@@ -13,11 +13,53 @@
     <Compile Remove="SQLServerFunctions_OLD.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="DarkImages\AddInDesktop16.png" />
+    <None Remove="DarkImages\AddInDesktop32.png" />
+    <None Remove="DarkImages\DataSelector16.png" />
+    <None Remove="DarkImages\DataSelector32.png" />
+    <None Remove="DarkImages\Error32.png" />
+    <None Remove="DarkImages\Success32.png" />
+    <None Remove="DarkImages\Warning32.png" />
+    <None Remove="Images\AddInDesktop16.png" />
+    <None Remove="Images\AddInDesktop32.png" />
+    <None Remove="Images\Error32.png" />
+    <None Remove="Images\Success32.png" />
+    <None Remove="Images\Warning32.png" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="Config.daml" />
+    <Content Include="DarkImages\AddInDesktop16.png" />
+    <Content Include="DarkImages\AddInDesktop32.png" />
+	  <Resource Include="DarkImages\DataSelector16.png">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="DarkImages\DataSelector32.png">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Resource>
+	  <Content Include="Images\AddInDesktop16.png" />
+	  <Content Include="Images\AddInDesktop32.png" />
+	<Resource Include="DarkImages\Error32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="DarkImages\Success32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="DarkImages\Warning32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Images\DataSelector16.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
 	<Resource Include="Images\DataSelector32.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\Error32.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\Success32.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\Warning32.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
   </ItemGroup>

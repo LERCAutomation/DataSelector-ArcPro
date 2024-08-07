@@ -1,23 +1,23 @@
-﻿// The Data tools are a suite of ArcGIS Pro addins used to extract
+﻿// The DataTools are a suite of ArcGIS Pro addins used to extract
 // and manage biodiversity information from ArcGIS Pro and SQL Server
 // based on pre-defined or user specified criteria.
 //
 // Copyright © 2024 Andy Foy Consulting.
 //
-// This file is part of DataSelector.
+// This file is part of DataTools suite of programs..
 //
-// DataSelector is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
+// DataTools are free software: you can redistribute it and/or modify
+// them under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// DataSelector is distributed in the hope that it will be useful,
+// DataTools are distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
+// along with with program.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Framework;
 using DataSelector.Properties;
@@ -89,7 +89,7 @@ namespace DataSelector.UI
             ToolConfig toolConfig = new(_xmlFolder, _displayName, false);
 
             // If the tool config file can't be found or hasn't been loaded.
-            if ((!toolConfig.XMLFound) || (!toolConfig.XMLLoaded))
+            if (!toolConfig.XMLFound || !toolConfig.XMLLoaded)
             {
                 // Clear the list and selection.
                 _availableXMLFiles = [];
@@ -195,8 +195,8 @@ namespace DataSelector.UI
             {
                 if (_selectXMLPathCommand == null)
                 {
-                    Action<object> selectXMLAction = new(this.SelectXMLPathCommandClick);
-                    _selectXMLPathCommand = new RelayCommand(selectXMLAction, param => this.CanSelectXMLPath);
+                    Action<object> selectXMLAction = new(SelectXMLPathCommandClick);
+                    _selectXMLPathCommand = new RelayCommand(selectXMLAction, param => CanSelectXMLPath);
                 }
 
                 return _selectXMLPathCommand;
@@ -224,8 +224,8 @@ namespace DataSelector.UI
         {
             get
             {
-                return (!_dockPane.QueryRunning)
-                    && (!_dockPane.TableListLoading);
+                return !_dockPane.QueryRunning
+                    && !_dockPane.TableListLoading;
             }
         }
 
@@ -271,7 +271,7 @@ namespace DataSelector.UI
         {
             get
             {
-                return (!string.IsNullOrEmpty(XMLFolder));
+                return !string.IsNullOrEmpty(XMLFolder);
             }
         }
 
@@ -293,8 +293,8 @@ namespace DataSelector.UI
             {
                 if (_loadProfileCommand == null)
                 {
-                    Action<object> openXMLAction = new(this.LoadProfileCommandClick);
-                    _loadProfileCommand = new RelayCommand(openXMLAction, param => this.CanLoadProfile);
+                    Action<object> openXMLAction = new(LoadProfileCommandClick);
+                    _loadProfileCommand = new RelayCommand(openXMLAction, param => CanLoadProfile);
                 }
 
                 return _loadProfileCommand;
@@ -325,10 +325,10 @@ namespace DataSelector.UI
             // Load the selected profile.
             LoadXMLProfile(xmlConfigFile, true);
 
-            // Clear the query pane if the XML wasn't loaded.
+            // Reset the query pane if the XML wasn't loaded.
             if (!XMLLoaded)
             {
-                // Clear the query pane.
+                // Reset the query pane.
                 _dockPane.ClearQueryPane();
                 return;
             }
@@ -352,9 +352,9 @@ namespace DataSelector.UI
         {
             get
             {
-                return (!string.IsNullOrEmpty(SelectedXMLProfile)
-                    && (!_dockPane.QueryRunning)
-                    && (!_dockPane.TableListLoading));
+                return !string.IsNullOrEmpty(SelectedXMLProfile)
+                    && !_dockPane.QueryRunning
+                    && !_dockPane.TableListLoading;
             }
         }
 
@@ -407,7 +407,7 @@ namespace DataSelector.UI
         {
             get
             {
-                var imageSource = System.Windows.Application.Current.Resources["FolderOpenState16"] as ImageSource;
+                var imageSource = Application.Current.Resources["FolderOpenState16"] as ImageSource;
                 return imageSource;
             }
         }
@@ -436,7 +436,7 @@ namespace DataSelector.UI
                 return;
 
             // If the tool config file can't be found or hasn't been loaded.
-            if ((!toolConfig.XMLFound) || (!toolConfig.XMLLoaded))
+            if (!toolConfig.XMLFound || !toolConfig.XMLLoaded)
             {
                 // Clear the list and selection.
                 _availableXMLFiles = [];
@@ -556,12 +556,12 @@ namespace DataSelector.UI
             {
                 // Add if it's not the tool XML file.
                 string strFileName = FileFunctions.GetFileName(strFile);
-                if (!FileFunctions.GetFileNameWithoutExtension(strFileName).Equals(_displayName, StringComparison.CurrentCultureIgnoreCase)
-                && FileFunctions.GetExtension(strFile).Equals(".xml", StringComparison.CurrentCultureIgnoreCase))
+                if (!FileFunctions.GetFileNameWithoutExtension(strFileName).Equals(_displayName, StringComparison.OrdinalIgnoreCase)
+                && FileFunctions.GetExtension(strFile).Equals(".xml", StringComparison.OrdinalIgnoreCase))
                 {
                     // Add file to list of XML files.
                     xmlFilesList.Add(strFileName);
-                    if (strFileName.Equals(strDefaultXMLName, StringComparison.CurrentCultureIgnoreCase))
+                    if (strFileName.Equals(strDefaultXMLName, StringComparison.OrdinalIgnoreCase))
                         blDefaultFound = true;
                     else
                         blOnlyDefault = false;
@@ -633,7 +633,7 @@ namespace DataSelector.UI
             {
                 string msg = "Invalid property name: " + propertyName;
 
-                if (this.ThrowOnInvalidPropertyName)
+                if (ThrowOnInvalidPropertyName)
                     throw new(msg);
                 else
                     Debug.Fail(msg);
@@ -663,7 +663,7 @@ namespace DataSelector.UI
         /// <param name="propertyName">The property that has a new value.</param>
         internal virtual void OnPropertyChanged(string propertyName)
         {
-            this.VerifyPropertyName(propertyName);
+            VerifyPropertyName(propertyName);
 
             PropertyChangedEventHandler handler = PropertyChanged;
             if (handler != null)

@@ -23,6 +23,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <Grid Name="GridColumns" Grid.Row="0" Margin="0,4,0,4">
@@ -31,7 +32,7 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="8" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
@@ -42,7 +43,7 @@
                        Margin="0,0,0,0"
                        Padding="0"
                        Foreground="Red"
-                       VerticalAlignment="Center" />
+                       VerticalAlignment="Top" />
                 <Label Name="LabelColumns"
                        Content="Select:"
                        Grid.Row="0"
@@ -71,7 +72,7 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="8" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="22" />
                 </Grid.ColumnDefinitions>
@@ -83,7 +84,7 @@
                        Margin="0,0,0,0"
                        Padding="0"
                        Foreground="Red"
-                       VerticalAlignment="Center" />
+                       VerticalAlignment="Top" />
                 <Label Name="LabelTables"
                     Content="From:"
                     Grid.Row="0"
@@ -139,7 +140,7 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="8" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
@@ -150,7 +151,7 @@
                        Margin="0,0,0,0"
                        Padding="0"
                        Foreground="Red"
-                       VerticalAlignment="Center" />
+                       VerticalAlignment="Top" />
                 <Label Name="LabelWhere"
                        Content="Where:"
                        Grid.Row="0"
@@ -177,7 +178,7 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="8" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
@@ -207,7 +208,7 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="8" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
@@ -237,7 +238,7 @@
                     <RowDefinition Height="28" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="8" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
@@ -248,7 +249,7 @@
                        Margin="0,0,0,0"
                        Padding="0"
                        Foreground="Red"
-                       VerticalAlignment="Center" />
+                       VerticalAlignment="Top" />
                 <Label Name="LabelOutputFormat"
                        Content="Output File Format:"
                        Grid.Row="0"
@@ -277,7 +278,7 @@
                 </Grid.RowDefinitions>
 
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="8" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
@@ -355,7 +356,17 @@
                 -->
             </Grid>
 
-            <Grid Name="GridButtons" Grid.Row="7" Margin="0,12,0,0">
+            <controls:MessageLabel
+                    Grid.Row="7"
+                    Margin="0,8,0,0"
+                    MessageType="{Binding Path=MessageLevel}"
+                    Severity="High"
+                    ShowHelp="False"
+                    Content="{Binding Path=Message}"
+                    CanClose="False"
+                    Visibility="{Binding Path=HasMessage}" />
+
+            <Grid Name="GridButtons" Grid.Row="8" Margin="0,12,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="24" />
                 </Grid.RowDefinitions>
@@ -448,26 +459,49 @@
                 </Button>
             </Grid>
 
-            <Grid Name="GridProcessing" Grid.Row="8" Margin="0,16,0,0" Height="Auto">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="22" />
-                    <ColumnDefinition Width="6" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+            <Grid Name="GridProgress" Grid.Row="9" Margin="0,15,0,0" Height="Auto">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="22" />
+                    <RowDefinition Height="24" />
+                </Grid.RowDefinitions>
 
-                <controls:CircularAnimationControl Name="ProcessingAnimation"
-                    Grid.Column="0"
-                    Foreground="{DynamicResource Esri_BorderSelectedBrush }"
-                    SpeedRatio="0.5"
-                    Width="22"
-                    Height="22"
-                    Visibility="{Binding ProcessingAnimation}" />
-                <Label Name="LabelProcessing"
-                       Grid.Column="2"
-                       VerticalAlignment="Center"
-                       Padding="0"
-                       BorderThickness="0"
-                       Content="{Binding Path=ProcessingLabel}" />
+                <Grid Name="GridProcessStatus" Grid.Row="0" Visibility="{Binding IsProcessing}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="22" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <controls:CircularAnimationControl
+                        Grid.Column="0"
+                        Foreground="{DynamicResource Esri_BorderSelectedBrush }"
+                        SpeedRatio="0.5"
+                        Width="22"
+                        Height="22"
+                        Visibility="{Binding IsProcessing}" />
+                    <TextBlock Name="TextBlockProcess"
+                               Grid.Column="1"
+                               Margin="5,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="{Binding ProcessStatus}" />
+                </Grid>
+
+                <Grid Name="GridProgressAnimation" Grid.Row="1" Margin="0,5,0,0" Visibility="{Binding ProgressAnimating}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ProgressBar x:Name="ProgressBar"
+                                 Grid.Column="0"
+                                 Height="22"
+                                 Margin="0,0,0,0"
+                                 HorizontalAlignment="Stretch"
+                                 Minimum="0"
+                                 Maximum="{Binding Path=MaxProgressValue, Mode=OneWay}"
+                                 Value="{Binding Path=ProgressValue, Mode=OneWay}" />
+                    <TextBlock Text="{Binding ProgressText}"
+                               Grid.Column="0"
+                               Margin="6,0,6,0"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Grid>
             </Grid>
         </Grid>
     </DockPanel>

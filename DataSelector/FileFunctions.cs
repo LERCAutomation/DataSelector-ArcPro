@@ -36,15 +36,18 @@ namespace DataTools
         /// Check if a directory exists.
         /// </summary>
         /// <param name="filePath"></param>
-        /// <returns></returns>
+        /// <returns>bool</returns>
         public static bool DirExists(string filePath)
         {
             // Check input first.
-            if (filePath == null) return false;
+            if (string.IsNullOrEmpty(filePath))
+                return false;
 
             // Check if the directory exists.
             DirectoryInfo myDir = new(filePath);
-            if (myDir.Exists == false) return false;
+            if (!myDir.Exists)
+                return false;
+
             return true;
         }
 
@@ -56,11 +59,13 @@ namespace DataTools
         public static string GetDirectoryName(string fullPath)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(fullPath)) return null;
+            if (string.IsNullOrEmpty(fullPath))
+                return null;
 
             // Get the directory name.
             FileInfo fileInfo = new(fullPath);
             string dirName = fileInfo.DirectoryName;
+
             return dirName;
         }
 
@@ -73,9 +78,17 @@ namespace DataTools
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="fileName"></param>
-        /// <returns></returns>
+        /// <returns>bool</returns>
         public static bool FileExists(string filePath, string fileName)
         {
+            // Check input first.
+            if (string.IsNullOrEmpty(filePath))
+                return false;
+
+            // Check input first.
+            if (string.IsNullOrEmpty(fileName))
+                return false;
+
             // If the directory exists.
             if (DirExists(filePath))
             {
@@ -102,15 +115,18 @@ namespace DataTools
         /// Check if a file exists from a full path.
         /// </summary>
         /// <param name="fullPath"></param>
-        /// <returns></returns>
+        /// <returns>bool</returns>
         public static bool FileExists(string fullPath)
         {
             // Check input first.
-            if (fullPath == null) return false;
+            if (string.IsNullOrEmpty(fullPath))
+                return false;
 
             // Check if the file exists.
             FileInfo fileInfo = new(fullPath);
-            if (fileInfo.Exists) return true;
+            if (fileInfo.Exists)
+                return true;
+
             return false;
         }
 
@@ -118,15 +134,17 @@ namespace DataTools
         /// Get the name of a file from a full path.
         /// </summary>
         /// <param name="fullPath"></param>
-        /// <returns></returns>
+        /// <returns>string</returns>
         public static string GetFileName(string fullPath)
         {
             // Check input first.
-            if (fullPath == null) return null;
+            if (string.IsNullOrEmpty(fullPath))
+                return null;
 
             // Get the file name.
             FileInfo fileInfo = new(fullPath);
             string fileName = fileInfo.Name;
+
             return fileName;
         }
 
@@ -134,15 +152,17 @@ namespace DataTools
         /// Get a file extension from a full path.
         /// </summary>
         /// <param name="fullPath"></param>
-        /// <returns></returns>
+        /// <returns>string</returns>
         public static string GetExtension(string fullPath)
         {
             // Check input first.
-            if (fullPath == null) return null;
+            if (string.IsNullOrEmpty(fullPath))
+                return null;
 
             // Get the file extension.
             FileInfo fileInfo = new(fullPath);
             string aExt = fileInfo.Extension;
+
             return aExt;
         }
 
@@ -150,9 +170,13 @@ namespace DataTools
         /// Get all files in a directory.
         /// </summary>
         /// <param name="filePath"></param>
-        /// <returns></returns>
+        /// <returns>List<string></returns>
         public static List<string> GetAllFilesInDirectory(string filePath)
         {
+            // Check input first.
+            if (string.IsNullOrEmpty(filePath))
+                return null;
+
             List<string> myFileList = [];
             if (DirExists(filePath))
             {
@@ -162,6 +186,7 @@ namespace DataTools
                     myFileList.Add(aFile);
                 }
             }
+
             return myFileList;
         }
 
@@ -169,11 +194,12 @@ namespace DataTools
         /// Get a full file name without the extension.
         /// </summary>
         /// <param name="fullName"></param>
-        /// <returns></returns>
+        /// <returns>string</returns>
         public static string GetFullNameWithoutExtension(string fullName)
         {
             // Check input first.
-            if (fullName == null) return null;
+            if (string.IsNullOrEmpty(fullName))
+                return null;
 
             // Get the directory name.
             string filePath = GetDirectoryName(fullName);
@@ -188,11 +214,12 @@ namespace DataTools
         /// Get a full file name without the extension.
         /// </summary>
         /// <param name="fileName"></param>
-        /// <returns></returns>
+        /// <returns>string</returns>
         public static string GetFileNameWithoutExtension(string fileName)
         {
             // Check input first.
-            if (fileName == null) return null;
+            if (string.IsNullOrEmpty(fileName))
+                return null;
 
             // Get the file name without the extension.
             fileName = Path.GetFileNameWithoutExtension(fileName);
@@ -204,10 +231,14 @@ namespace DataTools
         /// Delete a file.
         /// </summary>
         /// <param name="fullPath"></param>
-        /// <returns></returns>
+        /// <returns>bool</returns>
         public static bool DeleteFile(string fullPath)
         {
-            if (FileFunctions.FileExists(fullPath))
+            // Check input first.
+            if (string.IsNullOrEmpty(fullPath))
+                return false;
+
+            if (FileExists(fullPath))
             {
                 try
                 {
@@ -223,6 +254,40 @@ namespace DataTools
                 return true;
         }
 
+        /// <summary>
+        /// Write a new text file with optional headers.
+        /// </summary>
+        /// <param name="outTable"></param>
+        /// <param name="outHeader"></param>
+        /// <returns>bool</returns>
+        public static bool WriteEmptyTextFile(string outTable, string outHeader)
+        {
+            // Check input first.
+            if (string.IsNullOrEmpty(outTable))
+                return false;
+
+            try
+            {
+                // Open output file.
+                StreamWriter txtFile = new(outTable, false);
+
+                // Write the headers to the file.
+                if (!string.IsNullOrEmpty(outHeader))
+                    txtFile.WriteLine(outHeader);
+
+                // Close the file.
+                txtFile.Close();
+
+                txtFile.Dispose();
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         #endregion Files
 
         #region Logfile
@@ -231,12 +296,16 @@ namespace DataTools
         /// Create a log file.
         /// </summary>
         /// <param name="logFile"></param>
-        /// <returns></returns>
+        /// <returns>bool</returns>
         public static bool CreateLogFile(string logFile)
         {
+            // Check input first.
+            if (string.IsNullOrEmpty(logFile))
+                return false;
+
             StreamWriter myWriter = new(logFile, false);
 
-            myWriter.WriteLine("Log file for Data Selector, started on " + DateTime.Now.ToString());
+            myWriter.WriteLine("Log file started on " + DateTime.Now.ToString());
             myWriter.Close();
             myWriter.Dispose();
             return true;
@@ -247,9 +316,13 @@ namespace DataTools
         /// </summary>
         /// <param name="logFile"></param>
         /// <param name="logLine"></param>
-        /// <returns></returns>
+        /// <returns>bool</returns>
         public static bool WriteLine(string logFile, string logLine)
         {
+            // Check input first.
+            if (string.IsNullOrEmpty(logFile))
+                return false;
+
             try
             {
                 // Add the date and time to the start of the text.

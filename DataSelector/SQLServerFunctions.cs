@@ -1,28 +1,26 @@
-﻿// The Data tools are a suite of ArcGIS Pro addins used to extract
+﻿// The DataTools are a suite of ArcGIS Pro addins used to extract
 // and manage biodiversity information from ArcGIS Pro and SQL Server
 // based on pre-defined or user specified criteria.
 //
 // Copyright © 2024 Andy Foy Consulting.
 //
-// This file is part of DataSelector.
+// This file is part of DataTools suite of programs..
 //
-// DataSelector is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
+// DataTools are free software: you can redistribute it and/or modify
+// them under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// DataSelector is distributed in the hope that it will be useful,
+// DataTools are distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with DataSelector.  If not, see <http://www.gnu.org/licenses/>.
+// along with with program.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.Exceptions;
-
-//using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using System;
 using System.Collections.Generic;
@@ -31,46 +29,6 @@ using System.Threading.Tasks;
 
 namespace DataTools
 {
-    /// <summary>
-    /// Illustrates how to get a Dataset's Definition from a geodatabase.
-    /// </summary>
-    ///
-    /// <remarks>
-    /// <para>
-    /// While it is true classes that are derived from the <see cref="ArcGIS.Core.CoreObjectsBase"/> super class
-    /// consumes native resources (e.g., <see cref="ArcGIS.Core.Data.Geodatabase"/> or <see cref="ArcGIS.Core.Data.FeatureClass"/>),
-    /// you can rest assured that the garbage collector will properly dispose of the unmanaged resources during
-    /// finalization.  However, there are certain workflows that require a <b>deterministic</b> finalization of the
-    /// <see cref="ArcGIS.Core.Data.Geodatabase"/>.  Consider the case of a file geodatabase that needs to be deleted
-    /// on the fly at a particular moment.  Because of the <b>indeterministic</b> nature of garbage collection, we can't
-    /// count on the garbage collector to dispose of the Geodatabase object, thereby removing the <b>lock(s)</b> at the
-    /// moment we want. To ensure a deterministic finalization of important native resources such as a
-    /// <see cref="ArcGIS.Core.Data.Geodatabase"/> or <see cref="ArcGIS.Core.Data.FeatureClass"/>, you should declare
-    /// and instantiate said objects in a <b>using</b> statement.  Alternatively, you can achieve the same result by
-    /// putting the object inside a try block and then calling Dispose() in a finally block.
-    /// </para>
-    /// <para>
-    /// In general, you should always call Dispose() on the following types of objects:
-    /// </para>
-    /// <para>
-    /// - Those that are derived from <see cref="ArcGIS.Core.Data.Datastore"/> (e.g., <see cref="ArcGIS.Core.Data.Geodatabase"/>).
-    /// </para>
-    /// <para>
-    /// - Those that are derived from <see cref="ArcGIS.Core.Data.Dataset"/> (e.g., <see cref="ArcGIS.Core.Data.Table"/>).
-    /// </para>
-    /// <para>
-    /// - <see cref="ArcGIS.Core.Data.RowCursor"/> and <see cref="ArcGIS.Core.Data.RowBuffer"/>.
-    /// </para>
-    /// <para>
-    /// - <see cref="ArcGIS.Core.Data.Row"/> and <see cref="ArcGIS.Core.Data.Feature"/>.
-    /// </para>
-    /// <para>
-    /// - <see cref="ArcGIS.Core.Data.Selection"/>.
-    /// </para>
-    /// <para>
-    /// - <see cref="ArcGIS.Core.Data.VersionManager"/> and <see cref="ArcGIS.Core.Data.Version"/>.
-    /// </para>
-    /// </remarks>
     public class SQLServerFunctions
     {
         #region Fields
@@ -116,7 +74,7 @@ namespace DataTools
         /// the SDE connection works.
         /// </summary>
         /// <param name="sdeFileName"></param>
-        /// <returns></returns>
+        /// <returns>bool</returns>
         public static async Task<bool> CheckSDEConnection(string sdeFileName)
         {
             bool _sdeConnectionValid = false;
@@ -241,7 +199,7 @@ namespace DataTools
         /// Get the fieldName names for the specified table in the geodatabase.
         /// </summary>
         /// <param name="tableName"></param>
-        /// <returns></returns>
+        /// <returns>List<string></returns>
         public async Task<List<string>> GetFieldNamesListAsync(string tableName)
         {
             List<string> fieldNames = [];
@@ -281,7 +239,7 @@ namespace DataTools
         /// Get the fields for the specified table in the geodatabase.
         /// </summary>
         /// <param name="fullPath"></param>
-        /// <returns></returns>
+        /// <returns>IReadOnlyList<Field></returns>
         public async Task<IReadOnlyList<Field>> GetFieldsAsync(string fullPath)
         {
             IReadOnlyList<Field> fields = null;
@@ -319,9 +277,17 @@ namespace DataTools
         /// Get the fields for the specified table in the geodatabase.
         /// </summary>
         /// <param name="tableName"></param>
-        /// <returns></returns>
+        /// <returns>IReadOnlyList<Field></returns>
         public static async Task<IReadOnlyList<Field>> GetFieldNamesAsync(string filePath, string fileName)
         {
+            // Check there is an input file path.
+            if (String.IsNullOrEmpty(filePath))
+                return null;
+
+            // Check there is an input file name.
+            if (String.IsNullOrEmpty(fileName))
+                return null;
+
             IReadOnlyList<Field> fields = null;
 
             try
@@ -353,9 +319,13 @@ namespace DataTools
         /// Get the fields  for the specified table in the geodatabase.
         /// </summary>
         /// <param name="fullPath"></param>
-        /// <returns></returns>
+        /// <returns>IReadOnlyList<Field></returns>
         public static async Task<IReadOnlyList<Field>> GetFieldNamesAsync(string fullPath)
         {
+            // Check there is an input file path.
+            if (String.IsNullOrEmpty(fullPath))
+                return null;
+
             return await GetFieldNamesAsync(FileFunctions.GetDirectoryName(fullPath), FileFunctions.GetFileName(fullPath));
         }
 
@@ -368,13 +338,18 @@ namespace DataTools
         /// Any SQL is permitted (DDL or DML), but no results can be returned.
         /// </summary>
         /// <param name="sqlStatement"></param>
-        public async Task ExecuteSQLOnGeodatabase(string sqlStatement)
+        /// <returns>bool</returns>
+        public async Task<bool> ExecuteSQLOnGeodatabase(string sqlStatement)
         {
+            // Check there is a sql statement.
+            if (String.IsNullOrEmpty(sqlStatement))
+                return false;
+
             // Open a connection to the geodatabase if not already open.
             if (!GeodatabaseOpen) await OpenGeodatabase();
 
             // If still not open.
-            if (!GeodatabaseOpen) return;
+            if (!GeodatabaseOpen) return false;
 
             await QueuedTask.Run(() =>
             {
@@ -389,41 +364,77 @@ namespace DataTools
                     throw;
                 }
             });
+
+            return true;
         }
 
         #endregion Execute SQL
 
         #region Text Files
 
-        public static bool WriteEmptyTextFile(string outFile, string header)
-        {
-            // Open the output file.
-            using StreamWriter theOutput = new(outFile, false);
-
-            // Write the headers to the file.
-            theOutput.WriteLine(header);
-
-            // Close the file.
-            theOutput.Close();
-
-            return true;
-        }
-
+        /// <summary>
+        /// Copy a table to a text file.
+        /// </summary>
+        /// <param name="inTable"></param>
+        /// <param name="outFile"></param>
+        /// <param name="isSpatial"></param>
+        /// <param name="append"></param>
+        /// <returns>bool</returns>
         public async Task<bool> CopyToCSVAsync(string inTable, string outFile, bool isSpatial, bool append)
         {
+            // Check if there is an input table name.
+            if (String.IsNullOrEmpty(inTable))
+                return false;
+
+            // Check if there is an output file.
+            if (String.IsNullOrEmpty(outFile))
+                return false;
+
             string separator = ",";
             return await CopyToTextFileAsync(inTable, outFile, separator, isSpatial, append);
         }
 
+        /// <summary>
+        /// Copy a table to a text file.
+        /// </summary>
+        /// <param name="inTable"></param>
+        /// <param name="outFile"></param>
+        /// <param name="isSpatial"></param>
+        /// <param name="append"></param>
+        /// <returns>bool</returns>
         public async Task<bool> CopyToTabAsync(string inTable, string outFile, bool isSpatial, bool append)
         {
+            // Check if there is an input table name.
+            if (String.IsNullOrEmpty(inTable))
+                return false;
+
+            // Check if there is an output file.
+            if (String.IsNullOrEmpty(outFile))
+                return false;
+
             string separator = "\t";
             return await CopyToTextFileAsync(inTable, outFile, separator, isSpatial, append);
         }
 
+        /// <summary>
+        /// Copy a table to a text file.
+        /// </summary>
+        /// <param name="inTable"></param>
+        /// <param name="outFile"></param>
+        /// <param name="separator"></param>
+        /// <param name="isSpatial"></param>
+        /// <param name="append"></param>
+        /// <returns>bool</returns>
         public async Task<bool> CopyToTextFileAsync(string inTable, string outFile, string separator, bool isSpatial, bool append)
         {
-            // This sub copies the input table to a text file.
+            // Check if there is an input table name.
+            if (String.IsNullOrEmpty(inTable))
+                return false;
+
+            // Check if there is an output file.
+            if (String.IsNullOrEmpty(outFile))
+                return false;
+
             string filePath = FileFunctions.GetDirectoryName(inTable);
             string fileName = FileFunctions.GetFileName(inTable);
 
@@ -436,32 +447,33 @@ namespace DataTools
 
             int intFieldCount = fields.Count;
 
+            // Iterate through the fields in the collection to create header
+            // and flag which fields to ignore.
+            for (int i = 0; i < intFieldCount; i++)
+            {
+                // Get the fieldName name.
+                fieldName = fields[i].Name;
+
+                Field field = fields[i];
+
+                // Get the fieldName type.
+                FieldType fieldType = field.FieldType;
+
+                string fieldTypeName = fieldType.ToString();
+
+                if (fieldName.Equals("sp_geometry", StringComparison.OrdinalIgnoreCase) || fieldName.Equals("shape", StringComparison.OrdinalIgnoreCase))
+                    ignoreField = i;
+                else
+                    header = header + fieldName + separator;
+            }
+
             if (!append)
             {
-                // Iterate through the fields in the collection to create header.
-                for (int i = 0; i < intFieldCount; i++)
-                {
-                    // Get the fieldName name.
-                    fieldName = fields[i].Name;
-
-                    Field field = fields[i];
-
-                    // Get the fieldName type.
-                    FieldType fieldType = field.FieldType;
-
-                    string fieldTypeName = fieldType.ToString();
-
-                    if (fieldName == "SP_GEOMETRY" || fieldName == "Shape")
-                        ignoreField = i;
-                    else
-                        header = header + fieldName + separator;
-                }
-
                 // Remove the final separator from the header.
                 header = header.Substring(0, header.Length - 1);
 
                 // Write the header to the output file.
-                WriteEmptyTextFile(outFile, header);
+                FileFunctions.WriteEmptyTextFile(outFile, header);
             }
 
             // Open output file.
@@ -562,9 +574,13 @@ namespace DataTools
         /// Check if a feature class exists in the database.
         /// </summary>
         /// <param name="featureClassName"></param>
-        /// <returns></returns>
+        /// <returns>bool</returns>
         public async Task<bool> FeatureClassExistsAsync(string featureClassName)
         {
+            // Check there is an input feature class name.
+            if (String.IsNullOrEmpty(featureClassName))
+                return false;
+
             bool exists = false;
 
             // Open a connection to the geodatabase if not already open.
@@ -603,6 +619,10 @@ namespace DataTools
         /// <returns></returns>
         public async Task<long> FeatureClassCountRowsAsync(string featureClassName)
         {
+            // Check there is an input feature class name.
+            if (String.IsNullOrEmpty(featureClassName))
+                return -1;
+
             long rows = 0;
 
             // Open a connection to the geodatabase if not already open.
@@ -624,15 +644,11 @@ namespace DataTools
 
                     // Count the rows in the feature class.
                     rows = featureClass.GetCount();
-
-                    // Dispose of the feature class and definition.
-                    //featureClass.Dispose();
-                    //featureClassDefinition.Dispose();
                 }
                 catch
                 {
                     // GetDefinition or open dataset throw an exception if the definition doesn't exist.
-                    rows = 0;
+                    rows = -1;
                 }
             });
 
@@ -647,9 +663,13 @@ namespace DataTools
         /// Check if a table exists in the database.
         /// </summary>
         /// <param name="tableName"></param>
-        /// <returns></returns>
+        /// <returns>bool</returns>
         public async Task<bool> TableExistsAsync(string tableName)
         {
+            // Check there is an input table name.
+            if (String.IsNullOrEmpty(tableName))
+                return false;
+
             bool exists = false;
 
             // Open a connection to the geodatabase if not already open.
@@ -684,9 +704,13 @@ namespace DataTools
         /// Count the rows in a table within the database.
         /// </summary>
         /// <param name="tableName"></param>
-        /// <returns></returns>
+        /// <returns>long</returns>
         public async Task<long> TableCountRowsAsync(string tableName)
         {
+            // Check there is an input table name.
+            if (String.IsNullOrEmpty(tableName))
+                return -1;
+
             long rows = 0;
 
             // Open a connection to the geodatabase if not already open.
@@ -708,15 +732,11 @@ namespace DataTools
 
                     // Count the rows in the table.
                     rows = table.GetCount();
-
-                    // Dispose of the feature class and definition.
-                    //table.Dispose();
-                    //tableDefinition.Dispose();
                 }
                 catch
                 {
                     // GetDefinition or open dataset throw an exception if the definition doesn't exist.
-                    rows = 0;
+                    rows = -1;
                 }
             });
 
