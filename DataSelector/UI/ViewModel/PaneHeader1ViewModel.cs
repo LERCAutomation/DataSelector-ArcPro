@@ -89,7 +89,7 @@ namespace DataSelector.UI
             ToolConfig toolConfig = new(_xmlFolder, _displayName, false);
 
             // If the tool config file can't be found or hasn't been loaded.
-            if (!toolConfig.XMLFound || !toolConfig.XMLLoaded)
+            if ((!toolConfig.XMLFound) || (!toolConfig.XMLLoaded))
             {
                 // Clear the list and selection.
                 _availableXMLFiles = [];
@@ -224,8 +224,8 @@ namespace DataSelector.UI
         {
             get
             {
-                return !_dockPane.QueryRunning
-                    && !_dockPane.TableListLoading;
+                return ((!_dockPane.QueryRunning)
+                    && (!_dockPane.TableListLoading));
             }
         }
 
@@ -271,7 +271,7 @@ namespace DataSelector.UI
         {
             get
             {
-                return !string.IsNullOrEmpty(XMLFolder);
+                return (!string.IsNullOrEmpty(XMLFolder));
             }
         }
 
@@ -352,9 +352,9 @@ namespace DataSelector.UI
         {
             get
             {
-                return !string.IsNullOrEmpty(SelectedXMLProfile)
-                    && !_dockPane.QueryRunning
-                    && !_dockPane.TableListLoading;
+                return ((!string.IsNullOrEmpty(SelectedXMLProfile))
+                    && (!_dockPane.QueryRunning)
+                    && (!_dockPane.TableListLoading));
             }
         }
 
@@ -407,7 +407,7 @@ namespace DataSelector.UI
         {
             get
             {
-                var imageSource = Application.Current.Resources["FolderOpenState16"] as ImageSource;
+                var imageSource = System.Windows.Application.Current.Resources["FolderOpenState16"] as ImageSource;
                 return imageSource;
             }
         }
@@ -436,7 +436,7 @@ namespace DataSelector.UI
                 return;
 
             // If the tool config file can't be found or hasn't been loaded.
-            if (!toolConfig.XMLFound || !toolConfig.XMLLoaded)
+            if ((!toolConfig.XMLFound) || (!toolConfig.XMLLoaded))
             {
                 // Clear the list and selection.
                 _availableXMLFiles = [];

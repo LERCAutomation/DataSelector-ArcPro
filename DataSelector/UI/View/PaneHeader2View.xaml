@@ -14,9 +14,9 @@
 
         <Grid DockPanel.Dock="Top">
             <Grid.RowDefinitions>
-                <RowDefinition MinHeight="166" Height="*" />
+                <RowDefinition MinHeight="151" Height="*" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition MinHeight="91" Height="*" />
+                <RowDefinition MinHeight="76" Height="*" />
                 <RowDefinition MinHeight="76" Height="*" />
                 <RowDefinition MinHeight="76" Height="*" />
                 <RowDefinition Height="Auto" />
@@ -232,7 +232,7 @@
                          VerticalScrollBarVisibility="Visible" />
             </Grid>
 
-            <Grid Name="GridOutputFormat" Grid.Row="5" Margin="0,4,0,4">
+            <Grid Name="GridOutputFormat" Grid.Row="5" Margin="0,4,0,4" Background="Transparent">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="28" />
@@ -250,6 +250,29 @@
                        Padding="0"
                        Foreground="Red"
                        VerticalAlignment="Top" />
+                <!--<controls:InfoButton
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Width="12"
+                        Margin="0,0,0,0"
+                        HorizontalAlignment="Left"
+				        Header="Open log file"
+				        Description="Open the log file when the process has complete?">
+                    <controls:InfoButton.Style>
+                        <Style TargetType="{x:Type controls:InfoButton}">
+                            <Setter Property="Visibility" Value="Hidden" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsMouseOver,
+                                    ElementName=GridOutputFormat}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="DodgerBlue" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </controls:InfoButton.Style>
+                </controls:InfoButton>-->
                 <Label Name="LabelOutputFormat"
                        Content="Output File Format:"
                        Grid.Row="0"
@@ -260,7 +283,7 @@
                 <ComboBox Name="ComboBoxOutputFormat"
                           Grid.Row="1"
                           Grid.Column="1"
-                          Margin="0,0,0,2"
+                          Margin="0,0,0,0"
                           VerticalAlignment="Center"
                           IsEditable="False"
                           IsReadOnly="True"
@@ -273,7 +296,6 @@
 
             <Grid Name="GridOptions" Grid.Row="6" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
@@ -309,7 +331,7 @@
                 <CheckBox Name="CheckBoxClearLogFile"
                           Grid.Row="0"
                           Grid.Column="1"
-                          Margin="0,2,4,0"
+                          Margin="0,0,4,0"
                           Padding="0"
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
@@ -319,21 +341,13 @@
                        Content="Clear log file?"
                        Grid.Row="0"
                        Grid.Column="2"
-                       Margin="2,2,0,0"
+                       Margin="2,0,0,0"
                        Padding="0"
                        VerticalAlignment="Center" />
-                <!--
-                <controls:InfoButton
-                        Grid.Row="0"
-                        Grid.Column="3"
-                        Margin="2,0,0,0"
-				        Header="Clear log file"
-				        Description="Clear the log file before the process starts?" />
-                -->
                 <CheckBox Name="CheckBoxOpenLogFile"
                           Grid.Row="0"
                           Grid.Column="5"
-                          Margin="0,2,4,0"
+                          Margin="0,0,4,0"
                           Padding="0"
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
@@ -343,30 +357,12 @@
                        Content="Open log file when run?"
                        Grid.Row="0"
                        Grid.Column="6"
-                       Margin="2,2,0,0"
+                       Margin="2,0,0,0"
                        Padding="0"
                        VerticalAlignment="Center" />
-                <!--
-                <controls:InfoButton
-                        Grid.Row="0"
-                        Grid.Column="7"
-                        Margin="2,0,0,0"
-				        Header="Open log file"
-				        Description="Open the log file when the process has complete?" />
-                -->
             </Grid>
 
-            <controls:MessageLabel
-                    Grid.Row="7"
-                    Margin="0,8,0,0"
-                    MessageType="{Binding Path=MessageLevel}"
-                    Severity="High"
-                    ShowHelp="False"
-                    Content="{Binding Path=Message}"
-                    CanClose="False"
-                    Visibility="{Binding Path=HasMessage}" />
-
-            <Grid Name="GridButtons" Grid.Row="8" Margin="0,12,0,0">
+            <Grid Name="GridButtons" Grid.Row="7" Margin="0,8,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="24" />
                 </Grid.RowDefinitions>
@@ -376,7 +372,6 @@
                     <ColumnDefinition Width="48" />
                     <ColumnDefinition Width="48" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="70" />
                 </Grid.ColumnDefinitions>
 
                 <Button Name="ButtonLoad"
@@ -435,74 +430,18 @@
                         TabIndex="4"
                         Content="Verify"
                         ToolTip="Verify the query is valid" />
-                <Button Name="ButtonRun"
-                        Grid.Column="5"
-                        Margin="2,0,0,0"
-                        Padding="0"
-                        MinWidth="0"
-                        MinHeight="0"
-                        Command="{Binding Path=RunCommand}"
-                        IsCancel="False"
-                        IsDefault="True"
-                        IsEnabled="{Binding Path=RunButtonEnabled}"
-                        TabIndex="5"
-                        Style="{DynamicResource Esri_SimpleButton}">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="{Binding ButtonRunImg}" Width="16" Height="16" />
-                        <Label Content="Run" Padding="4,0,0,0" />
-                    </StackPanel>
-                    <Button.ToolTip>
-                        <ToolTip>
-                            <TextBlock Text="Run the query" FontWeight="Normal"></TextBlock>
-                        </ToolTip>
-                    </Button.ToolTip>
-                </Button>
             </Grid>
 
-            <Grid Name="GridProgress" Grid.Row="9" Margin="0,15,0,0" Height="Auto">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="22" />
-                    <RowDefinition Height="24" />
-                </Grid.RowDefinitions>
-
-                <Grid Name="GridProcessStatus" Grid.Row="0" Visibility="{Binding IsProcessing}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="22" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <controls:CircularAnimationControl
-                        Grid.Column="0"
-                        Foreground="{DynamicResource Esri_BorderSelectedBrush }"
-                        SpeedRatio="0.5"
-                        Width="22"
-                        Height="22"
-                        Visibility="{Binding IsProcessing}" />
-                    <TextBlock Name="TextBlockProcess"
-                               Grid.Column="1"
-                               Margin="5,0,0,0"
-                               VerticalAlignment="Center"
-                               Text="{Binding ProcessStatus}" />
-                </Grid>
-
-                <Grid Name="GridProgressAnimation" Grid.Row="1" Margin="0,5,0,0" Visibility="{Binding ProgressAnimating}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ProgressBar x:Name="ProgressBar"
-                                 Grid.Column="0"
-                                 Height="22"
-                                 Margin="0,0,0,0"
-                                 HorizontalAlignment="Stretch"
-                                 Minimum="0"
-                                 Maximum="{Binding Path=MaxProgressValue, Mode=OneWay}"
-                                 Value="{Binding Path=ProgressValue, Mode=OneWay}" />
-                    <TextBlock Text="{Binding ProgressText}"
-                               Grid.Column="0"
-                               Margin="6,0,6,0"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
-                </Grid>
-            </Grid>
+            <controls:MessageLabel
+                    Grid.Row="8"
+                    Margin="0,8,0,0"
+                    Height="24"
+                    MessageType="{Binding Path=MessageLevel}"
+                    Severity="High"
+                    ShowHelp="False"
+                    Content="{Binding Path=Message}"
+                    CanClose="False"
+                    Visibility="{Binding Path=HasMessage}" />
         </Grid>
     </DockPanel>
 </UserControl>

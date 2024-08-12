@@ -30,6 +30,9 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using System.Windows.Media;
+using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace DataSelector.UI
 {
@@ -131,6 +134,32 @@ namespace DataSelector.UI
         }
 
         #endregion ViewModelBase Members
+
+        #region Controls Enabled
+
+        /// <summary>
+        /// Can the Run button be pressed?
+        /// </summary>
+        /// <value></value>
+        /// <returns></returns>
+        /// <remarks></remarks>
+        public bool RunButtonEnabled
+        {
+            get
+            {
+                if (_paneH2VM == null)
+                    return false;
+
+                return (_paneH2VM.RunButtonEnabled);
+            }
+        }
+
+        public void CheckRunButton()
+        {
+            OnPropertyChanged(nameof(RunButtonEnabled));
+        }
+
+        #endregion Controls Enabled
 
         #region Properties
 
@@ -266,6 +295,18 @@ namespace DataSelector.UI
             set { _helpURL = value; }
         }
 
+        /// <summary>
+        /// Get the image for the Run button.
+        /// </summary>
+        public static ImageSource ButtonRunImg
+        {
+            get
+            {
+                var imageSource = Application.Current.Resources["GenericRun16"] as ImageSource;
+                return imageSource;
+            }
+        }
+
         #endregion Properties
 
         #region Methods
@@ -354,6 +395,199 @@ namespace DataSelector.UI
         }
 
         #endregion Methods
+
+        #region Processing
+
+        /// <summary>
+        /// Is the form processing?
+        /// </summary>
+        public Visibility IsProcessing
+        {
+            get
+            {
+                if (_processStatus != null)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+        }
+
+        private double _progressValue;
+
+        /// <summary>
+        /// Gets the value to set on the progress
+        /// </summary>
+        public double ProgressValue
+        {
+            get
+            {
+                return _progressValue;
+            }
+            set
+            {
+                _progressValue = value;
+
+                OnPropertyChanged(nameof(ProgressValue));
+            }
+        }
+
+        private double _maxProgressValue;
+
+        /// <summary>
+        /// Gets the max value to set on the progress
+        /// </summary>
+        public double MaxProgressValue
+        {
+            get
+            {
+                return _maxProgressValue;
+            }
+            set
+            {
+                _maxProgressValue = value;
+
+                OnPropertyChanged(nameof(MaxProgressValue));
+            }
+        }
+
+        private string _processStatus;
+
+        /// <summary>
+        /// ProgressStatus Text
+        /// </summary>
+        public string ProcessStatus
+        {
+            get
+            {
+                return _processStatus;
+            }
+            set
+            {
+                _processStatus = value;
+
+                OnPropertyChanged(nameof(ProcessStatus));
+                OnPropertyChanged(nameof(IsProcessing));
+                OnPropertyChanged(nameof(ProgressText));
+                OnPropertyChanged(nameof(ProgressAnimating));
+            }
+        }
+
+        private string _progressText;
+
+        /// <summary>
+        /// Progress bar Text
+        /// </summary>
+        public string ProgressText
+        {
+            get
+            {
+                return _progressText;
+            }
+            set
+            {
+                _progressText = value;
+
+                OnPropertyChanged(nameof(ProgressText));
+            }
+        }
+
+        /// <summary>
+        /// Is the progress wheel animating?
+        /// </summary>
+        public Visibility ProgressAnimating
+        {
+            get
+            {
+                if (_progressText != null)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
+        /// Update the progress bar.
+        /// </summary>
+        /// <param name="processText"></param>
+        /// <param name="progressValue"></param>
+        /// <param name="maxProgressValue"></param>
+        public void ProgressUpdate(string processText = null, int progressValue = -1, int maxProgressValue = -1)
+        {
+            if (Application.Current.Dispatcher.CheckAccess())
+            {
+                // Check if the values have changed and update them if they have.
+                if (progressValue >= 0)
+                    ProgressValue = progressValue;
+
+                if (maxProgressValue != 0)
+                    MaxProgressValue = maxProgressValue;
+
+                if (_maxProgressValue > 0)
+                    ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
+                else
+                    ProgressText = null;
+
+                ProcessStatus = processText;
+            }
+            else
+            {
+                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
+                  () =>
+                  {
+                      // Check if the values have changed and update them if they have.
+                      if (progressValue >= 0)
+                          ProgressValue = progressValue;
+
+                      if (maxProgressValue != 0)
+                          MaxProgressValue = maxProgressValue;
+
+                      if (_maxProgressValue > 0)
+                          ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
+                      else
+                          ProgressText = null;
+
+                      ProcessStatus = processText;
+                  });
+            }
+        }
+
+        #endregion Processing
+
+        #region Run Command
+
+        private ICommand _runCommand;
+
+        /// <summary>
+        /// Create Run button command.
+        /// </summary>
+        /// <value></value>
+        /// <returns></returns>
+        /// <remarks></remarks>
+        public ICommand RunCommand
+        {
+            get
+            {
+                if (_runCommand == null)
+                {
+                    Action<object> runAction = new(RunCommandClick);
+                    _runCommand = new RelayCommand(runAction, param => RunButtonEnabled);
+                }
+
+                return _runCommand;
+            }
+        }
+
+        /// <summary>
+        /// Handles event when Run button is clicked.
+        /// </summary>
+        /// <param name="param"></param>
+        /// <remarks></remarks>
+        private async void RunCommandClick(object param)
+        {
+            _paneH2VM.RunQuery();
+        }
+
+        #endregion Run Command
 
         #region Debugging Aides
 

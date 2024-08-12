@@ -41,8 +41,6 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using Application = System.Windows.Application;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace DataSelector.UI
@@ -166,8 +164,8 @@ namespace DataSelector.UI
         {
             get
             {
-                return _processStatus == null
-                    && _tablesList != null;
+                return ((_dockPane.ProcessStatus == null)
+                    && (_tablesList != null));
             }
         }
 
@@ -178,7 +176,7 @@ namespace DataSelector.UI
         {
             get
             {
-                return _processStatus == null;
+                return (_dockPane.ProcessStatus == null);
             }
         }
 
@@ -192,12 +190,12 @@ namespace DataSelector.UI
         {
             get
             {
-                return _processStatus == null
+                return ((_dockPane.ProcessStatus == null)
                     && (_selectedTable != null
                     || !string.IsNullOrEmpty(ColumnsText)
                     || !string.IsNullOrEmpty(WhereText)
                     || !string.IsNullOrEmpty(GroupByText)
-                    || !string.IsNullOrEmpty(OrderByText));
+                    || !string.IsNullOrEmpty(OrderByText)));
             }
         }
 
@@ -211,7 +209,7 @@ namespace DataSelector.UI
         {
             get
             {
-                return _processStatus == null;
+                return (_dockPane.ProcessStatus == null);
             }
         }
 
@@ -225,11 +223,11 @@ namespace DataSelector.UI
         {
             get
             {
-                return _processStatus == null
+                return ((_dockPane.ProcessStatus == null)
                     && (!string.IsNullOrEmpty(ColumnsText)
                     || !string.IsNullOrEmpty(WhereText)
                     || !string.IsNullOrEmpty(GroupByText)
-                    || !string.IsNullOrEmpty(OrderByText));
+                    || !string.IsNullOrEmpty(OrderByText)));
             }
         }
 
@@ -240,11 +238,11 @@ namespace DataSelector.UI
         {
             get
             {
-                return _processStatus == null
-                    && _tablesList != null
-                    && (_selectedTable != null
-                    || !string.IsNullOrEmpty(WhereText) && WhereText.Length > 5 && WhereText.Substring(0, 5).Equals("from ", StringComparison.OrdinalIgnoreCase))
-                    && !string.IsNullOrEmpty(ColumnsText);
+                return ((_dockPane.ProcessStatus == null)
+                    && (_tablesList != null)
+                    && ((_selectedTable != null
+                    || !string.IsNullOrEmpty(WhereText) && WhereText.Length > 5 && WhereText.Substring(0, 5).Equals("from ", StringComparison.OrdinalIgnoreCase)))
+                    && (!string.IsNullOrEmpty(ColumnsText)));
             }
         }
 
@@ -255,12 +253,12 @@ namespace DataSelector.UI
         {
             get
             {
-                return _processStatus == null
-                    && _tablesList != null
-                    && (_selectedTable != null
-                    || !string.IsNullOrEmpty(WhereText) && WhereText.Length > 5 && WhereText.Substring(0, 5).Equals("from ", StringComparison.OrdinalIgnoreCase))
-                    && !string.IsNullOrEmpty(ColumnsText)
-                    && !string.IsNullOrEmpty(_selectedOutputFormat);
+                return ((_dockPane.ProcessStatus == null)
+                    && (_tablesList != null)
+                    && ((_selectedTable != null)
+                    || (!string.IsNullOrEmpty(WhereText) && WhereText.Length > 5 && WhereText.Substring(0, 5).Equals("from ", StringComparison.OrdinalIgnoreCase)))
+                    && (!string.IsNullOrEmpty(ColumnsText))
+                    && (!string.IsNullOrEmpty(_selectedOutputFormat)));
             }
         }
 
@@ -312,7 +310,7 @@ namespace DataSelector.UI
         {
             get
             {
-                if (_processStatus != null
+                if (_dockPane.ProcessStatus != null
                 || string.IsNullOrEmpty(_message))
                     return Visibility.Collapsed;
                 else
@@ -335,163 +333,6 @@ namespace DataSelector.UI
         }
 
         #endregion Message
-
-        #region Processing
-
-        /// <summary>
-        /// Is the form processing?
-        /// </summary>
-        public Visibility IsProcessing
-        {
-            get
-            {
-                if (_processStatus != null)
-                    return Visibility.Visible;
-                else
-                    return Visibility.Collapsed;
-            }
-        }
-
-        private double _progressValue;
-
-        /// <summary>
-        /// Gets the value to set on the progress
-        /// </summary>
-        public double ProgressValue
-        {
-            get
-            {
-                return _progressValue;
-            }
-            set
-            {
-                _progressValue = value;
-
-                OnPropertyChanged(nameof(ProgressValue));
-            }
-        }
-
-        private double _maxProgressValue;
-
-        /// <summary>
-        /// Gets the max value to set on the progress
-        /// </summary>
-        public double MaxProgressValue
-        {
-            get
-            {
-                return _maxProgressValue;
-            }
-            set
-            {
-                _maxProgressValue = value;
-
-                OnPropertyChanged(nameof(MaxProgressValue));
-            }
-        }
-
-        private string _processStatus;
-
-        /// <summary>
-        /// ProgressStatus Text
-        /// </summary>
-        public string ProcessStatus
-        {
-            get
-            {
-                return _processStatus;
-            }
-            set
-            {
-                _processStatus = value;
-
-                OnPropertyChanged(nameof(ProcessStatus));
-                OnPropertyChanged(nameof(IsProcessing));
-                OnPropertyChanged(nameof(ProgressText));
-                OnPropertyChanged(nameof(ProgressAnimating));
-            }
-        }
-
-        private string _progressText;
-
-        /// <summary>
-        /// Progress bar Text
-        /// </summary>
-        public string ProgressText
-        {
-            get
-            {
-                return _progressText;
-            }
-            set
-            {
-                _progressText = value;
-
-                OnPropertyChanged(nameof(ProgressText));
-            }
-        }
-
-        /// <summary>
-        /// Is the progress wheel animating?
-        /// </summary>
-        public Visibility ProgressAnimating
-        {
-            get
-            {
-                if (_progressText != null)
-                    return Visibility.Visible;
-                else
-                    return Visibility.Collapsed;
-            }
-        }
-
-        /// <summary>
-        /// Update the progress bar.
-        /// </summary>
-        /// <param name="processText"></param>
-        /// <param name="progressValue"></param>
-        /// <param name="maxProgressValue"></param>
-        private void ProgressUpdate(string processText = null, int progressValue = -1, int maxProgressValue = -1)
-        {
-            if (Application.Current.Dispatcher.CheckAccess())
-            {
-                // Check if the values have changed and update them if they have.
-                if (progressValue >= 0)
-                    ProgressValue = progressValue;
-
-                if (maxProgressValue != 0)
-                    MaxProgressValue = maxProgressValue;
-
-                if (_maxProgressValue > 0)
-                    ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
-                else
-                    ProgressText = null;
-
-                ProcessStatus = processText;
-            }
-            else
-            {
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
-                  () =>
-                  {
-                      // Check if the values have changed and update them if they have.
-                      if (progressValue >= 0)
-                          ProgressValue = progressValue;
-
-                      if (maxProgressValue != 0)
-                          MaxProgressValue = maxProgressValue;
-
-                      if (_maxProgressValue > 0)
-                          ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
-                      else
-                          ProgressText = null;
-
-                      ProcessStatus = processText;
-                  });
-            }
-        }
-
-        #endregion Processing
 
         #region Clear Command
 
@@ -796,7 +637,7 @@ namespace DataSelector.UI
         {
             get
             {
-                if (_runCommand == null)
+                if (_verifyCommand == null)
                 {
                     Action<object> verifyAction = new(VerifyCommandClick);
                     _verifyCommand = new RelayCommand(verifyAction, param => VerifyButtonEnabled);
@@ -836,34 +677,10 @@ namespace DataSelector.UI
 
         #region Run Command
 
-        private ICommand _runCommand;
-
         /// <summary>
-        /// Create Run button command.
+        /// Runs the query.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        public ICommand RunCommand
-        {
-            get
-            {
-                if (_runCommand == null)
-                {
-                    Action<object> runAction = new(RunCommandClick);
-                    _runCommand = new RelayCommand(runAction, param => RunButtonEnabled);
-                }
-
-                return _runCommand;
-            }
-        }
-
-        /// <summary>
-        /// Handles event when Run button is clicked.
-        /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
-        private async void RunCommandClick(object param)
+        public async void RunQuery()
         {
             // Validate the parameters.
             if (!ValidateParameters())
@@ -1232,7 +1049,9 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(SaveButtonEnabled));
             OnPropertyChanged(nameof(LoadButtonEnabled));
             OnPropertyChanged(nameof(VerifyButtonEnabled));
-            OnPropertyChanged(nameof(RunButtonEnabled));
+
+                // Check if the run button is now enabled/disabled.
+                _dockPane.CheckRunButton();
         }
 
         /// <summary>
@@ -1308,7 +1127,9 @@ namespace DataSelector.UI
             set
             {
                 _selectedOutputFormat = value;
-                OnPropertyChanged(nameof(RunButtonEnabled));
+
+                // Check if the run button is now enabled/disabled.
+                _dockPane.CheckRunButton();
             }
         }
 
@@ -1375,9 +1196,9 @@ namespace DataSelector.UI
             // Indicate table is loading.
             _dockPane.TableListLoading = true;
             if (refresh)
-                ProgressUpdate("Refreshing tables list ...", -1, -1);
+                _dockPane.ProgressUpdate("Refreshing tables list ...", -1, -1);
             else
-                ProgressUpdate("Loading tables list ...", -1, -1);
+                _dockPane.ProgressUpdate("Loading tables list ...", -1, -1);
 
             // Preset the tables list.
             _tablesList = ["Loading tables ..."];
@@ -1406,7 +1227,7 @@ namespace DataSelector.UI
 
                 // Indicate the refresh has finished.
                 _dockPane.TableListLoading = false;
-                ProgressUpdate(null, -1, -1);
+                _dockPane.ProgressUpdate(null, -1, -1);
 
                 // Update the fields and buttons in the form.
                 OnPropertyChanged(nameof(TablesList));
@@ -1435,7 +1256,7 @@ namespace DataSelector.UI
 
             // Indicate the refresh has finished.
             _dockPane.TableListLoading = false;
-            ProgressUpdate(null, -1, -1);
+            _dockPane.ProgressUpdate(null, -1, -1);
 
             // Update the fields and buttons in the form.
             OnPropertyChanged(nameof(TablesList));
@@ -1862,7 +1683,7 @@ namespace DataSelector.UI
                 if (_pointCount > 0)
                 {
                     // Indicate the export has started.
-                    ProgressUpdate("Saving point results ...", processStep, processStepsMax);
+                    _dockPane.ProgressUpdate("Saving point results ...", processStep, processStepsMax);
                     processStep += 1;
 
                     FileFunctions.WriteLine(_logFile, string.Format("Copying point results to {0}", outputFormat));
@@ -1879,7 +1700,7 @@ namespace DataSelector.UI
                 if (_polyCount > 0)
                 {
                     // Indicate the export has started.
-                    ProgressUpdate("Saving polygon results ...", processStep, processStepsMax);
+                    _dockPane.ProgressUpdate("Saving polygon results ...", processStep, processStepsMax);
                     processStep += 1;
 
                     FileFunctions.WriteLine(_logFile, string.Format("Copying polygon results to {0}", outputFormat));
@@ -1904,13 +1725,13 @@ namespace DataSelector.UI
                 if (createMap)
                 {
                     // Indicate the map is being created.
-                    ProgressUpdate("Creating map ...", processStep, processStepsMax);
+                    _dockPane.ProgressUpdate("Creating map ...", processStep, processStepsMax);
                     processStep += 1;
 
                     await _mapFunctions.CreateMapAsync("DataMap");
 
                     // Indicate the data is being added to the map.
-                    ProgressUpdate("Adding results to map ...", processStep, processStepsMax);
+                    _dockPane.ProgressUpdate("Adding results to map ...", processStep, processStepsMax);
 
                     if (_pointCount > 0)
                         await _mapFunctions.AddLayerToMap(outPoints);
@@ -1952,7 +1773,7 @@ namespace DataSelector.UI
                 if (_pointCount > 0)
                 {
                     // Indicate the export has started.
-                    ProgressUpdate("Saving point results ...", processStep, processStepsMax);
+                    _dockPane.ProgressUpdate("Saving point results ...", processStep, processStepsMax);
                     processStep += 1;
 
                     FileFunctions.WriteLine(_logFile, string.Format("Exporting point results to {0} file", fileType));
@@ -1976,7 +1797,7 @@ namespace DataSelector.UI
                 if (_polyCount > 0)
                 {
                     // Indicate the export has started.
-                    ProgressUpdate("Saving polygon results ...", processStep, processStepsMax);
+                    _dockPane.ProgressUpdate("Saving polygon results ...", processStep, processStepsMax);
                     processStep += 1;
 
                     FileFunctions.WriteLine(_logFile, string.Format("Exporting polygon results to {0} file", fileType));
@@ -2000,7 +1821,7 @@ namespace DataSelector.UI
                 if (!createMap)
                 {
                     // Indicate the data is being added to the map.
-                    ProgressUpdate("Adding results to map ...", processStep, processStepsMax);
+                    _dockPane.ProgressUpdate("Adding results to map ...", processStep, processStepsMax);
 
                     // Add the output to the map as it won't be added
                     // automatically.
@@ -2037,7 +1858,7 @@ namespace DataSelector.UI
             FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
 
             // Indicate the export has started.
-            ProgressUpdate("Saving results ...", processStep, processStepsMax);
+            _dockPane.ProgressUpdate("Saving results ...", processStep, processStepsMax);
             processStep += 1;
 
             if (outputFormat.Contains("Text file"))
@@ -2087,7 +1908,7 @@ namespace DataSelector.UI
                 return true;
 
             // Indicate the data is being added to the map.
-            ProgressUpdate("Adding results to map ...", processStep, processStepsMax);
+            _dockPane.ProgressUpdate("Adding results to map ...", processStep, processStepsMax);
 
             // Add the output to the map as it won't be added
             // automatically.
@@ -2292,7 +2113,7 @@ namespace DataSelector.UI
 
             // Indicate the selection has started.
             _dockPane.QueryRunning = true;
-            ProgressUpdate("Performing selection ...", 0, 2);
+            _dockPane.ProgressUpdate("Performing selection ...", 0, 2);
 
             // Run the stored procedure to perform the selection.
             bool success = await PerformSelection(isSpatial, isSplit, _defaultSchema, tableName, columnNames,
@@ -2472,7 +2293,7 @@ namespace DataSelector.UI
 
             // Indicate processing has finished.
             _dockPane.QueryRunning = false;
-            ProgressUpdate(null, -1, -1);
+            _dockPane.ProgressUpdate(null, -1, -1);
 
             string imageSource = string.Format("pack://application:,,,/DataSelector;component/Images/{0}32.png", image);
 
