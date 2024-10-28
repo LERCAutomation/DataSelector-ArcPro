@@ -29,10 +29,10 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
-using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
-using System.Windows.Media;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace DataSelector.UI
 {
@@ -315,51 +315,45 @@ namespace DataSelector.UI
         /// Initialise the query pane.
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> InitialiseQueryPaneAsync(bool messages)
+        public async Task<bool> InitialiseQueryPaneAsync(bool message)
         {
             _paneH2VM = new PaneHeader2ViewModel(_dockPane, _paneH1VM.ToolConfig);
 
-            string sdeFileName = _paneH1VM.ToolConfig.SDEName;
+            string sdeFileName = _paneH1VM.ToolConfig.SDEFile;
 
             // Check if the SDE file exists.
             if (!FileFunctions.FileExists(sdeFileName))
             {
-                //TODO
-                if (messages)
-                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not found.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                return false;
-            }
-
-            // Open the SQL Server geodatabase.
-            bool sdeConnectionValid;
-            try
-            {
-                sdeConnectionValid = await SQLServerFunctions.CheckSDEConnection(sdeFileName);
-            }
-            catch (Exception)
-            {
-                //TODO
-                if (messages)
-                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (message)
+                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not found.", "DataSelector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                 _paneH2VM = null;
                 return false;
             }
 
-            // In the SDE connection is not valid.
-            if (!sdeConnectionValid)
+            // Open the SQL Server geodatabase.
+            try
             {
-                //TODO
-                if (messages)
-                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "Data Selector", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (!await SQLServerFunctions.CheckSDEConnection(sdeFileName))
+                {
+                    if (message)
+                        MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "DataSelector", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    _paneH2VM = null;
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                if (message)
+                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "DataSelector", MessageBoxButton.OK, MessageBoxImage.Error);
 
                 _paneH2VM = null;
                 return false;
             }
 
             // Trigger getting the SQL Server table names (don't wait for the response).
-            _paneH2VM.GetTableNames(false);
+            _paneH2VM.GetTableNamesAsync(false);
 
             return true;
         }
@@ -584,7 +578,7 @@ namespace DataSelector.UI
         /// <remarks></remarks>
         private async void RunCommandClick(object param)
         {
-            _paneH2VM.RunQuery();
+            _paneH2VM.RunQueryAsync();
         }
 
         #endregion Run Command

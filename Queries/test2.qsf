@@ -1,4 +1,0 @@
-Fields {SP_GEOMETRY, $$CommonName, $$RecYear as Year}
-Where {CommonName = 'Whitethroat' OR CommonName = 'Holly Blue'}
-Group By {}
-Order By {Year, CommonName}

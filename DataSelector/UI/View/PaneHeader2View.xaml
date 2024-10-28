@@ -14,11 +14,11 @@
 
         <Grid DockPanel.Dock="Top">
             <Grid.RowDefinitions>
-                <RowDefinition MinHeight="151" Height="*" />
+                <RowDefinition MinHeight="172" Height="*" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition MinHeight="76" Height="*" />
-                <RowDefinition MinHeight="76" Height="*" />
-                <RowDefinition MinHeight="76" Height="*" />
+                <RowDefinition MinHeight="80" Height="*" />
+                <RowDefinition MinHeight="80" Height="*" />
+                <RowDefinition MinHeight="80" Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -26,10 +26,10 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid Name="GridColumns" Grid.Row="0" Margin="0,4,0,4">
+            <Grid Name="GridColumns" Grid.Row="0" Margin="0,0,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="{Binding ColumnsTextHeight}" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="8" />
@@ -64,6 +64,29 @@
                          VerticalScrollBarVisibility="Visible"
                          ToolTip="{Binding ColumnsTooltip}"
                          MouseDoubleClick="TextColumns_MouseDoubleClick" />
+
+                <Button Name="ButtonColumnsTextExpand"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="0,0,0,0"
+                        Padding="0"
+                        MinWidth="0"
+                        MinHeight="0"
+                        Width="18"
+                        Height="18"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Right"
+                        BorderBrush="LightBlue"
+                        Command="{Binding Path=ColumnsTextExpandCommand}"
+                        IsCancel="False"
+                        IsDefault="False"
+                        Focusable="False"
+                        IsEnabled="true"
+                        Visibility="{Binding Path=ColumnsTextExpandButtonVisibility}"
+                        IsTabStop="False"
+                        Style="{DynamicResource Esri_SimpleButton}"
+                        Content="{Binding Path=ColumnsTextExpandButtonContent}"
+                        ToolTip="Expand/Collapse the columns text" />
             </Grid>
 
             <Grid Name="GridTables" Grid.Row="1" Margin="0,4,0,4">
@@ -137,7 +160,7 @@
             <Grid Name="GridWhere" Grid.Row="2" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="{Binding WhereTextHeight}" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="8" />
@@ -170,12 +193,35 @@
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
                          VerticalScrollBarVisibility="Visible" />
+
+                <Button Name="ButtonWhereTextExpand"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="0,0,0,0"
+                        Padding="0"
+                        MinWidth="0"
+                        MinHeight="0"
+                        Width="18"
+                        Height="18"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Right"
+                        BorderBrush="LightBlue"
+                        Command="{Binding Path=WhereTextExpandCommand}"
+                        IsCancel="False"
+                        IsDefault="False"
+                        Focusable="False"
+                        IsEnabled="true"
+                        Visibility="{Binding Path=WhereTextExpandButtonVisibility}"
+                        IsTabStop="False"
+                        Style="{DynamicResource Esri_SimpleButton}"
+                        Content="{Binding Path=WhereTextExpandButtonContent}"
+                        ToolTip="Expand/Collapse the where text" />
             </Grid>
 
             <Grid Name="GridGroupBy" Grid.Row="3" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="{Binding GroupByTextHeight}" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="8" />
@@ -200,12 +246,35 @@
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
                          VerticalScrollBarVisibility="Visible" />
+
+                <Button Name="ButtonGroupByTextExpand"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="0,0,0,0"
+                        Padding="0"
+                        MinWidth="0"
+                        MinHeight="0"
+                        Width="18"
+                        Height="18"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Right"
+                        BorderBrush="LightBlue"
+                        Command="{Binding Path=GroupByTextExpandCommand}"
+                        IsCancel="False"
+                        IsDefault="False"
+                        Focusable="False"
+                        IsEnabled="true"
+                        Visibility="{Binding Path=GroupByTextExpandButtonVisibility}"
+                        IsTabStop="False"
+                        Style="{DynamicResource Esri_SimpleButton}"
+                        Content="{Binding Path=GroupByTextExpandButtonContent}"
+                        ToolTip="Expand/Collapse the group by text" />
             </Grid>
 
             <Grid Name="GridOrderBy" Grid.Row="4" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="{Binding OrderByTextHeight}" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="8" />
@@ -230,6 +299,29 @@
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
                          VerticalScrollBarVisibility="Visible" />
+
+                <Button Name="ButtonOrderByTextExpand"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="0,0,0,0"
+                        Padding="0"
+                        MinWidth="0"
+                        MinHeight="0"
+                        Width="18"
+                        Height="18"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Right"
+                        BorderBrush="LightBlue"
+                        Command="{Binding Path=OrderByTextExpandCommand}"
+                        IsCancel="False"
+                        IsDefault="False"
+                        Focusable="False"
+                        IsEnabled="true"
+                        Visibility="{Binding Path=OrderByTextExpandButtonVisibility}"
+                        IsTabStop="False"
+                        Style="{DynamicResource Esri_SimpleButton}"
+                        Content="{Binding Path=OrderByTextExpandButtonContent}"
+                        ToolTip="Expand/Collapse the order by text" />
             </Grid>
 
             <Grid Name="GridOutputFormat" Grid.Row="5" Margin="0,4,0,4" Background="Transparent">
@@ -298,7 +390,6 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="8" />
                     <ColumnDefinition Width="Auto" />
@@ -344,6 +435,7 @@
                        Margin="2,0,0,0"
                        Padding="0"
                        VerticalAlignment="Center" />
+
                 <CheckBox Name="CheckBoxOpenLogFile"
                           Grid.Row="0"
                           Grid.Column="5"

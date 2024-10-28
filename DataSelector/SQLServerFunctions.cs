@@ -276,7 +276,8 @@ namespace DataTools
         /// <summary>
         /// Get the fields for the specified table in the geodatabase.
         /// </summary>
-        /// <param name="tableName"></param>
+        /// <param name="filePath"></param>
+        /// <param name="fileName"></param>
         /// <returns>IReadOnlyList<Field></returns>
         public static async Task<IReadOnlyList<Field>> GetFieldNamesAsync(string filePath, string fileName)
         {
@@ -316,7 +317,7 @@ namespace DataTools
         }
 
         /// <summary>
-        /// Get the fields  for the specified table in the geodatabase.
+        /// Get the fields for the specified table in the geodatabase.
         /// </summary>
         /// <param name="fullPath"></param>
         /// <returns>IReadOnlyList<Field></returns>
@@ -363,7 +364,7 @@ namespace DataTools
                     // ExecuteStatement throws an exception.
                     throw;
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
 
             return true;
         }
@@ -424,8 +425,9 @@ namespace DataTools
         /// <param name="separator"></param>
         /// <param name="isSpatial"></param>
         /// <param name="append"></param>
+        /// <param name="includeHeader"></param>
         /// <returns>bool</returns>
-        public async Task<bool> CopyToTextFileAsync(string inTable, string outFile, string separator, bool isSpatial, bool append)
+        public async Task<bool> CopyToTextFileAsync(string inTable, string outFile, string separator, bool isSpatial, bool append, bool includeHeader = true)
         {
             // Check if there is an input table name.
             if (String.IsNullOrEmpty(inTable))
@@ -442,8 +444,12 @@ namespace DataTools
             string header = "";
             int ignoreField = -1;
 
-            // Get the fields for the input file.
+            // Get the list of fields for the input table.
             IReadOnlyList<Field> fields = await GetFieldsAsync(inTable);
+
+            // Check a list of fields is returned.
+            if (fields == null || fields.Count == 0)
+                return false;
 
             int intFieldCount = fields.Count;
 
@@ -467,7 +473,7 @@ namespace DataTools
                     header = header + fieldName + separator;
             }
 
-            if (!append)
+            if (!append && includeHeader)
             {
                 // Remove the final separator from the header.
                 header = header.Substring(0, header.Length - 1);
@@ -485,20 +491,17 @@ namespace DataTools
             // If still not open.
             if (!GeodatabaseOpen) return false;
 
-            string tabName;
-            string fcName;
-
             try
             {
                 await QueuedTask.Run(() =>
                 {
+                    // Create a row cursor.
                     RowCursor rowCursor;
 
                     if (isSpatial)
                     {
                         // Open the feature class.
                         using FeatureClass featureClass = _geodatabase.OpenDataset<FeatureClass>(fileName);
-                        fcName = featureClass.GetName();
 
                         // Create a cursor on the table.
                         rowCursor = featureClass.Search(null);
@@ -507,7 +510,6 @@ namespace DataTools
                     {
                         // Open the table.
                         using Table table = _geodatabase.OpenDataset<Table>(fileName);
-                        tabName = table.GetName();
 
                         // Create a cursor on the table.
                         rowCursor = table.Search(null);
@@ -741,6 +743,59 @@ namespace DataTools
             });
 
             return rows;
+        }
+
+        /// <summary>
+        /// Calculate the total row length in a table within the database.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <returns>bool</returns>
+        public async Task<int> TableRowLength(string tableName)
+        {
+            // Check there is an input table name.
+            if (String.IsNullOrEmpty(tableName))
+                return -1;
+
+            int rowLength = 0;
+
+            // Open a connection to the geodatabase if not already open.
+            if (!GeodatabaseOpen) await OpenGeodatabase();
+
+            // If still not open.
+            if (!GeodatabaseOpen) return -1;
+
+            try
+            {
+                // Open the SQLServer geodatabase via the .sde connection file.
+                await QueuedTask.Run(() =>
+                {
+                    // Try and get the table definition.
+                    using TableDefinition tableDefinition = _geodatabase.GetDefinition<TableDefinition>(tableName);
+
+                    // Get the fields in the table.
+                    IReadOnlyList<Field> tableFields = tableDefinition.GetFields();
+
+                    int fldLength;
+
+                    // Loop through all fields.
+                    foreach (Field fld in tableFields)
+                    {
+                        if (fld.FieldType == FieldType.Geometry)
+                            fldLength = 0;
+                        else
+                            fldLength = fld.Length;
+
+                        rowLength += fldLength;
+                    }
+                });
+            }
+            catch
+            {
+                // Handle Exception.
+                return -1;
+            }
+
+            return rowLength;
         }
 
         #endregion Tables

@@ -189,6 +189,26 @@ namespace DataTools
             return strOutputString;
         }
 
+        /// <summary>
+        /// Calculate the current financial year.
+        /// </summary>
+        /// <param name="curDate"></param>
+        /// <returns></returns>
+        public static string FinancialYear(DateTime curDate)
+        {
+            string CurrYr = curDate.ToString("yy");
+            string PrevYr = curDate.AddYears(-1).ToString("yy");
+            string NextYr = curDate.AddYears(1).ToString("yy");
+            string FinYear;
+
+            if (curDate.Month > 3)
+                FinYear = CurrYr + NextYr;
+            else
+                FinYear = PrevYr + CurrYr;
+
+            return FinYear;
+        }
+
         #endregion Characters
 
         #region References

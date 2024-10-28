@@ -34,6 +34,11 @@ namespace DataSelector.UI
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Load list of columns when table name is double-clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TextColumns_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (this.ButtonLoadColumns.Command.CanExecute(null))

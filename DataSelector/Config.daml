@@ -5,13 +5,13 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
 
-	<AddInInfo id="{46e995cb-90ef-4d68-9f66-67839c8807e9}" version="1.0.4" desktopVersion="3.3.52636">
+	<AddInInfo id="{46e995cb-90ef-4d68-9f66-67839c8807e9}" version="1.0.5" desktopVersion="3.3.52636">
 		<Name>DataSelector</Name>
 		<Description>DataSelector is an ArcGIS .NET tool and associated SQL scripts to extract information from SQL Server based on any selection criteria. The output files can be created as ESRI Geodatabase (.gdb) files, ESRI Shapefile (.shp) files, Comma Separated Value (.csv) or Tab Delimited (.txt) files.</Description>
 		<Image>Images\AddinDesktop32.png</Image>
 		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
 		<Company>Andy Foy Consulting</Company>
-		<Date>12/08/2024 17:18:00 AM</Date>
+		<Date>29/10/2024 14:43:00 AM</Date>
 		<Subject>Framework, Geodatabase</Subject>
 		<!-- Note subject can be one or more of these topics:
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->

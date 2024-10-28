@@ -113,6 +113,10 @@ namespace DataSelector
             }
         }
 
+        #endregion Constructor
+
+        #region Get Mandatory Variables
+
         /// <summary>
         /// Get the mandatory variables from the XML file.
         /// </summary>
@@ -132,7 +136,7 @@ namespace DataSelector
             // The location of the SDE file that specifies which SQL Server database to connect to.
             try
             {
-                _sdeName = _xmlDataSelector["SDEFile"].InnerText;
+                _sdeFile = _xmlDataSelector["SDEFile"].InnerText;
             }
             catch
             {
@@ -195,6 +199,10 @@ namespace DataSelector
             // All mandatory variables were loaded successfully.
             return true;
         }
+
+        #endregion Get Mandatory Variables
+
+        #region Get Optional Variables
 
         /// <summary>
         /// Get the optional variables from the XML file.
@@ -327,7 +335,7 @@ namespace DataSelector
             }
         }
 
-        #endregion Constructor
+        #endregion Get Optional Variables
 
         #region Members
 
@@ -361,13 +369,13 @@ namespace DataSelector
 
         #region Variables
 
-        private string _sdeName;
+        private string _sdeFile;
 
-        public string SDEName
+        public string SDEFile
         {
             get
             {
-                return _sdeName;
+                return _sdeFile;
             }
         }
 
