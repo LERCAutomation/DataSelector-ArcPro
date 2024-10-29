@@ -14,7 +14,7 @@
 
         <Grid DockPanel.Dock="Top">
             <Grid.RowDefinitions>
-                <RowDefinition MinHeight="172" Height="*" />
+                <RowDefinition MinHeight="256" Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition MinHeight="80" Height="*" />
                 <RowDefinition MinHeight="80" Height="*" />

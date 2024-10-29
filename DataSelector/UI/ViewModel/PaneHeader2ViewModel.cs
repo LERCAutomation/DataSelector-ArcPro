@@ -426,7 +426,6 @@ namespace DataSelector.UI
         {
             // Clear all of the fields.
             ColumnsText = null;
-            SelectedTable = null;
             WhereText = null;
             GroupByText = null;
             OrderByText = null;
@@ -849,7 +848,7 @@ namespace DataSelector.UI
         private void ColumnsTextExpandCommandClick(object param)
         {
             if (_columnsTextHeight == null)
-                _columnsTextHeight = 151;
+                _columnsTextHeight = 235;
             else
                 _columnsTextHeight = null;
 
@@ -1099,7 +1098,7 @@ namespace DataSelector.UI
             }
         }
 
-        private double? _columnsTextHeight = 151;
+        private double? _columnsTextHeight = 235;
 
         /// <summary>
         /// Get the height of the columns text.
@@ -1109,7 +1108,7 @@ namespace DataSelector.UI
             get
             {
                 if (string.IsNullOrEmpty(_columnsText))
-                    return 151;
+                    return 235;
                 else
                     return _columnsTextHeight;
             }
@@ -1165,7 +1164,7 @@ namespace DataSelector.UI
             get
             {
                 if (string.IsNullOrEmpty(_whereText))
-                    return 151;
+                    return 55;
                 else
                     return _whereTextHeight;
             }
@@ -1383,6 +1382,7 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(OrderByText));
             OnPropertyChanged(nameof(TablesList));
             OnPropertyChanged(nameof(TablesListEnabled));
+            OnPropertyChanged(nameof(SelectedTable));
             OnPropertyChanged(nameof(LoadColumnsEnabled));
             OnPropertyChanged(nameof(Message));
         }
@@ -1409,42 +1409,48 @@ namespace DataSelector.UI
         /// <returns></returns>
         public async Task LoadColumnsAsync(string selectedTable)
         {
-            // If a table was selected.
-            if (selectedTable != null)
+            // Check if a table was selected.
+            if (selectedTable == null)
+                return;
+
+            if (!string.IsNullOrEmpty(_columnsText))
             {
-                if (!string.IsNullOrEmpty(_columnsText))
-                {
-                    MessageBoxResult dlResult = MessageBox.Show("Overwrite text in the Columns field?", _displayName, MessageBoxButton.YesNo, MessageBoxImage.Question);
-                    if (dlResult == MessageBoxResult.No)
-                        return; //User clicked by accident; leave routine.
-                }
-
-                // Get the field names and wait for the task to finish.
-                List<string> columnsList = await _sqlFunctions.GetFieldNamesListAsync(SelectedTable);
-
-                // Convert the field names to a single string.
-                string columnNamesText = "";
-                foreach (string columnName in columnsList)
-                {
-                    // Concatenate the field names vertically or horizontally.
-                    if (_loadColumnsVertically)
-                        columnNamesText = columnNamesText + columnName + ",\r\n";
-                    else
-                        columnNamesText = columnNamesText + columnName + ", ";
-                }
-
-                if (_loadColumnsVertically)
-                    columnNamesText = columnNamesText.Substring(0, columnNamesText.Length - 3);
-                else
-                    columnNamesText = columnNamesText.Substring(0, columnNamesText.Length - 2);
-
-                // Replace the text box value with the field names.
-                ColumnsText = columnNamesText;
-
-                // Update the fields and buttons in the form.
-                OnPropertyChanged(nameof(ColumnsText));
-                UpdateFormButtons();
+                MessageBoxResult dlResult = MessageBox.Show("Overwrite text in the Columns field?", _displayName, MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (dlResult == MessageBoxResult.No)
+                    return; //User clicked by accident; leave routine.
             }
+
+            // Indicate column list is loading.
+            _dockPane.ProgressUpdate("Loading list of columns from the selected table ...", -1, -1);
+
+            // Get the field names and wait for the task to finish.
+            List<string> columnsList = await _sqlFunctions.GetFieldNamesListAsync(SelectedTable);
+
+            // Convert the field names to a single string.
+            string columnNamesText = "";
+            foreach (string columnName in columnsList)
+            {
+                // Concatenate the field names vertically or horizontally.
+                if (_loadColumnsVertically)
+                    columnNamesText = columnNamesText + columnName + ",\r\n";
+                else
+                    columnNamesText = columnNamesText + columnName + ", ";
+            }
+
+            if (_loadColumnsVertically)
+                columnNamesText = columnNamesText.Substring(0, columnNamesText.Length - 3);
+            else
+                columnNamesText = columnNamesText.Substring(0, columnNamesText.Length - 2);
+
+            // Replace the text box value with the field names.
+            ColumnsText = columnNamesText;
+
+            // Indicate the load has finished.
+            _dockPane.ProgressUpdate(null, -1, -1);
+
+            // Update the fields and buttons in the form.
+            OnPropertyChanged(nameof(ColumnsText));
+            UpdateFormButtons();
         }
 
         private List<string> _outputFormats;
