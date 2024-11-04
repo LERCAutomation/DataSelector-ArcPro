@@ -1001,21 +1001,6 @@ namespace DataSelector.UI
         {
             // Get the table names from SQL Server (and wait).
             await GetTableNamesAsync(true);
-
-            // Inform the user no tables found in SQL Server.
-            if (_sqlFunctions.TableNames.Count == 0)
-            {
-                ShowMessage("No tables found in SQL Server", MessageType.Warning);
-            }
-            // Inform the user no filtered tables found.
-            else if (_tablesList.Count == 0)
-            {
-                ShowMessage("No tables found matching wildcard criteria", MessageType.Warning);
-            }
-            else
-            {
-                ClearMessage();
-            }
         }
 
         #endregion Tables List
@@ -1571,9 +1556,6 @@ namespace DataSelector.UI
             // Get the full list of feature classes and tables from SQL Server.
             await _sqlFunctions.GetTableNamesAsync();
 
-            // Get the list of tables returned from SQL Server.
-            List<string> tabList = _sqlFunctions.TableNames;
-
             // If no tables were found.
             if (_sqlFunctions.TableNames.Count == 0)
             {
@@ -1591,7 +1573,16 @@ namespace DataSelector.UI
                 OnPropertyChanged(nameof(LoadColumnsEnabled));
                 UpdateFormButtons();
                 _dockPane.RefreshPanel1Buttons();
+
+                // Inform the user no tables found in SQL Server.
+                if (_sqlFunctions.TableNames.Count == 0)
+                    ShowMessage("No tables found in SQL Server", MessageType.Warning);
+
+                return;
             }
+
+            // Get the list of tables returned from SQL Server.
+            List<string> tabList = _sqlFunctions.TableNames;
 
             // Get the include and exclude wildcard settings.
             string includeWC = _includeWildcard;
@@ -1620,6 +1611,10 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(LoadColumnsEnabled));
             UpdateFormButtons();
             _dockPane.RefreshPanel1Buttons();
+
+            // Inform the user no filtered tables found.
+            if (_tablesList.Count == 0)
+                ShowMessage("No tables found matching wildcard criteria", MessageType.Warning);
         }
 
         /// <summary>

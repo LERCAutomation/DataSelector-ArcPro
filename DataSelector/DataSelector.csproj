@@ -2,6 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0-windows7.0</TargetFramework>
+	<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <UseWPF>true</UseWPF>
 	<UseWindowsForms>true</UseWindowsForms>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
