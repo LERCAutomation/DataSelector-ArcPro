@@ -772,6 +772,8 @@ namespace DataSelector.UI
 
             // Replace any illegal characters in the user name string.
             string userID = StringFunctions.StripIllegals(Environment.UserName, "_", false);
+            // Replace hyphen with underscore.
+            userID = userID.Replace('-', '_');
 
             // User ID should be something at least.
             if (string.IsNullOrEmpty(userID))
