@@ -53,6 +53,9 @@ namespace DataSelector.UI
 
         private string _sdeFileName;
 
+        private bool _selectErrors;
+        private string _successMessage;
+
         private string _logFile;
         private bool _validateSQL;
         private int _sqlTimeout;
@@ -63,6 +66,7 @@ namespace DataSelector.UI
         private string _excludeWildcard;
         private string _defaultFormat;
         private string _defaultSchema;
+        private string _objectsTable;
         private string _defaultQueryPath;
         private string _defaultExtractPath;
         private string _selectStoredProcedure;
@@ -137,6 +141,7 @@ namespace DataSelector.UI
             _excludeWildcard = _toolConfig.ExcludeWildcard;
             _defaultFormat = _toolConfig.DefaultFormat;
             _defaultSchema = _toolConfig.DatabaseSchema;
+            _objectsTable = _toolConfig.ObjectsTable;
             _defaultQueryPath = _toolConfig.DefaultQueryPath;
             _defaultExtractPath = _toolConfig.DefaultExtractPath;
             _clearLogFile = _toolConfig.DefaultClearLogFile;
@@ -537,21 +542,27 @@ namespace DataSelector.UI
 
                 // Save the parameters.
                 string columnNames = ColumnsText == null ? "" : ColumnsText.Replace("\r\n", " ");
+                string fromClause = WhereText == null ? "" : SelectedTable;
                 string whereClause = WhereText == null ? "" : WhereText.Replace("\r\n", " ");
                 string groupClause = GroupByText == null ? "" : GroupByText.Replace("\r\n", " ");
                 string orderClause = OrderByText == null ? "" : OrderByText.Replace("\r\n", " ");
+                string outputFormat = SelectedOutputFormat == null ? "" : SelectedOutputFormat;
 
                 // Replace carriage return and line feeds in the constituent parts.
                 string columns = string.Format("Fields {0}{1}{2}", "{", columnNames, "}");
+                string from = string.Format("From {0}{1}{2}", "{", fromClause, "}");
                 string where = string.Format("Where {0}{1}{2}", "{", whereClause, "}");
                 string groupBy = string.Format("Group By {0}{1}{2}", "{", groupClause, "}");
                 string orderBy = string.Format("Order By {0}{1}{2}", "{", orderClause, "}");
+                string format = string.Format("Format {0}{1}{2}", "{", outputFormat, "}");
 
                 // Write the constituent parts to the file.
                 qryFile.WriteLine(columns);
+                qryFile.WriteLine(from);
                 qryFile.WriteLine(where);
                 qryFile.WriteLine(groupBy);
                 qryFile.WriteLine(orderBy);
+                qryFile.WriteLine(format);
 
                 // Close and dispose of the stream reader.
                 qryFile.Close();
@@ -649,6 +660,13 @@ namespace DataSelector.UI
                         qryLine = qryLine.Substring(8, qryLine.Length - 9);
                         ColumnsText = qryLine.Replace("$$", "\r\n");
                     }
+                    else if (qryLine.Length > 5 && qryLine.Substring(0, 6).Equals("FROM {", StringComparison.OrdinalIgnoreCase)
+                    && !qryLine.Equals("FROM {}", StringComparison.OrdinalIgnoreCase))
+                    {
+                        qryLine = qryLine.Substring(6, qryLine.Length - 7);
+                        SelectedTable = qryLine;
+                        OnPropertyChanged(nameof(SelectedTable));
+                    }
                     else if (qryLine.Length > 6 && qryLine.Substring(0, 7).Equals("WHERE {", StringComparison.OrdinalIgnoreCase)
                     && !qryLine.Equals("WHERE {}", StringComparison.OrdinalIgnoreCase))
                     {
@@ -666,6 +684,13 @@ namespace DataSelector.UI
                     {
                         qryLine = qryLine.Substring(10, qryLine.Length - 11);
                         OrderByText = qryLine.Replace("$$", "\r\n");
+                    }
+                    else if (qryLine.Length > 7 && qryLine.Substring(0, 8).Equals("FORMAT {", StringComparison.OrdinalIgnoreCase)
+                    && !qryLine.Equals("FORMAT {}", StringComparison.OrdinalIgnoreCase))
+                    {
+                        qryLine = qryLine.Substring(8, qryLine.Length - 9);
+                        SelectedOutputFormat = qryLine;
+                        OnPropertyChanged(nameof(SelectedOutputFormat));
                     }
                 }
 
@@ -774,12 +799,53 @@ namespace DataSelector.UI
                 FileFunctions.WriteLine(_logFile, "User ID not found. User ID used will be 'Temp'");
             }
 
+            // Clear any messages.
+            ClearMessage();
+
             // Update the fields and buttons in the form.
             UpdateFormControls();
             _dockPane.RefreshPanel1Buttons();
 
             // Perform the selection.
-            await ExecuteSelectionAsync(userID); // Success not currently checked.
+            bool success = await ExecuteSelectionAsync(userID);
+
+            // Run the stored procedure to clear the selection.
+            if (success || _selectErrors)
+                await ClearSelectionAsync(_defaultSchema, SelectedTable, userID);
+
+            // Indicate that the search process has completed (successfully or not).
+            string image = "Error";
+            if (success && !_selectErrors)
+            {
+                if (String.IsNullOrEmpty(_successMessage))
+                    _successMessage = "Process complete!";
+                image = "Success";
+            }
+            else if (success && _selectErrors)
+            {
+                if (String.IsNullOrEmpty(_successMessage))
+                    _successMessage = "Process complete!";
+                image = "Warning";
+            }
+            else if (!success && !_selectErrors)
+            {
+                // No error so skip.
+            }
+            else if (_selectErrors)
+            {
+                if (String.IsNullOrEmpty(_successMessage))
+                    _successMessage = "Process complete with errors!";
+                image = "Error";
+            }
+            else
+            {
+                _successMessage = "Process ended unexpectedly!";
+                image = "Error";
+            }
+
+            // Indicate that the process has stopped.
+            if (success || _selectErrors)
+                StopSelection(_successMessage, image);
 
             // Update the fields and buttons in the form.
             UpdateFormControls();
@@ -1554,7 +1620,8 @@ namespace DataSelector.UI
             _dockPane.RefreshPanel1Buttons();
 
             // Get the full list of feature classes and tables from SQL Server.
-            await _sqlFunctions.GetTableNamesAsync();
+            if (!await _sqlFunctions.GetTableNamesAsync(_defaultSchema + "." + _objectsTable))
+                ShowMessage("Error: Unable to get table names.", MessageType.Warning);
 
             // If no tables were found.
             if (_sqlFunctions.TableNames.Count == 0)
@@ -1809,7 +1876,7 @@ namespace DataSelector.UI
                     // Test for the types of flat output.
                     if (outputFormat.Contains("Geodatabase"))
                     {
-                        if (ArcGISFunctions.TableExists(outputFile))
+                        if (await ArcGISFunctions.TableExistsAsync(outputFile))
                         {
                             MessageBoxResult dlResult1 = MessageBox.Show("The output file already exists. Do you want to overwrite it?", _displayName, MessageBoxButton.YesNo, MessageBoxImage.Question);
                             if (dlResult1 == MessageBoxResult.Yes)
@@ -1907,12 +1974,12 @@ namespace DataSelector.UI
 
             try
             {
-                FileFunctions.WriteLine(_logFile, "Performing selection");
+                FileFunctions.WriteLine(_logFile, "Performing selection ...");
 
                 // Execute the stored procedure.
                 await _sqlFunctions.ExecuteSQLOnGeodatabase(sqlCmd.ToString());
 
-                // If the result is isSpatial it should be split into points and polys.
+                // If the result is expected to be spatial it should be split into points and polys.
                 if (isSpatial)
                 {
                     // Check if the point or polygon feature class exists.
@@ -2027,7 +2094,7 @@ namespace DataSelector.UI
                 if (createMap)
                     processStepsMax += 2;
 
-                FileFunctions.WriteLine(_logFile, "Output is spatial and will be split into a point and a polygon layer.");
+                FileFunctions.WriteLine(_logFile, "Output is spatial and will be split into a point and a polygon layer");
 
                 if (_pointCount > 0)
                 {
@@ -2035,15 +2102,17 @@ namespace DataSelector.UI
                     _dockPane.ProgressUpdate("Saving point results ...", processStep, processStepsMax);
                     processStep += 1;
 
-                    FileFunctions.WriteLine(_logFile, string.Format("Copying point results as '{0}'.", outputFormat));
+                    FileFunctions.WriteLine(_logFile, string.Format("Copying point results as '{0}' ...", outputFormat));
                     result = await ArcGISFunctions.CopyFeaturesAsync(inPoints, outPoints, !createMap);
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, string.Format("Error: Copying point results to '{0}'.", outPoints));
+                        FileFunctions.WriteLine(_logFile, string.Format("Error: Copying point results to '{0}'", outPoints));
 
                         return false;
                     }
+
+                    FileFunctions.WriteLine(_logFile, string.Format("Point results saved"));
                 }
                 if (_polyCount > 0)
                 {
@@ -2051,15 +2120,17 @@ namespace DataSelector.UI
                     _dockPane.ProgressUpdate("Saving polygon results ...", processStep, processStepsMax);
                     processStep += 1;
 
-                    FileFunctions.WriteLine(_logFile, string.Format("Copying polygon results as '{0}'.", outputFormat));
+                    FileFunctions.WriteLine(_logFile, string.Format("Copying polygon results as '{0}' ...", outputFormat));
                     result = await ArcGISFunctions.CopyFeaturesAsync(inPolys, outPolys, !createMap);
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, string.Format("Error: Copying polygon results to '{0}'.", outPolys));
+                        FileFunctions.WriteLine(_logFile, string.Format("Error: Copying polygon results to '{0}'", outPolys));
 
                         return false;
                     }
+
+                    FileFunctions.WriteLine(_logFile, string.Format("Polygon results saved"));
                 }
 
                 // Exit if nothing was exported.
@@ -2081,10 +2152,10 @@ namespace DataSelector.UI
                     _dockPane.ProgressUpdate("Adding results to map ...", processStep, processStepsMax);
 
                     if (_pointCount > 0)
-                        await _mapFunctions.AddLayerToMap(outPoints);
+                        await _mapFunctions.AddLayerToMapAsync(outPoints);
 
                     if (_polyCount > 0)
-                        await _mapFunctions.AddLayerToMap(outPolys);
+                        await _mapFunctions.AddLayerToMapAsync(outPolys);
                 }
 
                 return true;
@@ -2123,7 +2194,7 @@ namespace DataSelector.UI
                     _dockPane.ProgressUpdate("Saving point results ...", processStep, processStepsMax);
                     processStep += 1;
 
-                    FileFunctions.WriteLine(_logFile, string.Format("Exporting point results as '{0}'.", fileType));
+                    FileFunctions.WriteLine(_logFile, string.Format("Exporting point results as '{0}' ...", fileType));
 
                     if (outputFormat.Contains("Text file"))
                         result = await _sqlFunctions.CopyToTabAsync(inPoints, outFile, true, false);
@@ -2132,7 +2203,7 @@ namespace DataSelector.UI
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, string.Format("Error: Exporting point results to '{0}'", outFile));
+                        FileFunctions.WriteLine(_logFile, string.Format("Error: Exporting point results"));
 
                         return false;
                     }
@@ -2146,7 +2217,7 @@ namespace DataSelector.UI
                     _dockPane.ProgressUpdate("Saving polygon results ...", processStep, processStepsMax);
                     processStep += 1;
 
-                    FileFunctions.WriteLine(_logFile, string.Format("Exporting polygon results as '{0}'.", fileType));
+                    FileFunctions.WriteLine(_logFile, string.Format("Exporting polygon results as '{0}' ...", fileType));
 
                     if (outputFormat.Contains("Text file"))
                         result = await _sqlFunctions.CopyToTabAsync(inPolys, outFile, true, blAppend);
@@ -2155,7 +2226,7 @@ namespace DataSelector.UI
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, string.Format("Error: Exporting polygon results to {0}", outFile));
+                        FileFunctions.WriteLine(_logFile, string.Format("Error: Exporting polygon results"));
                     }
                 }
 
@@ -2170,7 +2241,7 @@ namespace DataSelector.UI
 
                     // Add the output to the map as it won't be added
                     // automatically.
-                    await _mapFunctions.AddTableToMap(outFile);
+                    await _mapFunctions.AddTableToMapAsync(outFile);
                 }
 
                 return true;
@@ -2200,7 +2271,7 @@ namespace DataSelector.UI
             if (addToMap)
                 processStepsMax += 1;
 
-            FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split.");
+            FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
 
             // Indicate the export has started.
             _dockPane.ProgressUpdate("Saving results ...", processStep, processStepsMax);
@@ -2214,10 +2285,12 @@ namespace DataSelector.UI
 
                 if (!result)
                 {
-                    FileFunctions.WriteLine(_logFile, "Error exporting results to text file '" + outFile + "'.");
+                    FileFunctions.WriteLine(_logFile, "Error copying results to text file '" + outFile + "'");
 
                     return false;
                 }
+
+                FileFunctions.WriteLine(_logFile, string.Format("Results copied to text file"));
             }
             else if (outputFormat.Contains("CSV file"))
             {
@@ -2227,10 +2300,12 @@ namespace DataSelector.UI
 
                 if (!result)
                 {
-                    FileFunctions.WriteLine(_logFile, "Error exporting results to CSV file '" + outFile + "'.");
+                    FileFunctions.WriteLine(_logFile, "Error copying results to CSV file '" + outFile + "'");
 
                     return false;
                 }
+
+                FileFunctions.WriteLine(_logFile, string.Format("Results copied to CSV file"));
             }
             else
             {
@@ -2240,10 +2315,12 @@ namespace DataSelector.UI
 
                 if (!result)
                 {
-                    FileFunctions.WriteLine(_logFile, "Error exporting results to geodatabase table '" + outFile + "'.");
+                    FileFunctions.WriteLine(_logFile, "Error copying results to geodatabase table '" + outFile + "'");
 
                     return false;
                 }
+
+                FileFunctions.WriteLine(_logFile, string.Format("Results copied to geodatabase table"));
             }
 
             if (!addToMap)
@@ -2254,7 +2331,7 @@ namespace DataSelector.UI
 
             // Add the output to the map as it won't be added
             // automatically.
-            await _mapFunctions.AddTableToMap(outFile);
+            await _mapFunctions.AddTableToMapAsync(outFile);
 
             return true;
         }
@@ -2273,6 +2350,7 @@ namespace DataSelector.UI
             // Build the sql command.
             StringBuilder sqlCommand = new();
 
+            // Append the "Set NOEXEC ON" statement to stop the query being executed.
             sqlCommand.Append("SET NOEXEC ON;SELECT ");
             sqlCommand.Append(columnNames);
 
@@ -2299,6 +2377,7 @@ namespace DataSelector.UI
             if (!string.IsNullOrEmpty(orderClause))
                 sqlCommand.Append(" ORDER BY " + orderClause);
 
+            // Append the "Set NOEXEC OFF" statement to enable execution again.
             sqlCommand.Append(";SET NOEXEC OFF");
 
             try
@@ -2336,12 +2415,20 @@ namespace DataSelector.UI
             }
             catch (SqlException ex)
             {
-                MessageBox.Show("SQL is invalid:" + "\r\n" + ex.Message, _displayName, MessageBoxButton.OK, MessageBoxImage.Information);
+                // Remove any appended 'SET NOEXEC' statements.
+                string msg = ex.Message;
+                msg = msg.Replace(";SET NOEXEC OFF", "").Replace("SET NOEXEC ON;", "");
+
+                MessageBox.Show("SQL is invalid:" + "\r\n" + msg, _displayName, MessageBoxButton.OK, MessageBoxImage.Information);
                 return false;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("SQL is invalid:" + "\r\n" + ex.Message, _displayName, MessageBoxButton.OK, MessageBoxImage.Error);
+                // Remove any appended 'SET NOEXEC' statements.
+                string msg = ex.Message;
+                msg = msg.Replace(";SET NOEXEC OFF", "").Replace("SET NOEXEC ON;", "");
+
+                MessageBox.Show("SQL is invalid:" + "\r\n" + msg, _displayName, MessageBoxButton.OK, MessageBoxImage.Error);
                 throw;
             }
         }
@@ -2351,8 +2438,12 @@ namespace DataSelector.UI
         /// </summary>
         /// <param name="userID"></param>
         /// <returns></returns>
-        private async Task ExecuteSelectionAsync(string userID)
+        private async Task<bool> ExecuteSelectionAsync(string userID)
         {
+            // Reset selecting errors flag and success message.
+            _selectErrors = false;
+            _successMessage = null;
+
             // Save the parameters.
             string tableName = SelectedTable;
             string columnNames = ColumnsText == null ? "" : ColumnsText.Replace("\r\n", " ");
@@ -2372,7 +2463,12 @@ namespace DataSelector.UI
             {
                 // Validate the sql command.
                 if (!VerifyQuery(tableName, columnNames, whereClause, groupClause, orderClause))
-                    return;
+                {
+                    ShowMessage("SQL is invalid.", MessageType.Warning);
+                    _successMessage = null;
+                    _selectErrors = false;
+                    return false;
+                }
             }
 
             // Check if there is a geometry field in the input
@@ -2394,7 +2490,7 @@ namespace DataSelector.UI
             {
                 if (outputFormat == "Geodatabase")
                     outputFormat = "Geodatabase Table";
-                else if (outputFormat == "Shapefile")
+                else if (outputFormat == "Shapefile") // Override format for non-spatial data.
                     outputFormat = "CSV file (comma delimited)";
             }
 
@@ -2403,7 +2499,12 @@ namespace DataSelector.UI
 
             // Exit if no output file path was entered/selected.
             if (outputFile == null)
-                return;
+            {
+                ShowMessage("No output file selected.", MessageType.Information);
+                _successMessage = null;
+                _selectErrors = false;
+                return false;
+            }
 
             FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
             FileFunctions.WriteLine(_logFile, "Process started");
@@ -2428,12 +2529,9 @@ namespace DataSelector.UI
             // Exit if the stored procedure failed.
             if (!success)
             {
-                string messageError = string.Format("Process complete with errors!");
-
-                // Clean up after the selection.
-                await CleanUpAsync(tableName, userID, messageError, "Error");
-
-                return;
+                _successMessage = "Process complete with errors!";
+                _selectErrors = true;
+                return false;
             }
 
             // Exit if the stored procedure returned no results.
@@ -2441,12 +2539,9 @@ namespace DataSelector.UI
             {
                 FileFunctions.WriteLine(_logFile, "No output returned");
 
-                string messageEmpty = string.Format("Process complete. No output returned by the query!");
-
-                // Clean up after the selection.
-                await CleanUpAsync(tableName, userID, messageEmpty, "Warning");
-
-                return;
+                _successMessage = "Process complete. No output returned by the query!";
+                _selectErrors = true;
+                return true;
             }
 
             // Log the results of the stored procedure.
@@ -2517,26 +2612,20 @@ namespace DataSelector.UI
 
             if (!exportSuccess)
             {
-                string messageError = string.Format("Process complete with errors!");
-
-                // Clean up after the selection.
-                await CleanUpAsync(tableName, userID, messageError, "Error");
-
-                return;
+                _successMessage = null;
+                _selectErrors = true;
+                return false;
             }
 
             // Inform the user if no results generated.
             if (isSpatial && _pointCount == 0 && _polyCount == 0
                 || !isSpatial && _tableCount == 0)
             {
-                FileFunctions.WriteLine(_logFile, "No output file(s) generated.");
+                FileFunctions.WriteLine(_logFile, "No output file(s) generated");
 
-                string messageError = string.Format("Process complete with errors!");
-
-                // Clean up after the selection.
-                await CleanUpAsync(tableName, userID, messageError, "Error");
-
-                return;
+                _successMessage = null;
+                _selectErrors = true;
+                return false;
             }
 
             //// Set the layer name(s) for use later.
@@ -2569,29 +2658,23 @@ namespace DataSelector.UI
             }
 
             // Notify user of completion.
-            string messageSuccess;
             if (isSpatial || !createMap)
-                messageSuccess = "Process complete. Output(s) have been added to map.";
+                _successMessage = "Process complete. Output(s) have been added to map";
             else
-                messageSuccess = "Process complete. Output(s) have been generated.";
+                _successMessage = "Process complete. Output(s) have been generated";
 
-            // Clean up after the selection.
-            await CleanUpAsync(tableName, userID, messageSuccess, "Success");
+            return true;
         }
 
         /// <summary>
-        /// Clean up after the process has completed (successfully or not).
+        /// Indicate that the process has stopped (either
+        /// successfully or otherwise).
         /// </summary>
-        /// <param name="tableName"></param>
-        /// <param name="userID"></param>
         /// <param name="message"></param>
         /// <param name="image"></param>
         /// <returns></returns>
-        private async Task CleanUpAsync(string tableName, string userID, string message, string image)
+        private void StopSelection(string message, string image)
         {
-            // Run the stored procedure to clear the selection.
-            await ClearSelectionAsync(_defaultSchema, tableName, userID);
-
             FileFunctions.WriteLine(_logFile, "---------------------------------------------------------------------------");
             FileFunctions.WriteLine(_logFile, message);
             FileFunctions.WriteLine(_logFile, "---------------------------------------------------------------------------");
@@ -2613,10 +2696,8 @@ namespace DataSelector.UI
             FrameworkApplication.AddNotification(notification);
 
             // Open the log file (if required).
-            if (OpenLogFile)
+            if (OpenLogFile || _selectErrors)
                 Process.Start("notepad.exe", _logFile);
-
-            return;
         }
 
         #endregion SQL

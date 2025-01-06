@@ -57,12 +57,12 @@
                          Margin="0,0,0,0"
                          IsEnabled="True"
                          IsReadOnly="False"
-                         Text="{Binding ColumnsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding Path=ColumnsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          TextAlignment="Left"
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
                          VerticalScrollBarVisibility="Visible"
-                         ToolTip="{Binding ColumnsTooltip}"
+                         ToolTip="{Binding Path=ColumnsTooltip}"
                          MouseDoubleClick="TextColumns_MouseDoubleClick" />
 
                 <Button Name="ButtonColumnsTextExpand"
@@ -150,17 +150,17 @@
                         FontWeight="Normal"
                         VerticalAlignment="Center"
                         IsEnabled="{Binding Path=TablesListEnabled}"
-                        Command="{Binding RefreshTablesListCommand}"
+                        Command="{Binding Path=RefreshTablesListCommand}"
                         ToolTip="Refresh tables list"
                         Style="{DynamicResource Esri_SimpleButton}">
-                    <Image Source="{Binding ButtonTablesListRefreshImg}" Width="16" Height="16" />
+                    <Image Source="{Binding Path=ButtonTablesListRefreshImg}" Width="16" Height="16" />
                 </Button>
             </Grid>
 
             <Grid Name="GridWhere" Grid.Row="2" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="{Binding WhereTextHeight}" />
+                    <RowDefinition Height="{Binding Path=WhereTextHeight}" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="8" />
@@ -188,7 +188,7 @@
                          Margin="0,0,0,0"
                          IsEnabled="True"
                          IsReadOnly="False"
-                         Text="{Binding WhereText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding Path=WhereText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          TextAlignment="Left"
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
@@ -221,7 +221,7 @@
             <Grid Name="GridGroupBy" Grid.Row="3" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="{Binding GroupByTextHeight}" />
+                    <RowDefinition Height="{Binding Path=GroupByTextHeight}" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="8" />
@@ -241,7 +241,7 @@
                          Margin="0,0,0,0"
                          IsEnabled="True"
                          IsReadOnly="False"
-                         Text="{Binding GroupByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding Path=GroupByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          TextAlignment="Left"
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
@@ -274,7 +274,7 @@
             <Grid Name="GridOrderBy" Grid.Row="4" Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="{Binding OrderByTextHeight}" />
+                    <RowDefinition Height="{Binding Path=OrderByTextHeight}" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="8" />
@@ -294,7 +294,7 @@
                          Margin="0,0,0,0"
                          IsEnabled="True"
                          IsReadOnly="False"
-                         Text="{Binding OrderByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding Path=OrderByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          TextAlignment="Left"
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
@@ -354,7 +354,7 @@
                         <Style TargetType="{x:Type controls:InfoButton}">
                             <Setter Property="Visibility" Value="Hidden" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsMouseOver,
+                                <DataTrigger Binding="{Binding Path=IsMouseOver,
                                     ElementName=GridOutputFormat}" Value="True">
                                     <Setter Property="Visibility" Value="Visible" />
                                 </DataTrigger>
@@ -409,7 +409,7 @@
                         Padding="0"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
-                        IsChecked="{Binding SetSymbology, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        IsChecked="{Binding Path=SetSymbology, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <Label Name="LabelSetSymbology"
                     Content="Set Default Symbology?"
                     Grid.Row="0"
@@ -427,7 +427,7 @@
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
                           ToolTip="Clear the log file before the process starts?"
-                          IsChecked="{Binding ClearLogFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                          IsChecked="{Binding Path=ClearLogFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <Label Name="LabelClearLogFile"
                        Content="Clear log file?"
                        Grid.Row="0"
@@ -444,7 +444,7 @@
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
                           ToolTip="Open the log file when the process has complete?"
-                          IsChecked="{Binding OpenLogFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                          IsChecked="{Binding Path=OpenLogFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <Label Name="LabelOpenLogFile"
                        Content="Open log file when run?"
                        Grid.Row="0"
@@ -525,15 +525,16 @@
             </Grid>
 
             <controls:MessageLabel
-                    Grid.Row="8"
-                    Margin="0,8,0,0"
-                    Height="24"
-                    MessageType="{Binding Path=MessageLevel}"
-                    Severity="High"
-                    ShowHelp="False"
-                    Content="{Binding Path=Message}"
-                    CanClose="False"
-                    Visibility="{Binding Path=HasMessage}" />
+                Grid.Row="8"
+                Margin="0,8,0,0"
+                Height="24"
+                MessageType="{Binding Path=MessageLevel}"
+                Severity="High"
+                ShowHelp="False"
+                Content="{Binding Path=Message}"
+                ToolTip="{Binding Path=Message}"
+                CanClose="False"
+                Visibility="{Binding Path=HasMessage}" />
         </Grid>
     </DockPanel>
 </UserControl>
