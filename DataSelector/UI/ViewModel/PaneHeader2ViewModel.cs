@@ -1,10 +1,10 @@
-﻿// The DataTools are a suite of ArcGIS Pro addins used to extract
+﻿// The DataTools are a suite of ArcGIS Pro addins used to extract, sync
 // and manage biodiversity information from ArcGIS Pro and SQL Server
 // based on pre-defined or user specified criteria.
 //
-// Copyright © 2024 Andy Foy Consulting.
+// Copyright © 2024-25 Andy Foy Consulting.
 //
-// This file is part of DataTools suite of programs..
+// This file is part of DataTools suite of programs.
 //
 // DataTools are free software: you can redistribute it and/or modify
 // them under the terms of the GNU General Public License as published by
@@ -1979,7 +1979,7 @@ namespace DataSelector.UI
                 FileFunctions.WriteLine(_logFile, "Performing selection ...");
 
                 // Execute the stored procedure.
-                await _sqlFunctions.ExecuteSQLOnGeodatabase(sqlCmd.ToString());
+                await _sqlFunctions.ExecuteSQLOnGeodatabaseAsync(sqlCmd.ToString());
 
                 // If the result is expected to be spatial it should be split into points and polys.
                 if (isSpatial)
@@ -2001,15 +2001,15 @@ namespace DataSelector.UI
                     if (isSpatial)
                     {
                         // Count the number of rows in the point feature count.
-                        _pointCount = await _sqlFunctions.FeatureClassCountRowsAsync(pointFeatureClass);
+                        _pointCount = await _sqlFunctions.GetFeaturesCountAsync(pointFeatureClass);
 
                         // Count the number of rows in the poly feature count.
-                        _polyCount = await _sqlFunctions.FeatureClassCountRowsAsync(polyFeatureClass);
+                        _polyCount = await _sqlFunctions.GetFeaturesCountAsync(polyFeatureClass);
                     }
                     else
                     {
                         // Count the number of rows in the table.
-                        _tableCount = await _sqlFunctions.TableCountRowsAsync(flatTable);
+                        _tableCount = await _sqlFunctions.GetTableRowCountAsync(flatTable);
                     }
                 }
                 else
@@ -2052,7 +2052,7 @@ namespace DataSelector.UI
                 FileFunctions.WriteLine(_logFile, "Deleting temporary tables ...");
 
                 // Execute the stored procedure.
-                await _sqlFunctions.ExecuteSQLOnGeodatabase(sqlCmd.ToString());
+                await _sqlFunctions.ExecuteSQLOnGeodatabaseAsync(sqlCmd.ToString());
             }
             catch (Exception ex)
             {
