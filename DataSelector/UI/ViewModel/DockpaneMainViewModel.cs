@@ -577,7 +577,7 @@ namespace DataSelector.UI
         /// </summary>
         /// <param name="param"></param>
         /// <remarks></remarks>
-        private async void RunCommandClick(object param)
+        private void RunCommandClick(object param)
         {
             _paneH2VM.RunQueryAsync();
         }

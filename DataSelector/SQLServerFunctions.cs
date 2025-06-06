@@ -368,7 +368,9 @@ namespace DataTools
                     if (tableDefinition == null)
                         return;
 
-                    using Field field = tableDefinition.GetFields().First(x => x.Name.Equals(fieldName) || x.AliasName.Equals(fieldName));
+                    using Field field = tableDefinition.GetFields()
+                        .First(x => x.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
+                                    (x.AliasName != null && x.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase)));
 
                     if (field != null)
                         fldFound = true;

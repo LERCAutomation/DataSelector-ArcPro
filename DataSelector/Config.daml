@@ -5,13 +5,13 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
 
-	<AddInInfo id="{46e995cb-90ef-4d68-9f66-67839c8807e9}" version="1.0.9" desktopVersion="3.3.52636">
+	<AddInInfo id="{46e995cb-90ef-4d68-9f66-67839c8807e9}" version="1.0.10" desktopVersion="3.4">
 		<Name>DataSelector</Name>
 		<Description>DataSelector is an ArcGIS .NET tool and associated SQL scripts to extract information from SQL Server based on any selection criteria. The output files can be created as ESRI Geodatabase (.gdb) files, ESRI Shapefile (.shp) files, Comma Separated Value (.csv) or Tab Delimited (.txt) files.</Description>
 		<Image>Images\AddinDesktop32.png</Image>
 		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
 		<Company>Andy Foy Consulting</Company>
-		<Date>14/01/2025 18:25:00 AM</Date>
+		<Date>06/06/2025 14:32:00 AM</Date>
 		<Subject>Framework, Geodatabase</Subject>
 		<!-- Note subject can be one or more of these topics:
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
@@ -35,7 +35,7 @@
 						smallImage="pack://application:,,,/DataSelector;component/Images/DataSelector16.png"
 						largeImage="pack://application:,,,/DataSelector;component/Images/DataSelector32.png">
 					<tooltip heading="Data Selector tool"
-							 image="pack://application:,,,/DataSelector;component/Images/DataSelector16.png">
+							 image="pack://application:,,,/DataSelector;component/Images/DataSelector32.png">
 						Define, load, save and run SQL queries.<disabledText />
 					</tooltip>
 				</button>

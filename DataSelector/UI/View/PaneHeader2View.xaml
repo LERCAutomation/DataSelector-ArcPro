@@ -1,24 +1,26 @@
 ﻿<UserControl x:Class="DataSelector.UI.PaneHeader2View"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:local="clr-namespace:DataSelector.UI"
-             xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
-             d:DataContext="{d:DesignInstance Type=local:PaneHeader2ViewModel}"
-             mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="300">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:DataSelector.UI"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=local:PaneHeader2ViewModel}"
+    d:DesignHeight="600"
+    d:DesignWidth="300"
+    mc:Ignorable="d">
 
-    <DockPanel MinWidth="270"
-               Margin="6,6,6,6">
+    <DockPanel
+        MinWidth="270"
+        Margin="6,6,6,6">
 
         <Grid DockPanel.Dock="Top">
             <Grid.RowDefinitions>
-                <RowDefinition MinHeight="256" Height="*" />
+                <RowDefinition Height="*" MinHeight="256" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition MinHeight="80" Height="*" />
-                <RowDefinition MinHeight="80" Height="*" />
-                <RowDefinition MinHeight="80" Height="*" />
+                <RowDefinition Height="*" MinHeight="80" />
+                <RowDefinition Height="*" MinHeight="80" />
+                <RowDefinition Height="*" MinHeight="80" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -26,7 +28,10 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid Name="GridColumns" Grid.Row="0" Margin="0,0,0,4">
+            <Grid
+                Name="GridColumns"
+                Grid.Row="0"
+                Margin="0,0,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="{Binding ColumnsTextHeight}" />
@@ -36,60 +41,63 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Label Name="AsterixColumns"
-                       Content="*"
-                       Grid.Row="0"
-                       Grid.Column="0"
-                       Margin="0,0,0,0"
-                       Padding="0"
-                       Foreground="Red"
-                       VerticalAlignment="Top" />
-                <Label Name="LabelColumns"
-                       Content="Select:"
-                       Grid.Row="0"
-                       Grid.Column="1"
-                       Margin="0,0,0,2"
-                       Padding="0"
-                       VerticalAlignment="Center" />
-                <TextBox Name="TextColumns"
-                         Grid.Row="1"
-                         Grid.Column="1"
-                         Margin="0,0,0,0"
-                         IsEnabled="True"
-                         IsReadOnly="False"
-                         Text="{Binding Path=ColumnsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         TextAlignment="Left"
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Visible"
-                         ToolTip="{Binding Path=ColumnsTooltip}"
-                         MouseDoubleClick="TextColumns_MouseDoubleClick" />
+                <Label Content="*"
+                    Name="AsterixColumns"
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    VerticalAlignment="Top"
+                    Foreground="Red" />
+                <Label Content="Select:"
+                    Name="LabelColumns"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="0,0,0,2"
+                    Padding="0"
+                    VerticalAlignment="Center" />
+                <TextBox Text="{Binding Path=ColumnsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Name="TextColumns"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,0,0"
+                    AcceptsReturn="True"
+                    IsEnabled="True"
+                    IsReadOnly="False"
+                    MouseDoubleClick="TextColumns_MouseDoubleClick"
+                    TextAlignment="Left"
+                    TextWrapping="Wrap"
+                    ToolTip="{Binding Path=ColumnsTooltip}"
+                    VerticalScrollBarVisibility="Visible" />
 
-                <Button Name="ButtonColumnsTextExpand"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        Margin="0,0,0,0"
-                        Padding="0"
-                        MinWidth="0"
-                        MinHeight="0"
-                        Width="18"
-                        Height="18"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Right"
-                        BorderBrush="LightBlue"
-                        Command="{Binding Path=ColumnsTextExpandCommand}"
-                        IsCancel="False"
-                        IsDefault="False"
-                        Focusable="False"
-                        IsEnabled="true"
-                        Visibility="{Binding Path=ColumnsTextExpandButtonVisibility}"
-                        IsTabStop="False"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        Content="{Binding Path=ColumnsTextExpandButtonContent}"
-                        ToolTip="Expand/Collapse the columns text" />
+                <Button Content="{Binding Path=ColumnsTextExpandButtonContent}"
+                    Name="ButtonColumnsTextExpand"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Width="18"
+                    Height="18"
+                    MinWidth="0"
+                    MinHeight="0"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    BorderBrush="LightBlue"
+                    Command="{Binding Path=ColumnsTextExpandCommand}"
+                    Focusable="False"
+                    IsCancel="False"
+                    IsDefault="False"
+                    IsEnabled="true"
+                    IsTabStop="False"
+                    Style="{DynamicResource Esri_SimpleButton}"
+                    ToolTip="Expand/Collapse the columns text"
+                    Visibility="{Binding Path=ColumnsTextExpandButtonVisibility}" />
             </Grid>
 
-            <Grid Name="GridTables" Grid.Row="1" Margin="0,4,0,4">
+            <Grid
+                Name="GridTables"
+                Grid.Row="1"
+                Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -100,64 +108,69 @@
                     <ColumnDefinition Width="22" />
                 </Grid.ColumnDefinitions>
 
-                <Label Name="AsterixTables"
-                       Content="*"
-                       Grid.Row="0"
-                       Grid.Column="0"
-                       Margin="0,0,0,0"
-                       Padding="0"
-                       Foreground="Red"
-                       VerticalAlignment="Top" />
-                <Label Name="LabelTables"
-                    Content="From:"
+                <Label Content="*"
+                    Name="AsterixTables"
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    VerticalAlignment="Top"
+                    Foreground="Red" />
+                <Label Content="From:"
+                    Name="LabelTables"
                     Grid.Row="0"
                     Grid.Column="1"
                     Margin="0,0,0,2"
                     Padding="0"
                     VerticalAlignment="Center" />
-                <ComboBox Name="ComboBoxTables"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        Margin="0,0,4,0"
-                        IsEditable="False"
-                        IsReadOnly="True"
-                        ToolTip="Select a source table"
-                        IsEnabled="{Binding Path=TablesListEnabled}"
-                        ItemsSource="{Binding Path=TablesList,
-                                            Mode=OneWay,
-                                            UpdateSourceTrigger=PropertyChanged}"
-                        SelectedValue="{Binding Path=SelectedTable}" />
-                <Button Name="ButtonLoadColumns"
+                <ComboBox ItemsSource="{Binding Path=TablesList, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                    Name="ComboBoxTables"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,4,0"
+                    IsEditable="False"
+                    IsEnabled="{Binding Path=TablesListEnabled}"
+                    IsReadOnly="True"
+                    SelectedValue="{Binding Path=SelectedTable}"
+                    ToolTip="Select a source table" />
+                <Button
+                    Name="ButtonLoadColumns"
                     Grid.Row="1"
                     Grid.Column="1"
                     Margin="0,0,0,0"
-                    IsEnabled="{Binding Path=LoadColumnsEnabled}"
                     Command="{Binding Path=LoadColumnsCommand}"
                     IsCancel="False"
-                    Visibility="Hidden">
-                </Button>
-                <Button Name="ButtonTablesListRefresh"
-                        Grid.Row="1"
-                        Grid.Column="2"
-                        Margin="0,0,0,0"
-                        MinWidth="0"
-                        MinHeight="0"
-                        Padding="0"
-                        Width="22"
-                        Height="22"
-                        BorderThickness="0"
-                        Background="Transparent"
-                        FontWeight="Normal"
-                        VerticalAlignment="Center"
-                        IsEnabled="{Binding Path=TablesListEnabled}"
-                        Command="{Binding Path=RefreshTablesListCommand}"
-                        ToolTip="Refresh tables list"
-                        Style="{DynamicResource Esri_SimpleButton}">
-                    <Image Source="{Binding Path=ButtonTablesListRefreshImg}" Width="16" Height="16" />
+                    IsEnabled="{Binding Path=LoadColumnsEnabled}"
+                    Visibility="Hidden" />
+                <Button
+                    Name="ButtonTablesListRefresh"
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Width="22"
+                    Height="22"
+                    MinWidth="0"
+                    MinHeight="0"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{Binding Path=RefreshTablesListCommand}"
+                    FontWeight="Normal"
+                    IsEnabled="{Binding Path=TablesListEnabled}"
+                    Style="{DynamicResource Esri_SimpleButton}"
+                    ToolTip="Refresh tables list">
+                    <Image
+                        Width="16"
+                        Height="16"
+                        Source="{Binding Path=ButtonTablesListRefreshImg}" />
                 </Button>
             </Grid>
 
-            <Grid Name="GridWhere" Grid.Row="2" Margin="0,4,0,4">
+            <Grid
+                Name="GridWhere"
+                Grid.Row="2"
+                Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="{Binding Path=WhereTextHeight}" />
@@ -167,58 +180,61 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Label Name="AsterixWhere"
-                       Content="*"
-                       Grid.Row="0"
-                       Grid.Column="0"
-                       Margin="0,0,0,0"
-                       Padding="0"
-                       Foreground="Red"
-                       VerticalAlignment="Top" />
-                <Label Name="LabelWhere"
-                       Content="Where:"
-                       Grid.Row="0"
-                       Grid.Column="1"
-                       Margin="0,0,0,2"
-                       Padding="0"
-                       VerticalAlignment="Center" />
-                <TextBox Name="TextWhere"
-                         Grid.Row="1"
-                         Grid.Column="1"
-                         Margin="0,0,0,0"
-                         IsEnabled="True"
-                         IsReadOnly="False"
-                         Text="{Binding Path=WhereText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         TextAlignment="Left"
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Visible" />
+                <Label Content="*"
+                    Name="AsterixWhere"
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    VerticalAlignment="Top"
+                    Foreground="Red" />
+                <Label Content="Where:"
+                    Name="LabelWhere"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="0,0,0,2"
+                    Padding="0"
+                    VerticalAlignment="Center" />
+                <TextBox Text="{Binding Path=WhereText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Name="TextWhere"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,0,0"
+                    AcceptsReturn="True"
+                    IsEnabled="True"
+                    IsReadOnly="False"
+                    TextAlignment="Left"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Visible" />
 
-                <Button Name="ButtonWhereTextExpand"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        Margin="0,0,0,0"
-                        Padding="0"
-                        MinWidth="0"
-                        MinHeight="0"
-                        Width="18"
-                        Height="18"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Right"
-                        BorderBrush="LightBlue"
-                        Command="{Binding Path=WhereTextExpandCommand}"
-                        IsCancel="False"
-                        IsDefault="False"
-                        Focusable="False"
-                        IsEnabled="true"
-                        Visibility="{Binding Path=WhereTextExpandButtonVisibility}"
-                        IsTabStop="False"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        Content="{Binding Path=WhereTextExpandButtonContent}"
-                        ToolTip="Expand/Collapse the where text" />
+                <Button Content="{Binding Path=WhereTextExpandButtonContent}"
+                    Name="ButtonWhereTextExpand"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Width="18"
+                    Height="18"
+                    MinWidth="0"
+                    MinHeight="0"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    BorderBrush="LightBlue"
+                    Command="{Binding Path=WhereTextExpandCommand}"
+                    Focusable="False"
+                    IsCancel="False"
+                    IsDefault="False"
+                    IsEnabled="true"
+                    IsTabStop="False"
+                    Style="{DynamicResource Esri_SimpleButton}"
+                    ToolTip="Expand/Collapse the where text"
+                    Visibility="{Binding Path=WhereTextExpandButtonVisibility}" />
             </Grid>
 
-            <Grid Name="GridGroupBy" Grid.Row="3" Margin="0,4,0,4">
+            <Grid
+                Name="GridGroupBy"
+                Grid.Row="3"
+                Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="{Binding Path=GroupByTextHeight}" />
@@ -228,50 +244,53 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Label Name="LabelGroupBy"
-                       Content="Group By:"
-                       Grid.Row="0"
-                       Grid.Column="1"
-                       Margin="0,0,0,2"
-                       Padding="0"
-                       VerticalAlignment="Center" />
-                <TextBox Name="TextGroupBy"
-                         Grid.Row="1"
-                         Grid.Column="1"
-                         Margin="0,0,0,0"
-                         IsEnabled="True"
-                         IsReadOnly="False"
-                         Text="{Binding Path=GroupByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         TextAlignment="Left"
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Visible" />
+                <Label Content="Group By:"
+                    Name="LabelGroupBy"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="0,0,0,2"
+                    Padding="0"
+                    VerticalAlignment="Center" />
+                <TextBox Text="{Binding Path=GroupByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Name="TextGroupBy"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,0,0"
+                    AcceptsReturn="True"
+                    IsEnabled="True"
+                    IsReadOnly="False"
+                    TextAlignment="Left"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Visible" />
 
-                <Button Name="ButtonGroupByTextExpand"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        Margin="0,0,0,0"
-                        Padding="0"
-                        MinWidth="0"
-                        MinHeight="0"
-                        Width="18"
-                        Height="18"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Right"
-                        BorderBrush="LightBlue"
-                        Command="{Binding Path=GroupByTextExpandCommand}"
-                        IsCancel="False"
-                        IsDefault="False"
-                        Focusable="False"
-                        IsEnabled="true"
-                        Visibility="{Binding Path=GroupByTextExpandButtonVisibility}"
-                        IsTabStop="False"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        Content="{Binding Path=GroupByTextExpandButtonContent}"
-                        ToolTip="Expand/Collapse the group by text" />
+                <Button Content="{Binding Path=GroupByTextExpandButtonContent}"
+                    Name="ButtonGroupByTextExpand"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Width="18"
+                    Height="18"
+                    MinWidth="0"
+                    MinHeight="0"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    BorderBrush="LightBlue"
+                    Command="{Binding Path=GroupByTextExpandCommand}"
+                    Focusable="False"
+                    IsCancel="False"
+                    IsDefault="False"
+                    IsEnabled="true"
+                    IsTabStop="False"
+                    Style="{DynamicResource Esri_SimpleButton}"
+                    ToolTip="Expand/Collapse the group by text"
+                    Visibility="{Binding Path=GroupByTextExpandButtonVisibility}" />
             </Grid>
 
-            <Grid Name="GridOrderBy" Grid.Row="4" Margin="0,4,0,4">
+            <Grid
+                Name="GridOrderBy"
+                Grid.Row="4"
+                Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="{Binding Path=OrderByTextHeight}" />
@@ -281,50 +300,54 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Label Name="LabelOrderBy"
-                       Content="Order By:"
-                       Grid.Row="0"
-                       Grid.Column="1"
-                       Margin="0,0,0,2"
-                       Padding="0"
-                       VerticalAlignment="Center" />
-                <TextBox Name="TextOrderBy"
-                         Grid.Row="1"
-                         Grid.Column="1"
-                         Margin="0,0,0,0"
-                         IsEnabled="True"
-                         IsReadOnly="False"
-                         Text="{Binding Path=OrderByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         TextAlignment="Left"
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Visible" />
+                <Label Content="Order By:"
+                    Name="LabelOrderBy"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="0,0,0,2"
+                    Padding="0"
+                    VerticalAlignment="Center" />
+                <TextBox Text="{Binding Path=OrderByText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Name="TextOrderBy"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,0,0"
+                    AcceptsReturn="True"
+                    IsEnabled="True"
+                    IsReadOnly="False"
+                    TextAlignment="Left"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Visible" />
 
-                <Button Name="ButtonOrderByTextExpand"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        Margin="0,0,0,0"
-                        Padding="0"
-                        MinWidth="0"
-                        MinHeight="0"
-                        Width="18"
-                        Height="18"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Right"
-                        BorderBrush="LightBlue"
-                        Command="{Binding Path=OrderByTextExpandCommand}"
-                        IsCancel="False"
-                        IsDefault="False"
-                        Focusable="False"
-                        IsEnabled="true"
-                        Visibility="{Binding Path=OrderByTextExpandButtonVisibility}"
-                        IsTabStop="False"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        Content="{Binding Path=OrderByTextExpandButtonContent}"
-                        ToolTip="Expand/Collapse the order by text" />
+                <Button Content="{Binding Path=OrderByTextExpandButtonContent}"
+                    Name="ButtonOrderByTextExpand"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Width="18"
+                    Height="18"
+                    MinWidth="0"
+                    MinHeight="0"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    BorderBrush="LightBlue"
+                    Command="{Binding Path=OrderByTextExpandCommand}"
+                    Focusable="False"
+                    IsCancel="False"
+                    IsDefault="False"
+                    IsEnabled="true"
+                    IsTabStop="False"
+                    Style="{DynamicResource Esri_SimpleButton}"
+                    ToolTip="Expand/Collapse the order by text"
+                    Visibility="{Binding Path=OrderByTextExpandButtonVisibility}" />
             </Grid>
 
-            <Grid Name="GridOutputFormat" Grid.Row="5" Margin="0,4,0,4" Background="Transparent">
+            <Grid
+                Name="GridOutputFormat"
+                Grid.Row="5"
+                Margin="0,4,0,4"
+                Background="Transparent">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="28" />
@@ -334,14 +357,14 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Label Name="AsterixOutputFormat"
-                       Content="*"
-                       Grid.Row="0"
-                       Grid.Column="0"
-                       Margin="0,0,0,0"
-                       Padding="0"
-                       Foreground="Red"
-                       VerticalAlignment="Top" />
+                <Label Content="*"
+                    Name="AsterixOutputFormat"
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    VerticalAlignment="Top"
+                    Foreground="Red" />
                 <!--<controls:InfoButton
                         Grid.Row="0"
                         Grid.Column="0"
@@ -365,28 +388,29 @@
                         </Style>
                     </controls:InfoButton.Style>
                 </controls:InfoButton>-->
-                <Label Name="LabelOutputFormat"
-                       Content="Output File Format:"
-                       Grid.Row="0"
-                       Grid.Column="1"
-                       Margin="0,0,0,0"
-                       Padding="0"
-                       VerticalAlignment="Center" />
-                <ComboBox Name="ComboBoxOutputFormat"
-                          Grid.Row="1"
-                          Grid.Column="1"
-                          Margin="0,0,0,0"
-                          VerticalAlignment="Center"
-                          IsEditable="False"
-                          IsReadOnly="True"
-                          ToolTip="Select an output format"
-                          ItemsSource="{Binding Path=OutputFormats,
-                                                Mode=OneWay,
-                                                UpdateSourceTrigger=PropertyChanged}"
-                          SelectedValue="{Binding Path=SelectedOutputFormat}" />
+                <Label Content="Output File Format:"
+                    Name="LabelOutputFormat"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    VerticalAlignment="Center" />
+                <ComboBox ItemsSource="{Binding Path=OutputFormats, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                    Name="ComboBoxOutputFormat"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,0,0"
+                    VerticalAlignment="Center"
+                    IsEditable="False"
+                    IsReadOnly="True"
+                    SelectedValue="{Binding Path=SelectedOutputFormat}"
+                    ToolTip="Select an output format" />
             </Grid>
 
-            <Grid Name="GridOptions" Grid.Row="6" Margin="0,4,0,4">
+            <Grid
+                Name="GridOptions"
+                Grid.Row="6"
+                Margin="0,4,0,4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -419,46 +443,55 @@
                     VerticalAlignment="Center" />
                 -->
 
-                <CheckBox Name="CheckBoxClearLogFile"
-                          Grid.Row="0"
-                          Grid.Column="1"
-                          Margin="0,0,0,0"
-                          Padding="0"
-                          HorizontalAlignment="Left"
-                          VerticalAlignment="Center"
-                          Style="{DynamicResource Esri_CheckboxToggleSwitch}"
-                          ToolTip="Clear the log file before the process starts?"
-                          IsChecked="{Binding Path=ClearLogFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <Label Name="LabelClearLogFile"
-                       Content="Clear log file?"
-                       Grid.Row="0"
-                       Grid.Column="2"
-                       Margin="0,0,0,0"
-                       Padding="0"
-                       ToolTip="Clear the log file before the process starts?"
-                       VerticalAlignment="Center" />
+                <CheckBox
+                    Name="CheckBoxClearLogFile"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding Path=ClearLogFile,
+                                        Mode=TwoWay,
+                                        UpdateSourceTrigger=PropertyChanged}"
+                    Style="{DynamicResource Esri_CheckboxToggleSwitch}"
+                    ToolTip="Clear the log file before the process starts?" />
+                <Label Content="Clear log file?"
+                    Name="LabelClearLogFile"
+                    Grid.Row="0"
+                    Grid.Column="2"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    ToolTip="Clear the log file before the process starts?" />
 
-                <CheckBox Name="CheckBoxOpenLogFile"
-                          Grid.Row="0"
-                          Grid.Column="5"
-                          Margin="0,0,0,0"
-                          Padding="0"
-                          HorizontalAlignment="Left"
-                          VerticalAlignment="Center"
-                          Style="{DynamicResource Esri_CheckboxToggleSwitch}"
-                          ToolTip="Open the log file when the process is complete?"
-                          IsChecked="{Binding Path=OpenLogFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <Label Name="LabelOpenLogFile"
-                       Content="Open log file?"
-                       Grid.Row="0"
-                       Grid.Column="6"
-                       Margin="0,0,0,0"
-                       Padding="0"
-                       ToolTip="Open the log file when the process is complete?"
-                       VerticalAlignment="Center" />
+                <CheckBox
+                    Name="CheckBoxOpenLogFile"
+                    Grid.Row="0"
+                    Grid.Column="5"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding Path=OpenLogFile,
+                                        Mode=TwoWay,
+                                        UpdateSourceTrigger=PropertyChanged}"
+                    Style="{DynamicResource Esri_CheckboxToggleSwitch}"
+                    ToolTip="Open the log file when the process is complete?" />
+                <Label Content="Open log file?"
+                    Name="LabelOpenLogFile"
+                    Grid.Row="0"
+                    Grid.Column="6"
+                    Margin="0,0,0,0"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    ToolTip="Open the log file when the process is complete?" />
             </Grid>
 
-            <Grid Name="GridButtons" Grid.Row="7" Margin="0,8,0,0">
+            <Grid
+                Name="GridButtons"
+                Grid.Row="7"
+                Margin="0,8,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="24" />
                 </Grid.RowDefinitions>
@@ -470,74 +503,73 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Button Name="ButtonLoad"
-                        Grid.Column="0"
-                        Margin="0,0,2,0"
-                        Padding="0"
-                        MinWidth="0"
-                        MinHeight="0"
-                        Command="{Binding Path=LoadCommand}"
-                        IsCancel="False"
-                        IsDefault="False"
-                        IsEnabled="{Binding Path=LoadButtonEnabled}"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        TabIndex="1"
-                        Content="Load"
-                        ToolTip="Load an existing query" />
-                <Button Name="ButtonSave"
-                        Grid.Column="1"
-                        Margin="0,0,2,0"
-                        Padding="0"
-                        MinWidth="0"
-                        MinHeight="0"
-                        Command="{Binding Path=SaveCommand}"
-                        IsCancel="False"
-                        IsDefault="False"
-                        IsEnabled="{Binding Path=SaveButtonEnabled}"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        TabIndex="2"
-                        Content="Save"
-                        ToolTip="Save the query" />
-                <Button Name="ButtonClear"
-                        Grid.Column="2"
-                        Margin="0,0,2,0"
-                        Padding="0"
-                        MinWidth="0"
-                        MinHeight="0"
-                        Command="{Binding Path=ClearCommand}"
-                        IsCancel="False"
-                        IsDefault="False"
-                        IsEnabled="{Binding Path=ClearButtonEnabled}"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        TabIndex="3"
-                        Content="Clear"
-                        ToolTip="Clear the form" />
-                <Button Name="ButtonVerify"
-                        Grid.Column="3"
-                        Margin="0,0,2,0"
-                        Padding="0"
-                        MinWidth="0"
-                        MinHeight="0"
-                        Command="{Binding Path=VerifyCommand}"
-                        IsCancel="False"
-                        IsDefault="False"
-                        IsEnabled="{Binding Path=VerifyButtonEnabled}"
-                        Style="{DynamicResource Esri_SimpleButton}"
-                        TabIndex="4"
-                        Content="Verify"
-                        ToolTip="Verify the query is valid" />
+                <Button Content="Load"
+                    Name="ButtonLoad"
+                    Grid.Column="0"
+                    MinWidth="0"
+                    MinHeight="0"
+                    Margin="0,0,2,0"
+                    Padding="0"
+                    Command="{Binding Path=LoadCommand}"
+                    IsCancel="False"
+                    IsDefault="False"
+                    IsEnabled="{Binding Path=LoadButtonEnabled}"
+                    Style="{DynamicResource Esri_SimpleButton}"
+                    TabIndex="1"
+                    ToolTip="Load an existing query" />
+                <Button Content="Save"
+                    Name="ButtonSave"
+                    Grid.Column="1"
+                    MinWidth="0"
+                    MinHeight="0"
+                    Margin="0,0,2,0"
+                    Padding="0"
+                    Command="{Binding Path=SaveCommand}"
+                    IsCancel="False"
+                    IsDefault="False"
+                    IsEnabled="{Binding Path=SaveButtonEnabled}"
+                    Style="{DynamicResource Esri_SimpleButton}"
+                    TabIndex="2"
+                    ToolTip="Save the query" />
+                <Button Content="Clear"
+                    Name="ButtonClear"
+                    Grid.Column="2"
+                    MinWidth="0"
+                    MinHeight="0"
+                    Margin="0,0,2,0"
+                    Padding="0"
+                    Command="{Binding Path=ClearCommand}"
+                    IsCancel="False"
+                    IsDefault="False"
+                    IsEnabled="{Binding Path=ClearButtonEnabled}"
+                    Style="{DynamicResource Esri_SimpleButton}"
+                    TabIndex="3"
+                    ToolTip="Clear the form" />
+                <Button Content="Verify"
+                    Name="ButtonVerify"
+                    Grid.Column="3"
+                    MinWidth="0"
+                    MinHeight="0"
+                    Margin="0,0,2,0"
+                    Padding="0"
+                    Command="{Binding Path=VerifyCommand}"
+                    IsCancel="False"
+                    IsDefault="False"
+                    IsEnabled="{Binding Path=VerifyButtonEnabled}"
+                    Style="{DynamicResource Esri_SimpleButton}"
+                    TabIndex="4"
+                    ToolTip="Verify the query is valid" />
             </Grid>
 
-            <controls:MessageLabel
+            <controls:MessageLabel Content="{Binding Path=Message}"
                 Grid.Row="8"
-                Margin="0,8,0,0"
                 Height="24"
+                Margin="0,8,0,0"
+                CanClose="False"
                 MessageType="{Binding Path=MessageLevel}"
                 Severity="High"
                 ShowHelp="False"
-                Content="{Binding Path=Message}"
                 ToolTip="{Binding Path=Message}"
-                CanClose="False"
                 Visibility="{Binding Path=HasMessage}" />
         </Grid>
     </DockPanel>

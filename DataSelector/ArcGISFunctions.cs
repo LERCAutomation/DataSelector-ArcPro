@@ -963,9 +963,9 @@ namespace DataTools
             foreach (ArcGIS.Core.Data.Field fld in fields)
             {
                 if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
-                    fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
-                {
-                    fldFound = true;
+                    (fld.AliasName != null && fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        fldFound = true;
                     break;
                 }
             }
@@ -1015,7 +1015,7 @@ namespace DataTools
                         foreach (ArcGIS.Core.Data.Field fld in fields)
                         {
                             if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
-                                fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
+                                (fld.AliasName != null && fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase)))
                             {
                                 fldFound = true;
                                 break;
@@ -1096,7 +1096,7 @@ namespace DataTools
                         foreach (ArcGIS.Core.Data.Field fld in fields)
                         {
                             if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
-                                fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
+                                (fld.AliasName != null && fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase)))
                             {
                                 fldIsNumeric = fld.FieldType switch
                                 {
@@ -1675,14 +1675,14 @@ namespace DataTools
                             featureLayer.SetRenderer(lryxRenderer);
 
                         //Get the label classes from the lyrx layer definition - we need the first one.
-                        List<CIMLabelClass> lryxLabelClassesList = lyrxLayerDefn.LabelClasses.ToList();
+                        List<CIMLabelClass> lryxLabelClassesList = [.. lyrxLayerDefn.LabelClasses];
                         CIMLabelClass lyrxLabelClass = lryxLabelClassesList.FirstOrDefault();
 
                         // Get the input layer definition.
                         CIMFeatureLayer lyrDefn = featureLayer.GetDefinition() as CIMFeatureLayer;
 
                         // Get the label classes from the input layer definition - we need the first one.
-                        List<CIMLabelClass> labelClassesList = lyrDefn.LabelClasses.ToList();
+                        List<CIMLabelClass> labelClassesList = [.. lyrDefn.LabelClasses];
                         CIMLabelClass labelClass = labelClassesList.FirstOrDefault();
 
                         // Copy the lyrx label class to the input layer class.

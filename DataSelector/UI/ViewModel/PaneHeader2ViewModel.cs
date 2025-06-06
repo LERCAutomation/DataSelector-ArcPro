@@ -41,6 +41,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace DataSelector.UI
@@ -197,6 +198,7 @@ namespace DataSelector.UI
             {
                 return ((_dockPane.ProcessStatus == null)
                     && (_selectedTable != null
+                    || (_selectedOutputFormat != null)
                     || !string.IsNullOrEmpty(ColumnsText)
                     || !string.IsNullOrEmpty(WhereText)
                     || !string.IsNullOrEmpty(GroupByText)
@@ -435,6 +437,12 @@ namespace DataSelector.UI
             GroupByText = null;
             OrderByText = null;
 
+            // Clear the selected table.
+            _selectedTable = null;
+
+            // Clear the selected output file format.
+            _selectedOutputFormat = null;
+
             // Clear the saved/loaded query name.
             _queryName = null;
 
@@ -546,7 +554,7 @@ namespace DataSelector.UI
                 string whereClause = WhereText == null ? "" : WhereText.Replace("\r\n", " ");
                 string groupClause = GroupByText == null ? "" : GroupByText.Replace("\r\n", " ");
                 string orderClause = OrderByText == null ? "" : OrderByText.Replace("\r\n", " ");
-                string outputFormat = SelectedOutputFormat == null ? "" : SelectedOutputFormat;
+                string outputFormat = SelectedOutputFormat ?? "";
 
                 // Replace carriage return and line feeds in the constituent parts.
                 string columns = string.Format("Fields {0}{1}{2}", "{", columnNames, "}");
@@ -1436,6 +1444,7 @@ namespace DataSelector.UI
             OnPropertyChanged(nameof(TablesList));
             OnPropertyChanged(nameof(TablesListEnabled));
             OnPropertyChanged(nameof(SelectedTable));
+            OnPropertyChanged(nameof(SelectedOutputFormat));
             OnPropertyChanged(nameof(LoadColumnsEnabled));
             OnPropertyChanged(nameof(Message));
         }
@@ -1534,6 +1543,9 @@ namespace DataSelector.UI
             {
                 _selectedOutputFormat = value;
 
+                // Update the buttons in the form.
+                UpdateFormButtons();
+
                 // Check if the run button is now enabled/disabled.
                 _dockPane.CheckRunButton();
             }
@@ -1608,6 +1620,10 @@ namespace DataSelector.UI
             else
                 _dockPane.ProgressUpdate("Loading tables list ...", -1, -1);
 
+            // Force UI update
+            //await Task.Delay(1);
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Background);
+
             // Preset the tables list.
             _tablesList = ["Loading tables ..."];
             SelectedTable = "Loading tables ...";
@@ -1625,27 +1641,23 @@ namespace DataSelector.UI
             if (!await _sqlFunctions.GetTableNamesAsync(_defaultSchema + "." + _objectsTable))
                 ShowMessage("Error: Unable to get table names.", MessageType.Warning);
 
-            // If no tables were found.
+            // Clear the tables list.
+            _tablesList = [];
+
+            // Hide progress update.
+            _dockPane.ProgressUpdate(null, -1, -1);
+
+            // Indicate the refresh has finished.
+            _dockPane.TableListLoading = false;
+
+            // Inform the user no tables found in SQL Server.
             if (_sqlFunctions.TableNames.Count == 0)
             {
-                // Clear the tables list.
-                _tablesList = [];
-
-                // Indicate the refresh has finished.
-                _dockPane.TableListLoading = false;
-                _dockPane.ProgressUpdate(null, -1, -1);
+                ShowMessage("No tables found in SQL Server", MessageType.Warning);
 
                 // Update the fields and buttons in the form.
-                OnPropertyChanged(nameof(TablesList));
-                OnPropertyChanged(nameof(TablesListEnabled));
-                OnPropertyChanged(nameof(SelectedTable));
-                OnPropertyChanged(nameof(LoadColumnsEnabled));
-                UpdateFormButtons();
+                UpdateFormControls();
                 _dockPane.RefreshPanel1Buttons();
-
-                // Inform the user no tables found in SQL Server.
-                if (_sqlFunctions.TableNames.Count == 0)
-                    ShowMessage("No tables found in SQL Server", MessageType.Warning);
 
                 return;
             }
@@ -1669,16 +1681,8 @@ namespace DataSelector.UI
             else
                 SelectedTable = null;
 
-            // Indicate the refresh has finished.
-            _dockPane.TableListLoading = false;
-            _dockPane.ProgressUpdate(null, -1, -1);
-
             // Update the fields and buttons in the form.
-            OnPropertyChanged(nameof(TablesList));
-            OnPropertyChanged(nameof(TablesListEnabled));
-            OnPropertyChanged(nameof(SelectedTable));
-            OnPropertyChanged(nameof(LoadColumnsEnabled));
-            UpdateFormButtons();
+            UpdateFormControls();
             _dockPane.RefreshPanel1Buttons();
 
             // Inform the user no filtered tables found.
