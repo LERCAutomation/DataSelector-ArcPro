@@ -64,8 +64,13 @@ as a spreadsheet.
 	<value>dbo</value>
   </DatabaseSchema>
 
+  <!-- The table used to list the spatial objects in the SQL Server database. -->
+  <ObjectsTable>
+	<value>SpatialObjects</value>
+  </ObjectsTable>
+
   <!-- The Include wildcard for table names to list all the species tables in SQL Server that can be selected
-         by the user to extract from. -->
+		 by the user to extract from. -->
   <IncludeWildcard>
 	<value>Spp_PointPoly_*Names|Spp_Poly_*Names</value>
   </IncludeWildcard>
@@ -90,16 +95,26 @@ as a spreadsheet.
   <DefaultClearLogFile>
 	<value>Yes</value>
   </DefaultClearLogFile>
-  
-  <!-- The default for whether log file should be opened by default. -->
+
+  <!-- The default for whether the log file should be opened by default. -->
   <DefaultOpenLogFile>
 	<value>No</value>
   </DefaultOpenLogFile>
-  
+
   <!-- Whether to validate the SQL before running. -->
   <ValidateSQL>
 	<value>Yes</value>
   </ValidateSQL>
-  
+
+  <!-- The timeout in seconds for the SQL verify (optional, defaults to 60). -->
+  <SQLTimeout>
+	<value>60</value>
+  </SQLTimeout>
+
+  <!-- Whether to load the columns for the selected table as a vertical list. -->
+  <LoadColumnsVertically>
+	<value>No</value>
+  </LoadColumnsVertically>
+
 </DataSelector>
 </configuration>
