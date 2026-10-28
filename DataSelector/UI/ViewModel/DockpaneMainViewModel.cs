@@ -2,8 +2,7 @@
 // and manage biodiversity information from ArcGIS Pro and SQL Server
 // based on pre-defined or user specified criteria.
 //
-// Copyright © 2024-25 Andy Foy Consulting.
-
+// Copyright © 2024-26 Andy Foy Consulting.
 //
 // This file is part of DataTools suite of programs.
 //
@@ -354,7 +353,7 @@ namespace DataSelector.UI
             }
 
             // Trigger getting the SQL Server table names (don't wait for the response).
-            _paneH2VM.GetTableNamesAsync(false);
+            _ = _paneH2VM.GetTableNamesAsync(false);
 
             return true;
         }

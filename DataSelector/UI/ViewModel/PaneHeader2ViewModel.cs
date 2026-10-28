@@ -2,7 +2,7 @@
 // and manage biodiversity information from ArcGIS Pro and SQL Server
 // based on pre-defined or user specified criteria.
 //
-// Copyright © 2024-25 Andy Foy Consulting.
+// Copyright © 2024-26 Andy Foy Consulting.
 //
 // This file is part of DataTools suite of programs.
 //
@@ -95,6 +95,31 @@ namespace DataSelector.UI
         }
 
         #endregion ViewModelBase Members
+
+        // Add-in id from Config.daml
+        private const string _addInId = "{46e995cb-90ef-4d68-9f66-67839c8807e9}";
+
+        /// <summary>
+        /// Gets the add-in version as declared in Config.daml.
+        /// </summary>
+        /// <returns>The add-in version, or "Unknown" if it cannot be resolved.</returns>
+        public static string GetAddInVersion()
+        {
+            try
+            {
+                var addInInfo = FrameworkApplication
+                    .GetAddInInfos()
+                    .FirstOrDefault(ai => ai != null && string.Equals(ai.ID, _addInId, StringComparison.OrdinalIgnoreCase));
+
+                return addInInfo?.Version ?? "Unknown";
+            }
+            catch
+            {
+                return "Unknown";
+            }
+        }
+
+
 
         #region Creator
 
@@ -792,6 +817,23 @@ namespace DataSelector.UI
             // Set the destination log file path.
             _logFile = _logFilePath + @"\DataSelector_" + userID + ".log";
 
+            // Create log file path.
+            if (!FileFunctions.DirExists(_logFilePath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(_logFilePath);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error: Cannot create directory " + _logFilePath + ". System error: " + ex.Message, _displayName, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+            }
+
+            // Initialize trace logging to capture trace output into the same log file.
+            InitializeTraceLogging(_logFile);
+
             // Clear the log file if required.
             if (ClearLogFile)
             {
@@ -799,6 +841,7 @@ namespace DataSelector.UI
                 if (!blDeleted)
                 {
                     MessageBox.Show("Cannot delete log file. Please make sure it is not open in another window.", _displayName, MessageBoxButton.OK, MessageBoxImage.Error);
+                    CloseTraceLogging();
                     return;
                 }
             }
@@ -806,7 +849,7 @@ namespace DataSelector.UI
             // If userid is temp.
             if (userID == "Temp")
             {
-                FileFunctions.WriteLine(_logFile, "User ID not found. User ID used will be 'Temp'");
+                FileFunctions.WriteLine(_logFile, "User ID not found. User ID used will be 'Temp'.");
             }
 
             // Clear any messages.
@@ -816,8 +859,17 @@ namespace DataSelector.UI
             UpdateFormControls();
             _dockPane.RefreshPanel1Buttons();
 
-            // Perform the selection.
-            bool success = await ExecuteSelectionAsync(userID);
+            bool success = false;
+            try
+            {
+                // Perform the selection.
+                success = await ExecuteSelectionAsync(userID);
+            }
+            finally
+            {
+                // Ensure trace logging is closed if ExecuteSelectionAsync did not call StopSelection.
+                CloseTraceLogging();
+            }
 
             // Run the stored procedure to clear the selection.
             if (success || _selectErrors)
@@ -1604,6 +1656,69 @@ namespace DataSelector.UI
 
         #endregion Methods
 
+        #region Debug Logging
+
+        /// <summary>
+        /// Initializes trace logging by redirecting Trace output to a log file.
+        /// This method ensures the log file is opened in append mode with proper flushing
+        /// and listener setup for reliable logging output.
+        /// </summary>
+        /// <param name="logFilePath">The full path to the log file.</param>
+        private static void InitializeTraceLogging(string logFilePath)
+        {
+            // Close any existing listeners before setting up a new one.
+            CloseTraceLogging();
+
+            // Open the log file stream in append mode, allowing concurrent read/write access.
+            var logFileStream = new FileStream(
+                logFilePath,
+                FileMode.Append,      // Ensure new logs are added to the end of the file.
+                FileAccess.Write,     // Only write access is needed.
+                FileShare.ReadWrite); // Allow other processes to read or write concurrently.
+
+            // Wrap the file stream with a StreamWriter for better buffering and encoding control.
+            var writer = new StreamWriter(logFileStream)
+            {
+                AutoFlush = true // Ensure log messages are written immediately without buffering delay.
+            };
+
+            // Create a trace listener that writes to the StreamWriter.
+            var listener = new FilteredTraceListener(writer)
+            {
+                // Include timestamp in trace output.
+                TraceOutputOptions = TraceOptions.DateTime
+            };
+
+            // Enable automatic flushing of the Trace buffer after each write.
+            Trace.AutoFlush = true;
+
+            // Add our configured listener to the Trace system.
+            Trace.Listeners.Add(listener);
+        }
+
+        /// <summary>
+        /// Closes and removes all FilteredTraceListener instances from the Trace listeners collection, ensuring that
+        /// any buffered trace output is flushed and resources are released.
+        /// </summary>
+        /// <remarks>This method only affects listeners of type FilteredTraceListener and does not remove
+        /// or modify other trace listeners. It should be called when trace logging is no longer needed to release file
+        /// handles and other resources associated with custom trace listeners.</remarks>
+        private static void CloseTraceLogging()
+        {
+            // Only remove our own listeners; don't clobber ArcGIS Pro / other add-ins.
+            for (int i = Trace.Listeners.Count - 1; i >= 0; i--)
+            {
+                if (Trace.Listeners[i] is FilteredTraceListener listener)
+                {
+                    listener.Flush(); // Ensure all buffered output is written to the underlying stream.
+                    listener.Close(); // Release the file handle and resources used by the listener.
+                    Trace.Listeners.RemoveAt(i);
+                }
+            }
+        }
+
+        #endregion Debug Logging
+
         #region SQL
 
         /// <summary>
@@ -1612,6 +1727,30 @@ namespace DataSelector.UI
         /// <param name="refresh"></param>
         /// <returns></returns>
         public async Task GetTableNamesAsync(bool refresh)
+        {
+            try
+            {
+                await LoadTableNamesAsync(refresh);
+            }
+            catch (Exception ex)
+            {
+                ShowMessage("Error: Unable to get table names. " + ex.Message, MessageType.Warning);
+            }
+            finally
+            {
+                // Ensure the UI is never left in a loading state.
+                _dockPane.ProgressUpdate(null, -1, -1);
+                _dockPane.TableListLoading = false;
+                _dockPane.RefreshPanel1Buttons();
+            }
+        }
+
+        /// <summary>
+        /// Load the table names from SQL Server and populate the tables list.
+        /// </summary>
+        /// <param name="refresh"></param>
+        /// <returns></returns>
+        private async Task LoadTableNamesAsync(bool refresh)
         {
             // Indicate table is loading.
             _dockPane.TableListLoading = true;
@@ -1649,6 +1788,7 @@ namespace DataSelector.UI
 
             // Indicate the refresh has finished.
             _dockPane.TableListLoading = false;
+            _dockPane.RefreshPanel1Buttons();
 
             // Inform the user no tables found in SQL Server.
             if (_sqlFunctions.TableNames.Count == 0)
@@ -1657,7 +1797,6 @@ namespace DataSelector.UI
 
                 // Update the fields and buttons in the form.
                 UpdateFormControls();
-                _dockPane.RefreshPanel1Buttons();
 
                 return;
             }
@@ -1683,7 +1822,6 @@ namespace DataSelector.UI
 
             // Update the fields and buttons in the form.
             UpdateFormControls();
-            _dockPane.RefreshPanel1Buttons();
 
             // Inform the user no filtered tables found.
             if (_tablesList.Count == 0)
@@ -1935,20 +2073,20 @@ namespace DataSelector.UI
             string storedProcedureName = _selectStoredProcedure;
 
             // Write the parameters to the log file.
-            FileFunctions.WriteLine(_logFile, string.Format("Source table is '{0}'", tableName));
-            FileFunctions.WriteLine(_logFile, string.Format("Column names are '{0}'", columnNames));
+            FileFunctions.WriteLine(_logFile, string.Format("Source table is '{0}'.", tableName));
+            FileFunctions.WriteLine(_logFile, string.Format("Column names are '{0}'.", columnNames));
             if (whereClause != null && whereClause.Length > 0)
-                FileFunctions.WriteLine(_logFile, string.Format("Where clause is '{0}'", whereClause));
+                FileFunctions.WriteLine(_logFile, string.Format("Where clause is '{0}'.", whereClause));
             else
-                FileFunctions.WriteLine(_logFile, "No where clause was used");
+                FileFunctions.WriteLine(_logFile, "No where clause was used.");
             if (groupClause != null && groupClause.Length > 0)
-                FileFunctions.WriteLine(_logFile, string.Format("Group by clause is '{0}'", groupClause));
+                FileFunctions.WriteLine(_logFile, string.Format("Group by clause is '{0}'.", groupClause));
             else
-                FileFunctions.WriteLine(_logFile, "No group by clause was used");
+                FileFunctions.WriteLine(_logFile, "No group by clause was used.");
             if (orderClause != null && orderClause.Length > 0)
-                FileFunctions.WriteLine(_logFile, string.Format("Order by clause is '{0}'", orderClause));
+                FileFunctions.WriteLine(_logFile, string.Format("Order by clause is '{0}'.", orderClause));
             else
-                FileFunctions.WriteLine(_logFile, "No order by clause was used");
+                FileFunctions.WriteLine(_logFile, "No order by clause was used.");
 
             // Set up the SQL command.
             StringBuilder sqlCmd = new();
@@ -2018,6 +2156,7 @@ namespace DataSelector.UI
                 }
                 else
                 {
+                    FileFunctions.WriteLine(_logFile, "Error: The selection did not create an output table.");
                     return false;
                 }
             }
@@ -2100,7 +2239,7 @@ namespace DataSelector.UI
                 if (createMap)
                     processStepsMax += 2;
 
-                FileFunctions.WriteLine(_logFile, "Output is spatial and will be split into a point and a polygon layer");
+                FileFunctions.WriteLine(_logFile, "Output is spatial and will be split into a point and a polygon layer.");
 
                 if (_pointCount > 0)
                 {
@@ -2113,12 +2252,12 @@ namespace DataSelector.UI
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, string.Format("Error: Copying point results to '{0}'", outPoints));
+                        FileFunctions.WriteLine(_logFile, string.Format("Error: Copying point results to '{0}'.", outPoints));
 
                         return false;
                     }
 
-                    FileFunctions.WriteLine(_logFile, string.Format("Point results saved"));
+                    FileFunctions.WriteLine(_logFile, "Point results saved.");
                 }
                 if (_polyCount > 0)
                 {
@@ -2131,12 +2270,12 @@ namespace DataSelector.UI
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, string.Format("Error: Copying polygon results to '{0}'", outPolys));
+                        FileFunctions.WriteLine(_logFile, string.Format("Error: Copying polygon results to '{0}'.", outPolys));
 
                         return false;
                     }
 
-                    FileFunctions.WriteLine(_logFile, string.Format("Polygon results saved"));
+                    FileFunctions.WriteLine(_logFile, "Polygon results saved.");
                 }
 
                 // Exit if nothing was exported.
@@ -2186,7 +2325,7 @@ namespace DataSelector.UI
 
                 // Not a spatial export, but it is a spatial layer so there are two files.
                 // which are appended back together again.
-                FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
+                FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split.");
 
                 // If schema.ini file exists delete it.
                 string strIniFile = FileFunctions.GetDirectoryName(outFile) + "\\schema.ini";
@@ -2209,10 +2348,12 @@ namespace DataSelector.UI
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, string.Format("Error: Exporting point results"));
+                        FileFunctions.WriteLine(_logFile, "Error: Exporting point results.");
 
                         return false;
                     }
+
+                    FileFunctions.WriteLine(_logFile, "Point results exported.");
 
                     blAppend = true;
                 }
@@ -2232,8 +2373,12 @@ namespace DataSelector.UI
 
                     if (!result)
                     {
-                        FileFunctions.WriteLine(_logFile, string.Format("Error: Exporting polygon results"));
+                        FileFunctions.WriteLine(_logFile, "Error: Exporting polygon results.");
+
+                        return false;
                     }
+
+                    FileFunctions.WriteLine(_logFile, "Polygon results exported.");
                 }
 
                 if (_pointCount == 0 && _polyCount == 0)
@@ -2277,7 +2422,7 @@ namespace DataSelector.UI
             if (addToMap)
                 processStepsMax += 1;
 
-            FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split");
+            FileFunctions.WriteLine(_logFile, "Output is non-spatial and will not be split.");
 
             // Indicate the export has started.
             _dockPane.ProgressUpdate("Saving results ...", processStep, processStepsMax);
@@ -2291,12 +2436,11 @@ namespace DataSelector.UI
 
                 if (!result)
                 {
-                    FileFunctions.WriteLine(_logFile, "Error copying results to text file '" + outFile + "'");
-
+                    FileFunctions.WriteLine(_logFile, "Error: Copying results to text file '" + outFile + "'.");
                     return false;
                 }
 
-                FileFunctions.WriteLine(_logFile, string.Format("Results copied to text file"));
+                FileFunctions.WriteLine(_logFile, "Results copied to text file.");
             }
             else if (outputFormat.Contains("CSV file"))
             {
@@ -2306,12 +2450,11 @@ namespace DataSelector.UI
 
                 if (!result)
                 {
-                    FileFunctions.WriteLine(_logFile, "Error copying results to CSV file '" + outFile + "'");
-
+                    FileFunctions.WriteLine(_logFile, "Error: Copying results to CSV file '" + outFile + "'.");
                     return false;
                 }
 
-                FileFunctions.WriteLine(_logFile, string.Format("Results copied to CSV file"));
+                FileFunctions.WriteLine(_logFile, "Results copied to CSV file.");
             }
             else
             {
@@ -2321,12 +2464,11 @@ namespace DataSelector.UI
 
                 if (!result)
                 {
-                    FileFunctions.WriteLine(_logFile, "Error copying results to geodatabase table '" + outFile + "'");
-
+                    FileFunctions.WriteLine(_logFile, "Error: Copying results to geodatabase table '" + outFile + "'.");
                     return false;
                 }
 
-                FileFunctions.WriteLine(_logFile, string.Format("Results copied to geodatabase table"));
+                FileFunctions.WriteLine(_logFile, "Results copied to geodatabase table.");
             }
 
             if (!addToMap)
@@ -2513,16 +2655,25 @@ namespace DataSelector.UI
             }
 
             FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
-            FileFunctions.WriteLine(_logFile, "Process started");
+            FileFunctions.WriteLine(_logFile, "Process started!");
             FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
 
-            if (isSpatial)
-                FileFunctions.WriteLine(_logFile, "Data is spatial. Spatial outputs (Shapefile, Geodatabase) will be split into _point and _poly components");
-            else
-                FileFunctions.WriteLine(_logFile, "Data is not spatial");
+            FileFunctions.WriteLine(_logFile, "DataSelector version: " + GetAddInVersion());
+            FileFunctions.WriteLine(_logFile, "XML profile: " + ((_toolConfig != null && !string.IsNullOrEmpty(_toolConfig.XMLFile)) ? _toolConfig.XMLFile : "(unknown)"));
+            FileFunctions.WriteLine(_logFile, "User ID: " + userID);
 
-            FileFunctions.WriteLine(_logFile, string.Format("Output format is '{0}'", outputFormat));
-            FileFunctions.WriteLine(_logFile, string.Format("Output file is '{0}'", outputFile));
+            FileFunctions.WriteLine(_logFile, "Selected UI options:");
+            FileFunctions.WriteLine(_logFile, "Table name: " + tableName);
+            FileFunctions.WriteLine(_logFile, "Output format: " + outputFormat);
+            FileFunctions.WriteLine(_logFile, "Output file: " + outputFile);
+            FileFunctions.WriteLine(_logFile, "Set symbology: " + (SetSymbology ? "Yes" : "No"));
+            FileFunctions.WriteLine(_logFile, "Clear log file: " + (ClearLogFile ? "Yes" : "No"));
+            FileFunctions.WriteLine(_logFile, "Open log file: " + (OpenLogFile ? "Yes" : "No"));
+
+            if (isSpatial)
+                FileFunctions.WriteLine(_logFile, "Data is spatial. Spatial outputs (Shapefile, Geodatabase) will be split into _point and _poly components.");
+            else
+                FileFunctions.WriteLine(_logFile, "Data is not spatial.");
 
             // Indicate the selection has started.
             _dockPane.QueryRunning = true;
@@ -2543,7 +2694,7 @@ namespace DataSelector.UI
             // Exit if the stored procedure returned no results.
             if (_pointCount == 0 && _polyCount == 0 && _tableCount == 0)
             {
-                FileFunctions.WriteLine(_logFile, "No output returned");
+                FileFunctions.WriteLine(_logFile, "No output returned.");
 
                 _successMessage = "Process complete. No output returned by the query!";
                 _selectErrors = true;
@@ -2553,9 +2704,9 @@ namespace DataSelector.UI
             // Log the results of the stored procedure.
             if (isSpatial)
                 FileFunctions.WriteLine(_logFile, "Selection returned " + _pointCount.ToString("N0") + " point and " + _polyCount.ToString("N0") +
-                    " polygon records");
+                    " polygon records.");
             else
-                FileFunctions.WriteLine(_logFile, "Selection returned " + _tableCount.ToString("N0") + " records");
+                FileFunctions.WriteLine(_logFile, "Selection returned " + _tableCount.ToString("N0") + " records.");
 
             // Prepare to export the results.
             string pointFeatureClass = _defaultSchema + "." + tableName + "_point_" + userID;
@@ -2627,7 +2778,7 @@ namespace DataSelector.UI
             if (isSpatial && _pointCount == 0 && _polyCount == 0
                 || !isSpatial && _tableCount == 0)
             {
-                FileFunctions.WriteLine(_logFile, "No output file(s) generated");
+                FileFunctions.WriteLine(_logFile, "No output file(s) generated.");
 
                 _successMessage = null;
                 _selectErrors = true;
@@ -2681,13 +2832,16 @@ namespace DataSelector.UI
         /// <returns></returns>
         private void StopSelection(string message, string image)
         {
-            FileFunctions.WriteLine(_logFile, "---------------------------------------------------------------------------");
+            FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
             FileFunctions.WriteLine(_logFile, message);
-            FileFunctions.WriteLine(_logFile, "---------------------------------------------------------------------------");
+            FileFunctions.WriteLine(_logFile, "-----------------------------------------------------------------------");
 
             // Indicate processing has finished.
             _dockPane.QueryRunning = false;
             _dockPane.ProgressUpdate(null, -1, -1);
+
+            // Refresh the panel 1 controls now the search has finished.
+            _dockPane.RefreshPanel1Buttons();
 
             string imageSource = string.Format("pack://application:,,,/DataSelector;component/Images/{0}32.png", image);
 
@@ -2700,6 +2854,9 @@ namespace DataSelector.UI
                 ImageSource = new BitmapImage(new Uri(imageSource)) as ImageSource
             };
             FrameworkApplication.AddNotification(notification);
+
+            // Flushes and closes all trace listeners.
+            CloseTraceLogging();
 
             // Open the log file (if required).
             if (OpenLogFile || _selectErrors)

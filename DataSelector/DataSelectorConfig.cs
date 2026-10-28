@@ -2,8 +2,7 @@
 // and manage biodiversity information from ArcGIS Pro and SQL Server
 // based on pre-defined or user specified criteria.
 //
-// Copyright © 2024-25 Andy Foy Consulting.
-
+// Copyright © 2024-26 Andy Foy Consulting.
 //
 // This file is part of DataTools suite of programs.
 //
@@ -42,6 +41,8 @@ namespace DataSelector
         // Initialise component to read XML
         private readonly XmlElement _xmlDataSelector;
 
+        private readonly string _xmlFile;
+
         #endregion Fields
 
         #region Constructor
@@ -50,9 +51,12 @@ namespace DataSelector
         /// Load the XML profile and read the variables.
         /// </summary>
         /// <param name="xmlFile"></param>
+        /// <param name="toolName"></param>
+        /// <param name="msgErrors"></param>
         public DataSelectorConfig(string xmlFile, string toolName, bool msgErrors)
         {
             _toolName = toolName;
+            _xmlFile = xmlFile;
 
             // The user has specified the xmlFile and we've checked it exists.
             _xmlFound = true;
@@ -373,6 +377,17 @@ namespace DataSelector
             get
             {
                 return _xmlLoaded;
+            }
+        }
+
+        /// <summary>
+        /// The XML profile file path.
+        /// </summary>
+        public string XMLFile
+        {
+            get
+            {
+                return _xmlFile;
             }
         }
 

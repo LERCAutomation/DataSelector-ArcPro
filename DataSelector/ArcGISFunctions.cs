@@ -2,7 +2,7 @@
 // and manage biodiversity information from ArcGIS Pro and SQL Server
 // based on pre-defined or user specified criteria.
 //
-// Copyright © 2024-25 Andy Foy Consulting.
+// Copyright © 2024-26 Andy Foy Consulting.
 
 //
 // This file is part of DataTools suite of programs.
@@ -342,6 +342,28 @@ namespace DataTools
         }
 
         #endregion Map
+
+        /// <summary>
+        /// Get the add-in version string for this assembly.
+        /// </summary>
+        /// <returns>string</returns>
+        public static string GetAddInVersion()
+        {
+            try
+            {
+                var asm = System.Reflection.Assembly.GetExecutingAssembly();
+                var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location);
+                if (!string.IsNullOrEmpty(fvi.ProductVersion))
+                    return fvi.ProductVersion;
+                if (asm.GetName().Version != null)
+                    return asm.GetName().Version.ToString();
+            }
+            catch
+            {
+                // ignore
+            }
+            return "(unknown)";
+        }
 
         #region Layers
 
@@ -1212,7 +1234,7 @@ namespace DataTools
 
             // Get the list of field names for the input table that
             // aren't required fields (e.g. excluding FID and Shape).
-            List<string> inputFieldNames = inputfields.Where(x => !x.IsRequired).Select(y => y.Name).ToList();
+            List<string> inputFieldNames = [.. inputfields.Where(x => !x.IsRequired).Select(y => y.Name)];
 
             // Get the list of fields that do exist in the layer.
             List<string> existingFields = await GetExistingFieldsAsync(layerName, fieldList);
@@ -1263,7 +1285,7 @@ namespace DataTools
         /// </summary>
         /// <param name="layer"></param>
         /// <returns>string</returns>
-        public string GetLayerPath(Layer layer)
+        public static string GetLayerPath(Layer layer)
         {
             // Check there is an input layer.
             if (layer == null)
@@ -1334,18 +1356,16 @@ namespace DataTools
         /// </summary>
         /// <param name="featureLayer"></param>
         /// <returns>string: point, line, polygon</returns>
-        public string GetFeatureClassType(FeatureLayer featureLayer)
+        public static string GetFeatureClassType(FeatureLayer featureLayer)
         {
             // Check there is an input feature layer.
             if (featureLayer == null)
                 return null;
 
+            // Investigate the feature layer shape type and return a simplified type.
             try
             {
-                BasicFeatureLayer basicFeatureLayer = featureLayer as BasicFeatureLayer;
-                esriGeometryType shapeType = basicFeatureLayer.ShapeType;
-
-                return shapeType switch
+                return featureLayer.ShapeType switch
                 {
                     esriGeometryType.esriGeometryPoint => "point",
                     esriGeometryType.esriGeometryMultipoint => "point",
@@ -2930,10 +2950,9 @@ namespace DataTools
                     rowCursor.Dispose();
 
                     // Get a list of any duplicate keys.
-                    List<string> duplicateKeys = keys.GroupBy(x => x)
+                    List<string> duplicateKeys = [.. keys.GroupBy(x => x)
                       .Where(g => g.Count() > 1)
-                      .Select(y => y.Key)
-                      .ToList();
+                      .Select(y => y.Key)];
 
                     // Return how many duplicate keys there are.
                     featureCount = duplicateKeys.Count;

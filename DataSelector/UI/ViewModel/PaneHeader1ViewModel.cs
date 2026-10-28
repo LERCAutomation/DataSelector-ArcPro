@@ -2,7 +2,7 @@
 // and manage biodiversity information from ArcGIS Pro and SQL Server
 // based on pre-defined or user specified criteria.
 //
-// Copyright © 2024-25 Andy Foy Consulting.
+// Copyright © 2024-25=6 Andy Foy Consulting.
 
 //
 // This file is part of DataTools suite of programs.
@@ -600,7 +600,7 @@ namespace DataSelector.UI
             // If the XML config file can't be loaded.
             if (!_xmlConfig.XMLLoaded)
             {
-                //MessageBox.Show(string.Format("Error loading XML File '{0}'.", _xmlConfigPath), _displayName, MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show(string.Format("Error: loading XML File '{0}'.", _xmlConfigPath), _displayName, MessageBoxButton.OK, MessageBoxImage.Error);
                 _xmlLoaded = false;
                 return;
             }

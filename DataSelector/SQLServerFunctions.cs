@@ -1,9 +1,8 @@
-﻿// The DataTools are a suite of ArcGIS Pro addins used to extract, sync
+// The DataTools are a suite of ArcGIS Pro addins used to extract, sync
 // and manage biodiversity information from ArcGIS Pro and SQL Server
 // based on pre-defined or user specified criteria.
 //
-// Copyright © 2024-25 Andy Foy Consulting.
-
+// Copyright © 2024-26 Andy Foy Consulting.
 //
 // This file is part of DataTools suite of programs.
 //
@@ -38,6 +37,8 @@ namespace DataTools
 
         private readonly string _sdeFileName;
 
+        private Task _openGeodatabaseTask;
+
         #endregion Fields
 
         #region Constructor
@@ -47,7 +48,7 @@ namespace DataTools
             _sdeFileName = sdeFileName;
 
             // Open a connection to the geodatabase (don't wait it will be checked later).
-            OpenGeodatabaseAsync();
+            _openGeodatabaseTask = OpenGeodatabaseAsync();
         }
 
         #endregion Constructor
@@ -111,6 +112,22 @@ namespace DataTools
         }
 
         /// <summary>
+        /// Wait for any pending geodatabase open, and retry once if it is still not open.
+        /// </summary>
+        /// <returns></returns>
+        private async Task EnsureGeodatabaseOpenAsync()
+        {
+            if (_openGeodatabaseTask != null)
+                await _openGeodatabaseTask;
+
+            if (!GeodatabaseOpen)
+            {
+                _openGeodatabaseTask = OpenGeodatabaseAsync();
+                await _openGeodatabaseTask;
+            }
+        }
+
+        /// <summary>
         /// Open a SQL Server database using a .sde connection file.
         /// </summary>
         /// <returns></returns>
@@ -157,7 +174,7 @@ namespace DataTools
             bool success = false;
 
             // Open a connection to the geodatabase if not already open.
-            if (!GeodatabaseOpen) await OpenGeodatabaseAsync();
+            await EnsureGeodatabaseOpenAsync();
 
             // If still not open.
             if (!GeodatabaseOpen) return false;
@@ -214,7 +231,7 @@ namespace DataTools
             List<string> fieldNames = [];
 
             // Open a connection to the geodatabase if not already open.
-            if (!GeodatabaseOpen) await OpenGeodatabaseAsync();
+            await EnsureGeodatabaseOpenAsync();
 
             // If still not open.
             if (!GeodatabaseOpen) return fieldNames;
@@ -257,7 +274,7 @@ namespace DataTools
             string fileName = FileFunctions.GetFileName(fullPath);
 
             // Open a connection to the geodatabase if not already open.
-            if (!GeodatabaseOpen) await OpenGeodatabaseAsync();
+            await EnsureGeodatabaseOpenAsync();
 
             // If still not open.
             if (!GeodatabaseOpen) return fields;
@@ -351,7 +368,7 @@ namespace DataTools
             string fileName = FileFunctions.GetFileName(fullPath);
 
             // Open a connection to the geodatabase if not already open.
-            if (!GeodatabaseOpen) await OpenGeodatabaseAsync();
+            await EnsureGeodatabaseOpenAsync();
 
             // If still not open.
             if (!GeodatabaseOpen) return false;
@@ -407,7 +424,7 @@ namespace DataTools
                 return false;
 
             // Open a connection to the geodatabase if not already open.
-            if (!GeodatabaseOpen) await OpenGeodatabaseAsync();
+            await EnsureGeodatabaseOpenAsync();
 
             // If still not open.
             if (!GeodatabaseOpen) return false;
@@ -546,7 +563,7 @@ namespace DataTools
             StreamWriter txtFile = new(outFile, true);
 
             // Open a connection to the geodatabase if not already open.
-            if (!GeodatabaseOpen) await OpenGeodatabaseAsync();
+            await EnsureGeodatabaseOpenAsync();
 
             // If still not open.
             if (!GeodatabaseOpen) return false;
@@ -649,7 +666,7 @@ namespace DataTools
             bool exists = false;
 
             // Open a connection to the geodatabase if not already open.
-            if (!GeodatabaseOpen) await OpenGeodatabaseAsync();
+            await EnsureGeodatabaseOpenAsync();
 
             // If still not open.
             if (!GeodatabaseOpen) return exists;
@@ -810,10 +827,9 @@ namespace DataTools
                     rowCursor.Dispose();
 
                     // Get a list of any duplicate keys.
-                    List<string> duplicateKeys = keys.GroupBy(x => x)
+                    List<string> duplicateKeys = [.. keys.GroupBy(x => x)
                       .Where(g => g.Count() > 1)
-                      .Select(y => y.Key)
-                      .ToList();
+                      .Select(y => y.Key)];
 
                     // Return how many duplicate keys there are.
                     featureCount = duplicateKeys.Count;
@@ -846,7 +862,7 @@ namespace DataTools
             bool exists = false;
 
             // Open a connection to the geodatabase if not already open.
-            if (!GeodatabaseOpen) await OpenGeodatabaseAsync();
+            await EnsureGeodatabaseOpenAsync();
 
             // If still not open.
             if (!GeodatabaseOpen) return exists;
@@ -981,7 +997,7 @@ namespace DataTools
             bool success = false;
 
             // Open a connection to the geodatabase if not already open.
-            if (!GeodatabaseOpen) await OpenGeodatabaseAsync();
+            await EnsureGeodatabaseOpenAsync();
 
             // If still not open.
             if (!GeodatabaseOpen) return success;
